@@ -12,8 +12,14 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# Downloaded project datasets (linked from Data_0N.md instead of committed)
-*.sqlite
-*.sqlite3
-*.db
-Data/
+# Slide-deck build tooling — the shared builder and each day's generator
+# script. Not course content; the .pptx it produces is what's committed.
+_slide_kit/
+build.py
+
+# Datasets for project days (06-09): committed directly when small enough
+# so students don't need a separate download step. Only exclude a specific
+# oversized file here when it actually can't fit in git (e.g. European
+# Soccer's database.sqlite is 299 MB, over GitHub's 100 MB hard limit) —
+# decide per-dataset when that day is built, don't blanket-exclude the
+# extension.
