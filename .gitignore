@@ -1,0 +1,19 @@
+# Archived/reference material — kept on disk, not published
+OLD SQL/
+
+# Secrets
+.env
+
+# Local tooling state
+.claude/
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Downloaded project datasets (linked from Data_0N.md instead of committed)
+*.sqlite
+*.sqlite3
+*.db
+Data/
