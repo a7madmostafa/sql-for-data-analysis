@@ -5,10 +5,15 @@ four applied projects on real datasets. See [`COURSE_PLAN.md`](COURSE_PLAN.md) f
 plan and source-material notes.
 
 Each lesson day (01–05) contains:
-- `Reading_0N.md` — concepts, worked examples, gotchas — read this first
-- `Slides_0N` — a slide-deck version of the same material
-- `Walkthrough_0N/` — the explained, titled SQL (or notebook) to run alongside the reading
-- `Exercises_0N/` — practice questions (`exercises.sql`) and a reference answer key (`exercises_solutions.sql`)
+- `D0N_01_Materials/` — the day's database-setup script, a `day0N_reading.md` write-up (worked
+  examples, gotchas), and a `.pptx` slide deck covering the same ground, often in more depth
+  (concepts, diagrams) — start with the slides
+- `D0N_02_Walkthrough/` — the explained, titled SQL (or notebook) to run alongside the reading
+- `D0N_03_Exercises/` — practice questions (`day0N_exercises.sql`) and a reference answer key
+  (`day0N_exercises_solutions.sql`)
+
+Subfolders are numbered so they list in read order; every file inside them is prefixed `day0N_` so
+it's unambiguous even outside its folder.
 
 Each project day (06–09) contains a `Reading_0N.md` (business framing), a `project_0N.ipynb`
 notebook, and a `Data_0N.md` pointing to the dataset source.
@@ -30,6 +35,7 @@ notebook, and a `Data_0N.md` pointing to the dataset source.
 ## Setup
 
 Each MySQL-backed day expects a local MySQL server. Run the relevant database script once before
-starting that day (`Day 01/world_db.sql` for Day 01; `Day 02/Database_Creation/Parch & Posey
-Database.sql` for Days 02–05). From Day 05 onward you'll also need Python packages listed in
-`requirements.txt` and a `.env` file (see `.env.example`) holding your local MySQL credentials.
+starting that day (`Day 01/D01_01_Materials/world_db.sql` for Day 01; `Day 02/Database_Creation/
+Parch & Posey Database.sql` for Days 02–05). From Day 05 onward you'll also need Python packages
+listed in `requirements.txt` and a `.env` file (see `.env.example`) holding your local MySQL
+credentials.
