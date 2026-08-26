@@ -86,8 +86,8 @@ changes what backs Days 03–05:
   - `Data_0N.md` — Kaggle source link + download instructions (data itself is **not** committed;
     the European Soccer `.sqlite` alone is 299 MB — same "link, don't commit" pattern the old
     material already used via `Kaggle Dataset.txt` / `data.docx` pointers)
-- **Database reuse:** Day 01 keeps its own `world` setup. Day 02's `Database_Creation` /
-  `Database_Description` (`parch_and_posey`) is shared by Days 02–05 — Days 03–05 don't duplicate
+- **Database reuse:** Day 01 keeps its own `world` setup. Day 02's `D02_01_Materials/` DB setup and
+  schema reference (`parch_and_posey`) is shared by Days 02–05 — Days 03–05 don't duplicate
   it, their reading material just says "run Day 02's script first."
 - **Root additions:** `README.md` (9-day table of contents), `.env.example` (MySQL credentials
   template for Day 05+), `requirements.txt` (Python packages used from Day 05 on).
@@ -121,15 +121,21 @@ changes what backs Days 03–05:
 - Introduced `_slide_kit/deckkit.py`, the shared `.pptx` builder every later day's
   `D0N_01_Materials/build.py` will reuse — see `_slide_kit/README.md`.
 
-### Day 02 — Filtering & Aggregation
-- Already done in this session: `sql_for_beginners.sql` (every statement titled, bugs fixed) and
-  its exercises (reordered to match the walkthrough, business-framed, harder, DATE-functions
-  section added). *(Currently still on the old `Live_Session_02` / `Exercises_02` / `Slides_02`
-  layout on disk — gets moved onto the `D02_01_Materials` / `D02_02_Walkthrough` /
-  `D02_03_Exercises` + `day02_` file-prefix convention, matching Day 01, when next touched.)*
-- Add: `day02_reading.md` inside `D02_01_Materials/`, plus the slide deck. Optionally fold in a few
-  questions from `Updated MySQL Tutorial/1- Basics/SQL Basics Practice (Answers).ipynb` (25 Qs,
-  WHERE/LIKE/IN/BETWEEN on `parch_and_posey`) if the exercises need more variety.
+### Day 02 — Filtering & Aggregation — DONE
+- Migrated onto the Day 01 convention: `D02_02_Walkthrough/day02_filtering_and_aggregation.sql`
+  (every statement titled, bugs fixed, from earlier in this session) and
+  `D02_03_Exercises/day02_exercises.sql` + `day02_exercises_solutions.sql` (reordered to match the
+  walkthrough, business-framed, harder, DATE-functions section added).
+- `D02_01_Materials/` — DB setup (`Parch & Posey Database.sql`; the SQL Server T-SQL variant that
+  used to sit alongside it was dropped — this course is MySQL-only),
+  `Parch_and_Posey.md` + `parch_and_posey_erd.svg` (detailed schema reference) and
+  `dates_specifiers.jpg` (DATE_FORMAT chart) carried over from the old layout; `day02_reading.md`
+  (new — Mermaid ERD for the region→sales_reps→accounts→{orders,web_events} chain, plus ASCII
+  diagrams for AND/OR and GROUP BY) and `Day 02 - Filtering & Aggregation.pptx` (16 slides — new
+  `chain_fork_slide` and `group_by_diagram_slide` diagram types added to `_slide_kit/deckkit.py`
+  for this day's ERD shape and GROUP BY bucketing visual).
+- Not folded in: the `Updated MySQL Tutorial/1- Basics/SQL Basics Practice (Answers).ipynb` bonus
+  questions — exercises already had enough variety without them.
 
 ### Day 03 — JOINs + CASE
 - Primary source: `Updated MySQL Tutorial/2- Intermediate/SQL Intermediate.ipynb` — its JOIN section

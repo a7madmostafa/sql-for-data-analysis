@@ -22,8 +22,8 @@ notebook, and a `Data_0N.md` pointing to the dataset source.
 
 | Day | Topic | Database | Status |
 |---|---|---|---|
-| [01](Day%2001) | SQL Foundations — SELECT, LIMIT/OFFSET, DISTINCT, ORDER BY, COUNT | `world` (MySQL) | |
-| [02](Day%2002) | WHERE, operators, BETWEEN, IN, NULL, LIKE, GROUP BY, aggregates, DATE functions | `parch_and_posey` (MySQL) | |
+| [01](Day%2001) | SQL Foundations — SELECT, LIMIT/OFFSET, DISTINCT, ORDER BY, COUNT | `world` (MySQL) | done |
+| [02](Day%2002) | WHERE, operators, BETWEEN, IN, NULL, LIKE, GROUP BY, aggregates, DATE functions | `parch_and_posey` (MySQL) | done |
 | 03 | JOINs (INNER/multi-table/HAVING/LEFT/RIGHT/UNION) + CASE | `parch_and_posey` (MySQL) | planned |
 | 04 | String Functions, Subqueries, CTEs, Temp Tables, Views | `parch_and_posey` (MySQL) | planned |
 | 05 | Window Functions, Stored Procedures, Python → MySQL & SQLite | `parch_and_posey` (MySQL) + SQLite | planned |
@@ -35,7 +35,7 @@ notebook, and a `Data_0N.md` pointing to the dataset source.
 ## Setup
 
 Each MySQL-backed day expects a local MySQL server. Run the relevant database script once before
-starting that day (`Day 01/D01_01_Materials/world_db.sql` for Day 01; `Day 02/Database_Creation/
+starting that day (`Day 01/D01_01_Materials/world_db.sql` for Day 01; `Day 02/D02_01_Materials/
 Parch & Posey Database.sql` for Days 02–05). From Day 05 onward you'll also need Python packages
 listed in `requirements.txt` and a `.env` file (see `.env.example`) holding your local MySQL
 credentials.
