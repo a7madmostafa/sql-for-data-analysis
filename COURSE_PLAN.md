@@ -137,20 +137,25 @@ changes what backs Days 03–05:
 - Not folded in: the `Updated MySQL Tutorial/1- Basics/SQL Basics Practice (Answers).ipynb` bonus
   questions — exercises already had enough variety without them.
 
-### Day 03 — JOINs + CASE
+### Day 03 — JOINs + CASE — DONE
 - Primary source: `Updated MySQL Tutorial/2- Intermediate/SQL Intermediate.ipynb` — its JOIN section
   (INNER implicit via `ON`, multi-table, aliasing, LEFT/LEFT OUTER, RIGHT/RIGHT OUTER, FULL emulated
-  via `UNION`) and its CASE section.
-- Supplement from `OLD SQL/SQL_03/02- Join_Statements.sql`: the HAVING-paired-with-JOIN examples and
-  the anti-join pattern (`LEFT JOIN ... WHERE x.id IS NULL`) aren't in the new source and are worth
-  keeping. `01- Practice.sql` still works as a Day 02 warm-up review. `SQL_01/many_to_many_example.md`
-  (relationship primer) still opens `Reading_03.md`, ahead of JOIN syntax.
-- Exercises: `Updated MySQL Tutorial/2- Intermediate/SQL Intermediate Practice.ipynb` (10 blank JOIN
-  questions) plus its `(Answers)` sibling's extra Q11–17 (CASE-based tiering, month/year grouping) —
-  good direct source for `Exercises_03`, reframed as business questions per this course's style.
-- Note: `SQL 03/Join_Statements.sql` at the repo root is an unmodified copy of the *old* JOIN source,
-  staged there before this new material surfaced — now secondary/supplementary rather than primary.
-- Build: `Walkthrough_03`, `Exercises_03`, `Reading_03.md`, `Slides_03`.
+  via `UNION`) and its CASE section, plus its `SQL Intermediate Practice.ipynb` (10 blank JOIN
+  questions) and the `(Answers)` sibling's extra Q11–17 — reframed as business questions.
+- Supplemented from `OLD SQL/SQL_03/02- Join_Statements.sql`: the HAVING-paired-with-JOIN examples
+  and the anti-join pattern (`LEFT JOIN ... WHERE x.id IS NULL`), which weren't in the new source.
+  `SQL_01/many_to_many_example.md`'s 1:1/1:N/N:N framing (already used in Day 01) is what
+  `day03_reading.md` opens with, reframed as "a JOIN is how you follow a foreign key."
+- Dropped: the sourced Q17 (find the top sales rep per region) needs a subquery/CTE — out of scope
+  for Day 03. Reworked into challenge question C3 instead, using `COUNT(DISTINCT ...)` to solve a
+  similar-shaped problem (reps who are both top performers AND manage several accounts) without a
+  subquery, teaching the JOIN-fan-out-inflates-COUNT gotcha along the way.
+- `D03_01_Materials/day03_reading.md` + `Day 03 - JOINs + CASE.pptx` (15 slides). One slide (LEFT
+  JOIN row-matching) is built with raw `deckkit` primitives directly in `build.py` rather than a new
+  named method — a one-off, not clearly reusable elsewhere yet.
+- Bug fixed along the way (affects all three decks, all rebuilt): `cards_slide`'s card height was
+  fixed regardless of description length, so a 3-line description overflowed into the next card.
+  Now sized dynamically, same fix pattern already used for `code_slide`'s notes column.
 
 ### Day 04 — String Functions, Subqueries, CTEs, Temp Tables, Views
 - String functions: `Updated MySQL Tutorial/3- Advanced/string operations.sql` (`LTRIM`/`RTRIM`/
