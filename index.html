@@ -160,11 +160,31 @@ footer a{color:var(--gray-muted)}
     </div>
   </div>
 
-  <div class="day-card planned">
+  <div class="day-card">
     <div class="day-num">DAY 04</div>
     <div class="day-body">
       <div class="day-head"><span class="day-title">String Functions, Subqueries, CTEs, Temp Tables, Views</span><span class="db-tag">parch_and_posey (MySQL)</span></div>
-      <p class="day-topics">Not built yet.</p>
+      <p class="day-topics">LTRIM/RTRIM/TRIM, LEFT/RIGHT/SUBSTRING/LOCATE, CONCAT/REPLACE, COALESCE/IFNULL, subqueries, CTEs, temp tables, views.</p>
+      <details class="day-details">
+        <summary><span class="caret">▸</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Trim, slice, and rebuild text with <code class="inline">LTRIM</code>/<code class="inline">RTRIM</code>/<code class="inline">TRIM</code>, <code class="inline">LEFT</code>/<code class="inline">RIGHT</code>/<code class="inline">SUBSTRING</code>/<code class="inline">LOCATE</code>, <code class="inline">CONCAT</code>, <code class="inline">REPLACE</code>, <code class="inline">LOWER</code>/<code class="inline">UPPER</code>/<code class="inline">LENGTH</code>.</li>
+            <li>Fill in gaps left by a <code class="inline">CASE</code> expression with <code class="inline">COALESCE</code>/<code class="inline">IFNULL</code>.</li>
+            <li>Write a scalar subquery (one value) and a row subquery (a tuple, matched with <code class="inline">IN</code>).</li>
+            <li>Use a subquery as a derived table in <code class="inline">FROM</code>, then rewrite the same idea more readably with a CTE.</li>
+            <li>Chain multiple CTEs together, and know when to reach for a temporary table or a view instead.</li>
+            <li>Choose the right tool — subquery, CTE, temp table, or view — for a given reuse scenario.</li>
+          </ul>
+          <p class="before-start"><strong>Before you start:</strong> run <code class="inline">Databases/Parch &amp; Posey Database.sql</code> if you haven't already.</p>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="Day%2004/day04_reading.html">Reading</a>
+        <a href="Day%2004/day04_string_functions_subqueries_ctes.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Walkthrough</a>
+        <a href="Day%2004/day04_exercises.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Exercises</a>
+        <a href="Day%2004/day04_exercises_solutions.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Solutions</a>
+      </div>
     </div>
   </div>
 
