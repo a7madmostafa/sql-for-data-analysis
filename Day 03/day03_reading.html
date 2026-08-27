@@ -203,6 +203,7 @@ every time, especially once you're joining three or four tables.</p>
 <h2 class="section"><span class="num">3</span>INNER JOIN basics</h2>
 <p>Plain <code class="inline">JOIN</code> is shorthand for <code class="inline">INNER JOIN</code> —
 it returns only the rows that find a match on <em>both</em> sides.</p>
+<p><strong>Business question:</strong> Finance wants order and account details together in one view — combine every order with the account that placed it.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> orders.id, accounts.name, orders.occurred_at
@@ -224,6 +225,7 @@ it returns only the rows that find a match on <em>both</em> sides.</p>
 <h2 class="section"><span class="num">4</span>Multi-table JOINs</h2>
 <p>Each additional <code class="inline">JOIN</code> follows one more foreign key — chaining three or
 four tables together is just repeating the pattern from Section 2.</p>
+<p><strong>Business question:</strong> leadership wants to trace every order back to the sales rep who owns that account, and regional management wants a per-order unit price broken out by region.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="com">-- 3 tables: orders -> accounts -> sales_reps</span>
@@ -249,6 +251,7 @@ four tables together is just repeating the pattern from Section 2.</p>
 <h2 class="section"><span class="num">5</span>JOIN + GROUP BY</h2>
 <p>Nothing new syntactically — the JOIN happens first, combining rows from multiple tables, and
 <code class="inline">GROUP BY</code> then works on the result exactly as it did in Day 02.</p>
+<p><strong>Business question:</strong> which accounts generate the most total revenue, and how often does each sales rep's accounts use each marketing channel?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> a.name <span class="kw">AS</span> account_name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
@@ -271,6 +274,7 @@ four tables together is just repeating the pattern from Section 2.</p>
 <h2 class="section"><span class="num">6</span>JOIN + HAVING</h2>
 <p><code class="inline">WHERE</code> filters rows before grouping; <code class="inline">HAVING</code>
 filters groups after aggregation — the same rule from Day 02, now applied across joined tables.</p>
+<p><strong>Business question:</strong> which sales reps manage more than 5 accounts — are any of them overloaded?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="com">-- sales reps who manage more than 5 accounts</span>
@@ -328,6 +332,7 @@ is the mirror image: keep everything on the right, matched or not.</p>
 </svg>
 <figcaption>LEFT JOIN from accounts to orders — Delta LLC has no orders, but LEFT JOIN keeps it in the result with NULLs where order columns would be.</figcaption>
 </figure>
+<p><strong>Business question:</strong> which accounts exist, whether or not they've ever placed an order — and, mirrored, which orders exist even if their account record can no longer be resolved?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="com">-- every account, whether or not it has orders</span>
@@ -352,6 +357,7 @@ is the mirror image: keep everything on the right, matched or not.</p>
 <p>A <code class="inline">LEFT JOIN</code> plus <code class="inline">WHERE ... IS NULL</code> isolates
 exactly the rows that found <em>no</em> match — this pattern is called an
 <strong>anti-join</strong>.</p>
+<p><strong>Business question:</strong> which accounts have NEVER placed a single order — a churn/onboarding red-flag list for the sales team?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="com">-- accounts with NO orders at all</span>
@@ -371,6 +377,7 @@ exactly the rows that found <em>no</em> match — this pattern is called an
 sides, matched or not). MySQL doesn't — you get the same result by taking the
 <code class="inline">UNION</code> of a <code class="inline">LEFT JOIN</code> and a
 <code class="inline">RIGHT JOIN</code>.</p>
+<p><strong>Business question:</strong> compliance wants a single report covering every order-account relationship — matched, order-only, and account-only rows, all at once.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> *
@@ -403,6 +410,7 @@ sides, matched or not). MySQL doesn't — you get the same result by taking the
 so order matters whenever ranges could overlap. <code class="inline">ELSE</code> is optional;
 without it, rows that hit no <code class="inline">WHEN</code> come back <code class="inline">NULL</code>
 instead of a fallback value.</p>
+<p><strong>Business question:</strong> flag every order "Large" or "Small" for a dashboard, and compute a safe per-unit price that won't crash on zero-quantity orders.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> id, account_id, total_amt_usd,
@@ -428,6 +436,7 @@ instead of a fallback value.</p>
 <p>A <code class="inline">CASE</code> inside — or alongside — an aggregate is how you bucket
 continuous values (order totals, account lifetime spend) into discrete tiers for reporting, with no
 separate lookup table required.</p>
+<p><strong>Business question:</strong> bucket every order into a size category for reporting, and rank every account into top/middle/low lifetime-value tiers based on total spend.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="com">-- bucket every order into a size category, then count each bucket</span>
@@ -463,6 +472,7 @@ separate lookup table required.</p>
 <p><code class="inline">HAVING</code> treats a <code class="inline">CASE</code>-derived value like any
 other aggregate result — you can filter on the same expression a <code class="inline">CASE</code>
 uses to decide its label.</p>
+<p><strong>Business question:</strong> which sales reps fall specifically in the "under $5k total sales" category — reps who might need extra support?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> s.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales,

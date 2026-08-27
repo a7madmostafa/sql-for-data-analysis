@@ -497,6 +497,7 @@ predict the structure of) almost any SELECT you'll ever encounter:</p>
 <span class="kw">ORDER BY</span> &lt;column&gt;
 <span class="kw">LIMIT</span> &lt;count&gt;;</div>
 </div>
+<p><strong>Business question:</strong> a travel-industry analyst wants a quick regional overview of every country — just region, continent, and name to start.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> Region, Continent, Name
@@ -544,6 +545,7 @@ results" works on any website with a paginated table.</p>
 </svg>
 <figcaption>LIMIT 3 OFFSET 2 on an 8-row table — skip the first 2, return the next 3.</figcaption>
 </figure>
+<p><strong>Business question:</strong> the team only wants to review one slice of the country list at a time — show "page 2," 3 countries per page.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
   <div class="code-body"><span class="com">-- standard SQL</span>
@@ -560,6 +562,7 @@ results" works on any website with a paginated table.</p>
 </div>
 
 <h2 class="section"><span class="num">12</span>DISTINCT</h2>
+<p><strong>Business question:</strong> before building a region filter for a dashboard, find out what regions actually exist in the data.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
   <div class="code-body"><span class="kw">SELECT DISTINCT</span> Region
@@ -574,6 +577,7 @@ results" works on any website with a paginated table.</p>
 <h2 class="section"><span class="num">13</span>Aggregation: COUNT</h2>
 <p><code class="inline">COUNT</code> is your first <strong>aggregate function</strong> — instead of
 returning one row per input row, it collapses many rows into a single summary number.</p>
+<p><strong>Business question:</strong> a stakeholder asks three things at once — how many countries are in this dataset, how many actually have a code on file, and how many distinct regions are represented?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
   <div class="code-body"><span class="kw">SELECT COUNT</span>(*) <span class="kw">AS</span> CNTRY_CNT <span class="kw">FROM</span> country;
@@ -587,6 +591,7 @@ returning one row per input row, it collapses many rows into a single summary nu
 </div>
 
 <h2 class="section"><span class="num">14</span>ORDER BY</h2>
+<p><strong>Business question:</strong> an expansion team wants a shortlist — the 5 largest countries by population, most promising markets first.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
   <div class="code-body"><span class="com">-- Top 5 countries by population</span>

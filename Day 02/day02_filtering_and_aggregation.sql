@@ -1,32 +1,29 @@
 USE parch_and_posey;
 
--- Preview the orders table's columns and types before querying it
+-- Before analyzing order data, check what columns are actually available to work with
 DESCRIBE orders;
 
 -- ======================================
 -- SECTION 1 — LIMIT & OFFSET
 -- ======================================
 
--- Return a literal string (no FROM clause needed)
+-- Quick sanity check that the client is connected and running queries at all (no FROM clause needed)
 SELECT "Hello World" AS Welcome;
 
--- Basic arithmetic in a SELECT
+-- Confirm basic arithmetic works in a SELECT before trusting it inside a real calculation
 SELECT 10/5;
 
-
--- Get every row from the orders table (no LIMIT yet — compare to the versions below)
+-- Pull every order on file, no filtering yet — see the full shape of the raw data (compare to the versions below)
 SELECT *
 FROM orders;
 
--- Skip the first 10 rows, then return the next 2 rows
--- Useful for pagination
+-- The sales team only wants to preview "page 2" of results — skip the first 10 orders, show the next 2
 SELECT *
 FROM orders
 LIMIT 2 OFFSET 10;
 
--- MySQL-style shortcut:
--- LIMIT offset, number_of_rows
--- Skip 10 rows, then return 2 rows
+-- Same "page 2" request, MySQL-style shortcut:
+-- LIMIT offset, number_of_rows — skip 10 rows, then return 2 rows
 SELECT *
 FROM orders
 LIMIT 10, 2;
@@ -35,11 +32,11 @@ LIMIT 10, 2;
 -- SECTION 2 — DISTINCT
 -- ======================================
 
--- Get unique marketing channels only (no duplicates)
+-- Marketing wants to know which channels actually drive traffic — list every unique channel
 SELECT DISTINCT channel
 FROM web_events;
 
--- Count how many distinct channels exist
+-- And in total, how many different channels are being used?
 SELECT COUNT(DISTINCT channel) AS channels_cnt
 FROM web_events;
 
@@ -48,28 +45,28 @@ FROM web_events;
 -- SECTION 3 — ORDER BY
 -- ======================================
 
--- Sort accounts alphabetically by name (ASC is default)
+-- Give the sales team an alphabetical account directory
 SELECT *
 FROM accounts
 ORDER BY name;
 
--- Sort orders by total_amt_usd
+-- Which orders were the biggest, in dollar terms?
 SELECT *
 FROM orders
 ORDER BY total_amt_usd DESC;
 
--- Sort by column position instead of name (3 = total_amt_usd)
+-- Same "biggest orders first" question, referenced by column position instead of name (3 = total_amt_usd)
 SELECT id, total, total_amt_usd
 FROM orders
 ORDER BY 3 DESC;
 
--- Sort accounts by sales_rep_id, referenced by column position (2 = sales_rep_id)
+-- Group the account list by sales rep, highest rep ID first, for a quick rep-assignment review (2 = sales_rep_id)
 SELECT name, sales_rep_id, primary_poc
 FROM accounts
 ORDER BY 2 DESC;
 
 
--- Sort by sales_rep_id ascending, and within each rep sort by name descending
+-- Organize accounts by sales rep, and alphabetize (reverse) within each rep's book of accounts
 SELECT *
 FROM accounts
 ORDER BY sales_rep_id ASC, name DESC;
@@ -79,23 +76,23 @@ ORDER BY sales_rep_id ASC, name DESC;
 -- SECTION 4 — AGGREGATION FUNCTIONS
 -- ======================================
 
--- Count total number of orders
+-- How many orders has Parch & Posey processed in total?
 SELECT COUNT(id) AS Orders_count
 FROM orders;
 
--- Count only non-null order totals (COUNT ignores NULLs, unlike COUNT(*))
+-- How many of those orders actually have a recorded dollar total? (COUNT ignores NULLs, unlike COUNT(*))
 SELECT COUNT(total_amt_usd) AS Non_Null_count
 FROM orders;
 
--- Get the smallest order total from the orders table
+-- What's the smallest order Parch & Posey has ever received?
 SELECT MIN(total_amt_usd) AS MinOrderTotal
 FROM orders;
 
--- Get the average order total
+-- What's the average order size, across every order on record?
 SELECT AVG(total_amt_usd) AS AvgOrderTotal
 FROM orders;
 
--- Multiple aggregate calculations in one query
+-- Finance wants one summary row: order count, smallest, biggest, average, and total revenue, all at once
 SELECT
     COUNT(total_amt_usd) AS OrderCount,     		-- Number of non-null order totals
     MIN(total_amt_usd) AS MinTotal,         		-- Lowest order total
@@ -109,41 +106,41 @@ FROM orders;
 -- SECTION 5 — WHERE CONDITIONS
 -- ======================================
 
--- Get orders worth more than 100,000 USD
+-- Which orders were worth more than $100,000 — the company's biggest deals?
 SELECT *
 FROM orders
 WHERE total_amt_usd > 100000
 ORDER BY total_amt_usd DESC;
 
--- Get orders before 2015
+-- Pull every order placed before 2015, for a look back at the company's earliest years
 SELECT *
 FROM orders
 WHERE occurred_at < "2015-01-01"
 ORDER BY occurred_at;
 
 
--- Get all web events that came through Facebook
+-- Which web events came in through Facebook specifically?
 SELECT *
 FROM web_events
 WHERE channel = 'facebook';
 
--- Get all web events that came through direct traffic
+-- Which web events came in through direct traffic (no referral) instead?
 SELECT *
 FROM web_events
 WHERE channel = 'direct';
 
--- Count number of Facebook web events
+-- How many web events, in total, came through Facebook?
 SELECT COUNT(*) AS Facebook_cnt
 FROM web_events
 WHERE channel = 'facebook';
 
--- Order count and average order total for the Walmart account (account_id = 1001)
+-- How many orders has Walmart (account 1001) placed, and what's their average order size?
 SELECT 	COUNT(total_amt_usd) AS No_of_Orders,
 		AVG(total_amt_usd) AS AvgOrderTotal
 FROM orders
 WHERE account_id = 1001;
 
--- Order count and average order total for account_id = 1011
+-- Same question, for a different account (1011)
 SELECT  COUNT(total_amt_usd) AS Orders_1011,
 		AVG(total_amt_usd) AS AvgOrderTotal
 FROM orders
@@ -154,17 +151,17 @@ WHERE account_id = 1011;
 -- SECTION 6 — NOT EQUAL CONDITIONS
 -- ======================================
 
--- All orders except those placed through account_id = 1001
+-- Every order EXCEPT those from Walmart (account 1001) — useful when you want to exclude one big customer from a report
 SELECT *
 FROM orders
 WHERE account_id != 1001;
 
--- Same as above (<> is standard SQL)
+-- Same exclusion, standard SQL spelling (<>)
 SELECT *
 FROM orders
 WHERE account_id <> 1001;
 
--- Same logic using NOT keyword
+-- Same exclusion again, using the NOT keyword instead
 SELECT *
 FROM orders
 WHERE NOT account_id = 1001;
@@ -174,13 +171,13 @@ WHERE NOT account_id = 1001;
 -- SECTION 7 — AND / OR CONDITIONS
 -- ======================================
 
--- Facebook web events for account_id = 1001
+-- Did Walmart specifically generate any Facebook traffic?
 SELECT *
 FROM web_events
-WHERE channel = 'facebook' 
+WHERE channel = 'facebook'
 AND account_id = 1001;
 
--- Web events that are Facebook OR for account_id = 1001
+-- Now cast a much wider net: everything Facebook overall, plus everything from Walmart, regardless of channel
 SELECT *
 FROM web_events
 WHERE channel = 'facebook'
@@ -191,18 +188,18 @@ OR account_id = 1001;
 -- SECTION 8 — RANGE FILTERING (BETWEEN)
 -- ======================================
 
--- Orders worth between 500 (inclusive) and 999
+-- Which orders fall in the mid-size $500-$999 range, written with plain AND logic?
 SELECT *
 FROM orders
 WHERE total_amt_usd < 1000
 AND total_amt_usd >= 500;
 
--- Same logic using BETWEEN (inclusive)
+-- Same $500-$999 question, written the shorter way with BETWEEN (inclusive on both ends)
 SELECT *
 FROM orders
 WHERE total_amt_usd BETWEEN 500 AND 999;
 
--- All orders for the last 2 days in 2014
+-- Which orders came in during the final two days of 2014 — useful for a year-end cutoff report?
 SELECT *
 FROM orders
 WHERE occurred_at BETWEEN "2014-12-30" AND "2015-01-01";
@@ -212,14 +209,14 @@ WHERE occurred_at BETWEEN "2014-12-30" AND "2015-01-01";
 -- SECTION 9 — IN vs OR
 -- ======================================
 
--- Using OR (less readable for many values)
+-- Marketing wants every event from Facebook, Twitter, or organic search — written the long way with OR
 SELECT *
 FROM web_events
 WHERE channel = 'facebook'
 OR channel = 'twitter'
 OR channel = 'organic';
 
--- Same logic using IN (recommended)
+-- Same three-channel question, written the cleaner way with IN
 SELECT *
 FROM web_events
 WHERE channel IN ('facebook','twitter', 'organic');
@@ -228,14 +225,14 @@ WHERE channel IN ('facebook','twitter', 'organic');
 -- SECTION 10 — NULL CHECKS
 -- ======================================
 
--- Accounts where a primary point of contact is missing
+-- Compliance wants a list of accounts missing a primary point of contact
 -- (Parch & Posey has no NULLs, so this returns 0 rows — the syntax still applies
 --  to any table/column where NULLs do exist)
 SELECT *
 FROM accounts
 WHERE primary_poc IS NULL;
 
--- Accounts where a primary point of contact is available
+-- And the opposite: accounts that DO have a point of contact on file
 -- (returns every row here, since primary_poc is always populated)
 SELECT *
 FROM accounts
@@ -246,31 +243,31 @@ WHERE primary_poc IS NOT NULL;
 -- SECTION 11 — LIKE (Pattern Matching)
 -- ======================================
 
--- Account name starts with letter A
+-- Which accounts have a name starting with the letter A — useful for an alphabetized client directory page?
 SELECT *
 FROM accounts
 WHERE name LIKE 'A%';
 
--- % means any number of characters greater than or equal to 0
+-- % means any number of characters, zero or more
 
--- Account name contains letter a anywhere
+-- Which accounts have the letter 'a' anywhere in their name?
 SELECT *
 FROM accounts
 WHERE name LIKE '%a%';
 
--- Account name with a as a second character
+-- Which accounts have 'a' as the second letter of their name?
 SELECT *
 FROM accounts
 WHERE name LIKE '_a%';
 
--- _ means only one character
+-- _ means exactly one character
 
--- Account name exactly 5 characters long, with 'a' as the 2nd character
+-- Which accounts have a 5-character name with 'a' as the second letter — a narrower pattern-matching example?
 SELECT *
 FROM accounts
 WHERE name LIKE '_a___';
 
--- Web events channels ending with 'ct' (e.g. 'direct')
+-- Which web traffic channels have names ending in 'ct' (like 'direct')?
 SELECT *
 FROM web_events
 WHERE channel LIKE '%ct';
@@ -280,14 +277,14 @@ WHERE channel LIKE '%ct';
 -- SECTION 12 — GROUP BY
 -- ======================================
 
--- Count web events by channel
+-- Which marketing channel drives the most web traffic overall?
 SELECT channel, COUNT(channel) AS Cnt
 FROM web_events
 GROUP BY channel
 ORDER BY Cnt DESC;
 
 
--- Count web events per channel, for the Walmart account only
+-- Which channels does Walmart specifically use most — what are their top 3?
 SELECT channel, COUNT(*) AS Cnt
 FROM web_events
 WHERE account_id = 1001
@@ -295,7 +292,7 @@ GROUP BY channel
 ORDER BY Cnt DESC
 LIMIT 3;
 
--- Number of events for accounts (1001, 1011, 1021)
+-- How much web activity did each of these three key accounts (1001, 1011, 1021) generate?
 SELECT account_id, COUNT(account_id) AS Cnt
 FROM web_events
 WHERE account_id IN (1001,1011,1021)
@@ -303,14 +300,14 @@ GROUP BY account_id
 ORDER BY account_id ASC;
 
 
--- Number of events for accounts (1001, 1011, 1021), per channel
+-- For those same three accounts, break the activity down by channel too — which channel does each account favor?
 SELECT account_id, channel, COUNT(channel) AS Cnt
 FROM web_events
 WHERE account_id IN (1001,1011,1021)
 GROUP BY account_id, channel
 ORDER BY account_id ASC;
 
--- Same, but restricted to just the 'organic' and 'adwords' channels
+-- Now narrow that same view to just organic and paid-search (adwords) traffic
 SELECT account_id, channel, COUNT(channel) AS Cnt
 FROM web_events
 WHERE channel IN ('organic', 'adwords')
@@ -318,26 +315,25 @@ AND account_id IN (1001,1011,1021)
 GROUP BY account_id, channel;
 
 
--- Count sales reps per region, ordered by count descending
+-- How many sales reps are assigned to each region, most-staffed region first?
 SELECT region_id, COUNT(*) AS Cnt
 FROM sales_reps
 GROUP BY region_id
 ORDER BY Cnt DESC;
 
--- Same, using COUNT(region_id) instead of COUNT(*), unordered
+-- Same headcount-per-region question, using COUNT(region_id) instead of COUNT(*), unordered
 SELECT region_id, COUNT(region_id) AS Cnt
 FROM sales_reps
 GROUP BY region_id;
 
--- Count accounts per sales rep
--- Sorted by count ascending
+-- How many accounts does each sales rep manage, lightest workload first?
 SELECT sales_rep_id, COUNT(*) AS Cnt
 FROM accounts
 GROUP BY sales_rep_id
 ORDER BY Cnt ASC;
 
 
--- Same as the channel count above, written with multi-line formatting
+-- Same channel-traffic question as Section 12's first query, just reformatted for a shared report
 SELECT
     channel,
     COUNT(*) AS EventCount
@@ -345,7 +341,7 @@ FROM web_events
 GROUP BY channel
 ORDER BY EventCount DESC;
 
--- Order statistics per account, for 2014 orders only
+-- For 2014 specifically, which accounts ordered the most, and what did their orders look like on average?
 SELECT
     account_id,
     COUNT(*) AS OrderCount,
@@ -358,11 +354,11 @@ WHERE occurred_at LIKE "2014%"
 GROUP BY account_id
 ORDER BY OrderCount DESC;
 
--- Total number of orders across all years, for comparison against the 2014-only counts above
+-- For comparison, how many orders exist across ALL years combined, not just 2014?
 SELECT COUNT(*) AS OrderCount
 FROM orders;
 
--- Same order statistics, all years, ordered by column position (3 = AvgTotal)
+-- Same per-account order stats as above, but across every year, sorted by average order size (3 = AvgTotal)
 SELECT
     account_id,
     COUNT(*) AS OrderCount,
@@ -374,7 +370,7 @@ FROM orders
 GROUP BY account_id
 ORDER BY 3 DESC;
 
--- Same order statistics, sorted by account_id instead of AvgTotal
+-- Same stats again, resorted by account ID instead of average size, for a tidy lookup table
 SELECT
 	account_id,
     COUNT(*) AS OrderCount,
@@ -387,7 +383,7 @@ GROUP BY account_id
 ORDER BY account_id;
 
 
--- Event count plus first/last event timestamp, per account and channel, for accounts (1001, 1011, 1021)
+-- For those three key accounts, when was each channel first and last used, and how often?
 SELECT
 	account_id, channel,
     COUNT(*) AS EventCount,
@@ -404,7 +400,7 @@ ORDER BY account_id;
 -- for REF : https://www.w3schools.com/sql/func_mysql_date.asp
 -- ======================================
 
--- Top 10 individual dates with the most orders
+-- Which single dates had the most orders — were there any spike days worth investigating?
 SELECT
     DATE(occurred_at) AS order_date,
     COUNT(*) num_orders
@@ -415,7 +411,7 @@ LIMIT 10 ;
 
 -- =======================================================================================================================================
 
--- Break each order's timestamp into year, month, day, and hour components
+-- Ops wants every order's timestamp broken into year, month, day, and hour for a custom reporting tool
 
 SELECT
     id,
@@ -426,26 +422,26 @@ SELECT
     HOUR(occurred_at) AS 'hour'
 FROM orders;
 
--- Unique years in orders
+-- Which years does this dataset actually cover?
 SELECT DISTINCT(YEAR(occurred_at)) Years
 FROM orders
 ORDER BY Years;
 
--- Earliest year present in the data
+-- What's the very first year of data on record?
 SELECT Min(YEAR(occurred_at)) MIN_Yr
 FROM orders;
 
--- Latest year present in the data
+-- What's the most recent year of data on record?
 SELECT MAX(YEAR(occurred_at)) MAX_Yr
 FROM orders;
 
--- Earliest and latest order dates
+-- What are the exact earliest and latest order dates in the dataset?
 SELECT
 	Min(DATE(occurred_at)) MIN_Date,
 	MAX(DATE(occurred_at)) MAX_Date
 FROM orders;
 
--- Total revenue per year
+-- How has total revenue trended year over year?
 SELECT
     year(occurred_at) AS OrderYear,
     SUM(total_amt_usd) TOTALRev
@@ -455,7 +451,7 @@ ORDER BY TOTALRev ;
 
 -- =======================================================================================================================================
 
--- Find the sales in terms of total dollars for all orders in each year, ordered from greatest to least. 
+-- Find the sales in terms of total dollars for all orders in each year, ordered from greatest to least.
 -- Do you notice any trends in the yearly sales totals?
 
 -- Using YEAR() — note: ordered ascending here, opposite of the two variants below
@@ -465,7 +461,7 @@ FROM orders
 GROUP BY 1
 ORDER BY 2 ASC;
 
--- Same, using EXTRACT(YEAR FROM ...) instead of YEAR()
+-- Same question, using EXTRACT(YEAR FROM ...) instead of YEAR()
 SELECT
 	EXTRACT(YEAR FROM occurred_at) ord_year,
 	SUM(total_amt_usd) total_spent
@@ -473,7 +469,7 @@ FROM orders
 GROUP BY 1
 ORDER BY 2 DESC;
 
--- Same, using DATE_FORMAT(occurred_at, '%Y') instead of YEAR()
+-- Same question again, using DATE_FORMAT(occurred_at, '%Y') instead of YEAR()
 SELECT
 	DATE_FORMAT(occurred_at,'%Y') ord_year,
     SUM(total_amt_usd) total_spent
@@ -483,7 +479,7 @@ ORDER BY 2 DESC;
 
 -- =======================================================================================================================================
 
--- Which year did Parch & Posey have the greatest sales in terms of total number of orders? 
+-- Which year did Parch & Posey have the greatest sales in terms of total number of orders?
 -- Are all years evenly represented by the dataset?
 
 SELECT YEAR(occurred_at) ord_year,  COUNT(*) Orders_cnt
@@ -493,7 +489,7 @@ ORDER BY 2 DESC;
 
 -- =======================================================================================================================================
 
--- Which month did Parch & Posey have the greatest sales in terms of total dollars? 
+-- Which month did Parch & Posey have the greatest sales in terms of total dollars?
 -- Are all months evenly represented by the dataset?
 
 -- Filtered to 2014–2016 (excludes the partial 2013/2017 data) to avoid skewing the month totals
@@ -505,14 +501,14 @@ WHERE occurred_at BETWEEN '2014-01-01' AND '2017-01-01'
 GROUP BY 1
 ORDER BY 2 DESC;
 
--- Distinct months represented per year, to check how evenly the data is spread
+-- How evenly is the data actually spread across each year — are some months missing entirely?
 SELECT YEAR(occurred_at) ord_year,
 		COUNT(DISTINCT MONTH(occurred_at)) No_of_Months
 FROM orders
 GROUP BY 1
 ORDER BY 2 DESC;
 
--- Distinct days represented per year, to check how evenly the data is spread
+-- Same evenness check, at the day level instead of month
 SELECT YEAR(occurred_at) ord_year,
 		COUNT(DISTINCT DAY(occurred_at)) No_of_Days
 FROM orders
@@ -520,7 +516,7 @@ GROUP BY 1
 ORDER BY 2 DESC;
 -- =======================================================================================================================================
 
--- Orders in Q1, 2015.
+-- Pull every order from Q1 2015 specifically, for a quarterly review
 
 SELECT *
 FROM orders
@@ -529,8 +525,8 @@ AND YEAR(occurred_at) = 2015;
 
 -- =======================================================================================================================================
 
--- Show total sales per month name.
-SELECT 
+-- Which calendar month (Jan, Feb, ...) generates the most total sales, combined across every year?
+SELECT
     MONTHNAME(occurred_at) AS month_name,
     SUM(total_amt_usd) total_sales
 FROM orders
@@ -538,8 +534,8 @@ GROUP BY month_name;
 
 -- =======================================================================================================================================
 
--- Which day of week has highest sales?
-SELECT 
+-- Which day of the week has the highest total sales?
+SELECT
     DAYNAME(occurred_at) AS day_name,
     SUM(total_amt_usd) total_sales
 FROM orders
@@ -552,7 +548,7 @@ ORDER BY total_sales DESC;
 --  (first JOIN in this script — links orders to accounts to filter by name)
 
 SELECT DATE_FORMAT(occurred_at,'%Y-%m') ord_date, SUM(o.gloss_amt_usd) tot_spent
-FROM orders o 
+FROM orders o
 JOIN accounts a
 	ON a.id = o.account_id
 WHERE a.name = 'Walmart'
@@ -562,18 +558,18 @@ LIMIT 1;
 
 -- =======================================================================================================================================
 
--- Expected delivery date.
-SELECT 
+-- Ops needs an expected delivery date for every order — 7 days after it was placed
+SELECT
     id,
     DATE(occurred_at) order_date,
     DATE_ADD(DATE(occurred_at), INTERVAL 7 DAY) AS expected_delivery
 FROM orders;
 
--- Today's date
+-- Quick reference: what does MySQL consider "today" on this server?
 SELECT CURDATE();
 
--- Current date and time
+-- Quick reference: current date and time, for timestamping something happening right now
 SELECT NOW();
 
--- Date 7 days from today
+-- If an order were placed today, what would its 7-day delivery date be?
 SELECT DATE_ADD(CURDATE(), INTERVAL 7 DAY) Delivery

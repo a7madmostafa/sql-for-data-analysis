@@ -278,6 +278,7 @@ nature.</p>
 <p>WHERE narrows which rows a query returns, evaluated <em>before</em>
 <code class="inline">SELECT</code>/<code class="inline">ORDER BY</code>/<code class="inline">LIMIT</code>
 get a chance to do anything — think of it as a gate that rows have to pass through first.</p>
+<p><strong>Business question:</strong> Finance wants to see every order worth more than $100,000 — the company's biggest deals, most valuable first.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> *
@@ -295,6 +296,7 @@ get a chance to do anything — think of it as a gate that rows have to pass thr
   <div class="col good"><h4>AND — narrows</h4><p>Both conditions must hold. <code class="inline">channel = 'facebook' AND account_id = 1001</code> returns only Facebook events, and only for that one account — the smallest of the four possible result sets.</p></div>
   <div class="col bad"><h4>OR — widens</h4><p>Either can hold. Swap in <code class="inline">OR</code> and you get every Facebook event from <em>any</em> account, plus every event (any channel) from account 1001 — often a much bigger, looser result than intended.</p></div>
 </div>
+<p><strong>Business question:</strong> did account 1001 specifically show up on Facebook — versus casting a much wider net for anything Facebook-related, plus everything from that account regardless of channel?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- AND: narrow — only Facebook events from account 1001</span>
@@ -337,6 +339,7 @@ get a chance to do anything — think of it as a gate that rows have to pass thr
 <strong>both endpoints inclusive</strong>. It works on dates too:
 <code class="inline">WHERE occurred_at BETWEEN '2014-12-30' AND '2015-01-01'</code> — a pattern you'll
 use constantly once real reporting periods (last week, last quarter) enter the picture.</p>
+<p><strong>Business question:</strong> which orders fall in the $500–$999 mid-size range, and which orders came in during the final two days of 2014, for a year-end cutoff report?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- numeric range</span>
@@ -354,6 +357,7 @@ use constantly once real reporting periods (last week, last quarter) enter the p
 </div>
 
 <h2 class="section"><span class="num">6</span>IN vs OR</h2>
+<p><strong>Business question:</strong> marketing wants every web event from Facebook, Twitter, or organic search — three channels at once.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- gets unwieldy fast</span>
@@ -437,6 +441,7 @@ per group:</p>
 </svg>
 <figcaption>web_events rows, in original table order, sorted by GROUP BY channel into buckets by color — COUNT(*) then runs once per bucket.</figcaption>
 </figure>
+<p><strong>Business question:</strong> which marketing channel drives the most web traffic overall?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> Cnt
@@ -455,6 +460,7 @@ per group:</p>
 <code class="inline">DAY()</code>, <code class="inline">HOUR()</code>,
 <code class="inline">DATE()</code> (strips the time, keeps the date),
 <code class="inline">MONTHNAME()</code>, <code class="inline">DAYNAME()</code>.</p>
+<p><strong>Business question:</strong> for a quarterly report, pull just the year out of every order's timestamp — three interchangeable ways to do it.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- three equivalent ways to get just the year</span>
@@ -467,6 +473,7 @@ per group:</p>
 </div>
 
 <h3 class="sub">Shifting and truncating dates</h3>
+<p><strong>Business question:</strong> ops needs a delivery date, a "how stale is this order" figure, and monthly order counts — three common date-shifting needs.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- expected delivery = order date + 7 days</span>
