@@ -1,8 +1,7 @@
 # SQL for Data Analysis — Self-Paced Course
 
 A 9-day self-paced MySQL course: five days of core SQL syntax and Python connectivity, followed by
-four applied projects on real datasets. See [`COURSE_PLAN.md`](COURSE_PLAN.md) for the full build
-plan and source-material notes.
+four applied projects on real datasets.
 
 `Databases/` holds the shared database-provisioning scripts for every MySQL-backed day — run the
 relevant one once before starting that day.
@@ -16,8 +15,10 @@ it's unambiguous even outside its folder — containing:
   (`day0N_exercises_solutions.sql`)
 - a `README.md` indexing that day's files, what you'll learn, and the order to work through them
 
-Each project day (06–09) contains a `Reading_0N.md` (business framing), a `project_0N.ipynb`
-notebook, and a `Data_0N.md` pointing to the dataset source.
+Each project day (06–09) contains:
+- `Reading_0N.md` (business framing)
+- `project_0N.ipynb` (the working notebook)
+- `Data_0N.md` (pointing to the dataset source)
 
 ## Table of Contents
 
@@ -35,7 +36,10 @@ notebook, and a `Data_0N.md` pointing to the dataset source.
 
 ## Setup
 
-Each MySQL-backed day expects a local MySQL server. Run the relevant database script once before
-starting that day (`Databases/world_db.sql` for Day 01; `Databases/Parch & Posey Database.sql` for
-Days 02–05). From Day 05 onward you'll also need Python packages listed in `requirements.txt` and a
-`.env` file (see `.env.example`) holding your local MySQL credentials.
+- Each MySQL-backed day expects a local MySQL server.
+- Run the relevant database script once before starting that day:
+  - `Databases/world_db.sql` for Day 01
+  - `Databases/Parch & Posey Database.sql` for Days 02–05
+- From Day 05 onward you'll also need:
+  - Python packages listed in `requirements.txt`
+  - a `.env` file (see `.env.example`) holding your local MySQL credentials

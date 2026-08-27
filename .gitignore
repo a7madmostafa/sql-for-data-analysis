@@ -1,6 +1,10 @@
 # Archived/reference material — kept on disk, not published
 OLD SQL/
 
+# Internal build-planning / agent-instruction docs — not published course content
+CLAUDE.md
+COURSE_PLAN.md
+
 # Secrets
 .env
 
