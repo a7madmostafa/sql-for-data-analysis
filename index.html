@@ -47,6 +47,17 @@ h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:22px;color:
 .db-card a:hover{background:var(--blue);color:white;border-color:var(--blue)}
 .dl-icon{width:11px;height:11px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
+.day-details{margin:2px 0 14px}
+.day-details summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:700;color:var(--blue-dark);list-style:none}
+.day-details summary::-webkit-details-marker{display:none}
+.day-details summary .caret{display:inline-block;margin-right:5px;transition:transform .15s ease}
+.day-details[open] summary .caret{transform:rotate(90deg)}
+.day-details-body{margin-top:10px;padding:14px 16px;background:var(--panel);border-radius:8px}
+.day-details-body ul{margin:0 0 10px;padding-left:18px}
+.day-details-body li{font-size:14px;margin-bottom:5px}
+.day-details-body li:last-child{margin-bottom:0}
+.day-details-body .before-start{margin:10px 0 0;font-size:13.5px;color:var(--gray)}
+
 footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;font-family:'IBM Plex Mono',monospace}
 footer a{color:var(--gray-muted)}
 @media(max-width:640px){.page{padding:36px 22px}h1.title{font-size:30px}.day-card{flex-direction:column}.db-grid{grid-template-columns:1fr}}
@@ -74,12 +85,24 @@ footer a{color:var(--gray-muted)}
     <div class="day-body">
       <div class="day-head"><span class="day-title">SQL Foundations</span><span class="db-tag">world (MySQL)</span></div>
       <p class="day-topics">SELECT, LIMIT/OFFSET, DISTINCT, ORDER BY, COUNT — entities, attributes, and the three relationship types.</p>
+      <details class="day-details">
+        <summary><span class="caret">▸</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Explain what SQL, a database, and a DBMS are — and how they relate to each other.</li>
+            <li>Tell relational and non-relational databases apart, and know why this course uses MySQL.</li>
+            <li>Read an entity-relationship diagram: entities, attributes, and the three relationship types.</li>
+            <li>Write your first real queries: <code class="inline">SELECT</code>, <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>, <code class="inline">DISTINCT</code>, <code class="inline">COUNT</code>, <code class="inline">ORDER BY</code>.</li>
+            <li>Recognize the mistakes almost every beginner makes in their first week, before you make them.</li>
+          </ul>
+          <p class="before-start"><strong>Before you start:</strong> run <code class="inline">Databases/world_db.sql</code> once — creates and loads the <code class="inline">world</code> database.</p>
+        </div>
+      </details>
       <div class="day-links">
         <a class="primary" href="Day%2001/day01_reading.html">Reading</a>
         <a href="Day%2001/day01_sql_foundations.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Walkthrough</a>
         <a href="Day%2001/day01_exercises.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Exercises</a>
         <a href="Day%2001/day01_exercises_solutions.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Solutions</a>
-        <a href="Day%2001/README.md">Day README</a>
       </div>
     </div>
   </div>
@@ -89,12 +112,23 @@ footer a{color:var(--gray-muted)}
     <div class="day-body">
       <div class="day-head"><span class="day-title">Filtering &amp; Aggregation</span><span class="db-tag">parch_and_posey (MySQL)</span></div>
       <p class="day-topics">WHERE, comparison operators, AND/OR, BETWEEN, IN, NULL checks, LIKE, GROUP BY, aggregates, DATE functions.</p>
+      <details class="day-details">
+        <summary><span class="caret">▸</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Filter rows with <code class="inline">WHERE</code>, comparison operators, <code class="inline">AND</code>/<code class="inline">OR</code>, <code class="inline">BETWEEN</code>, <code class="inline">IN</code>, and <code class="inline">NULL</code> checks.</li>
+            <li>Match text patterns with <code class="inline">LIKE</code>.</li>
+            <li>Aggregate per group with <code class="inline">GROUP BY</code>, and know when <code class="inline">WHERE</code> can't do the job but <code class="inline">HAVING</code> can.</li>
+            <li>Pull pieces out of a date/time column and reason about date ranges with <code class="inline">DATE</code> functions.</li>
+          </ul>
+          <p class="before-start"><strong>Before you start:</strong> run <code class="inline">Databases/Parch &amp; Posey Database.sql</code> once — creates and loads the <code class="inline">parch_and_posey</code> database. Shared by Days 02–05.</p>
+        </div>
+      </details>
       <div class="day-links">
         <a class="primary" href="Day%2002/day02_reading.html">Reading</a>
         <a href="Day%2002/day02_filtering_and_aggregation.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Walkthrough</a>
         <a href="Day%2002/day02_exercises.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Exercises</a>
         <a href="Day%2002/day02_exercises_solutions.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Solutions</a>
-        <a href="Day%2002/README.md">Day README</a>
       </div>
     </div>
   </div>
@@ -104,12 +138,24 @@ footer a{color:var(--gray-muted)}
     <div class="day-body">
       <div class="day-head"><span class="day-title">JOINs + CASE</span><span class="db-tag">parch_and_posey (MySQL)</span></div>
       <p class="day-topics">INNER/multi-table JOINs, JOIN + GROUP BY/HAVING, LEFT/RIGHT JOIN, anti-joins, FULL JOIN via UNION, CASE.</p>
+      <details class="day-details">
+        <summary><span class="caret">▸</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Combine rows from multiple tables with <code class="inline">JOIN</code>, and know when a plain (INNER) <code class="inline">JOIN</code> silently drops rows you wanted.</li>
+            <li>Keep unmatched rows with <code class="inline">LEFT</code>/<code class="inline">RIGHT JOIN</code>, and use that same pattern to write an anti-join.</li>
+            <li>Emulate MySQL's missing <code class="inline">FULL JOIN</code> with <code class="inline">UNION</code>.</li>
+            <li>Aggregate and filter across joined tables with <code class="inline">GROUP BY</code> and <code class="inline">HAVING</code>.</li>
+            <li>Add conditional logic with <code class="inline">CASE</code> — labeling rows, and bucketing continuous values into tiers.</li>
+          </ul>
+          <p class="before-start"><strong>Before you start:</strong> run <code class="inline">Databases/Parch &amp; Posey Database.sql</code> if you haven't already.</p>
+        </div>
+      </details>
       <div class="day-links">
         <a class="primary" href="Day%2003/day03_reading.html">Reading</a>
         <a href="Day%2003/day03_joins_and_case.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Walkthrough</a>
         <a href="Day%2003/day03_exercises.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Exercises</a>
         <a href="Day%2003/day03_exercises_solutions.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Solutions</a>
-        <a href="Day%2003/README.md">Day README</a>
       </div>
     </div>
   </div>
