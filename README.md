@@ -5,9 +5,9 @@ four applied projects on real datasets. See [`COURSE_PLAN.md`](COURSE_PLAN.md) f
 plan and source-material notes.
 
 Each lesson day (01–05) contains:
-- `D0N_01_Materials/` — the day's database-setup script, a `day0N_reading.md` write-up (worked
-  examples, gotchas), and a `.pptx` slide deck covering the same ground, often in more depth
-  (concepts, diagrams) — start with the slides
+- `D0N_01_Materials/` — the day's database-setup script and a single self-contained
+  `day0N_reading.html` (concepts, diagrams, worked examples, gotchas — open it directly in a
+  browser, no server needed)
 - `D0N_02_Walkthrough/` — the explained, titled SQL (or notebook) to run alongside the reading
 - `D0N_03_Exercises/` — practice questions (`day0N_exercises.sql`) and a reference answer key
   (`day0N_exercises_solutions.sql`)

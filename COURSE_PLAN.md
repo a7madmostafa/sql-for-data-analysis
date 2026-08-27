@@ -65,16 +65,22 @@ changes what backs Days 03–05:
   `D01_02_Walkthrough`, `D01_03_Exercises`) so they list in read order in a plain file browser —
   established with Day 01, applies to Days 02–05 too.
 - **Lesson-day layout** (Days 1–5), each folder gets:
-  - `D0N_01_Materials/` — a `day0N_reading.md` write-up (concepts, worked examples, gotchas — read
-    first) **and** the slide deck for the same material, kept together since they're consumed
-    together: `Day 0N - Topic.pptx` plus the `build.py` that generates it (via the shared
-    `_slide_kit/deckkit.py` — see its README for the builder API and font setup). The day's
-    database-provisioning script (e.g. `world_db.sql`) also lives here. Where relevant, the reading
-    calls out MySQL-vs-SQLite differences (e.g. `DATE_FORMAT` vs `STRFTIME`, `CONCAT()` vs `||`,
+  - `D0N_01_Materials/` — a single self-contained `day0N_reading.html` (concepts, worked examples,
+    gotchas, diagrams — open directly in a browser, no build step) plus the day's
+    database-provisioning script (e.g. `world_db.sql`). **Format history:** Days 01–03 originally
+    shipped as a `day0N_reading.md` write-up plus a separately-built `.pptx` deck (via a shared
+    `_slide_kit/deckkit.py` builder) — the user found maintaining two formats per day friction-prone
+    and asked for one consolidated file instead. An HTML candidate and a consolidated-Markdown
+    candidate were both prototyped side by side for Days 01–02; HTML won ("html is more rich"), then
+    went through iteration on diagram richness, prose depth, and a code-block color-contrast bug
+    before Days 01–03 were rebuilt as `day0N_reading.html` and the old `.md`/`.pptx`/`build.py`/
+    `_slide_kit/` files were removed. See `CLAUDE.md`'s "Reading material format" section for the
+    current design system and diagram-tooling rules (Mermaid `erDiagram`/`flowchart` by default,
+    hand SVG only when Mermaid's grammar can't express the diagram) — apply that to Day 04 onward,
+    not the pptx approach described in older entries below. Where relevant, the reading calls out
+    MySQL-vs-SQLite differences (e.g. `DATE_FORMAT` vs `STRFTIME`, `CONCAT()` vs `||`,
     `AUTO_INCREMENT` vs `AUTOINCREMENT`) — most relevant in Day 04 (string functions) and Day 05
-    (dual connections), since Days 06–09 run on SQLite. Diagrams belong in both: Mermaid
-    `erDiagram`/tables in the reading, native PowerPoint shapes (via `deckkit`'s entity/relationship/
-    grid primitives) in the deck — same visual, appropriate to each medium.
+    (dual connections), since Days 06–09 run on SQLite.
   - `D0N_02_Walkthrough/` — the explained, titled SQL script (or notebook, for Day 5). Renamed from
     "Live_Session" — this is self-paced, nothing here is actually live.
   - `D0N_03_Exercises/` — `day0N_exercises.sql` + `day0N_exercises_solutions.sql`, business-framed,
@@ -120,6 +126,9 @@ changes what backs Days 03–05:
   Concepts, condensed from `SQL for Data Analysis.pdf`, then Hands-On) and its `build.py`.
 - Introduced `_slide_kit/deckkit.py`, the shared `.pptx` builder every later day's
   `D0N_01_Materials/build.py` will reuse — see `_slide_kit/README.md`.
+- **Superseded:** `day01_reading.md` + `Day 01 - SQL Foundations.pptx` + `build.py` were later
+  replaced by a single `day01_reading.html` (see the format-history note above) — `_slide_kit/` is
+  gone entirely, this entry is kept for provenance only.
 
 ### Day 02 — Filtering & Aggregation — DONE
 - Migrated onto the Day 01 convention: `D02_02_Walkthrough/day02_filtering_and_aggregation.sql`
@@ -136,6 +145,10 @@ changes what backs Days 03–05:
   for this day's ERD shape and GROUP BY bucketing visual).
 - Not folded in: the `Updated MySQL Tutorial/1- Basics/SQL Basics Practice (Answers).ipynb` bonus
   questions — exercises already had enough variety without them.
+- **Superseded:** `day02_reading.md`/`Day 02 - Filtering & Aggregation.pptx`/`build.py` were later
+  replaced by `day02_reading.html` — `dates_specifiers.jpg` was dropped too, replaced by an inline
+  `DATE_FORMAT` specifier table in the HTML. `Parch_and_Posey.md` + `parch_and_posey_erd.svg` stay
+  (schema reference, not lesson reading). This entry is kept for provenance only.
 
 ### Day 03 — JOINs + CASE — DONE
 - Primary source: `Updated MySQL Tutorial/2- Intermediate/SQL Intermediate.ipynb` — its JOIN section
@@ -156,6 +169,11 @@ changes what backs Days 03–05:
 - Bug fixed along the way (affects all three decks, all rebuilt): `cards_slide`'s card height was
   fixed regardless of description length, so a 3-line description overflowed into the next card.
   Now sized dynamically, same fix pattern already used for `code_slide`'s notes column.
+- **Superseded:** `day03_reading.md` + `Day 03 - JOINs + CASE.pptx` + `build.py` were later replaced
+  by `day03_reading.html`, applying the same design system as Days 01–02 (Mermaid `erDiagram` for
+  the N:N book/author_book relationship, a hand-drawn SVG for the LEFT JOIN unmatched-row example
+  since it shows specific record instances rather than a table schema). This entry is kept for
+  provenance only.
 
 ### Day 04 — String Functions, Subqueries, CTEs, Temp Tables, Views
 - String functions: `Updated MySQL Tutorial/3- Advanced/string operations.sql` (`LTRIM`/`RTRIM`/
@@ -243,9 +261,11 @@ changes what backs Days 03–05:
 
 ## Open items to confirm before/at execution
 
-1. ~~Exact slide-deck format~~ — resolved: real `.pptx` via a shared `_slide_kit/deckkit.py` builder,
-   styled to match a reference deck (fonts installed locally), diagrams drawn as native PowerPoint
-   shapes rather than embedded images (no image-generation capability available).
+1. ~~Exact slide-deck format~~ — resolved, then superseded: originally a real `.pptx` via a shared
+   `_slide_kit/deckkit.py` builder; later replaced entirely by a single self-contained
+   `day0N_reading.html` per day (Days 01–03 rebuilt, `_slide_kit/` removed) — see CLAUDE.md's
+   "Reading material format" section. Diagrams are Mermaid (`erDiagram`/`flowchart`, preferred) or
+   hand-drawn inline SVG when Mermaid can't express the shape — still no raster image generation.
 2. Day 03/04 file names for the rewritten `Walkthrough` SQL (placeholder names used above) — apply
    the `day0N_` prefix standard once named.
 3. Whether to physically move/rename `SQL 03` (the staged root folder) into `Day 03` now, or treat

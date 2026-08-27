@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 01 — SQL Foundations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+:root{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+  --tip-bg:#EEF6FF; --tip-bd:#2E6FB5; --tip-ti:#1F4E82;
+  --warn-bg:#FDECEA; --warn-bd:#C0392B; --warn-ti:#7B1F14;
+  --recap-bg:#FFF8E1; --recap-bd:#B45309; --recap-ti:#8A4B00;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
+.page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
+.crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
+.subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
+.objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
+.objectives h2{font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);margin:0 0 10px;font-weight:700}
+.objectives ul{margin:0;padding-left:20px}.objectives li{font-size:15px;margin-bottom:6px}
+h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:26px;color:var(--ink);margin:52px 0 8px;padding-bottom:10px;border-bottom:2px solid var(--ink);font-weight:700}
+h2.section .num{color:var(--blue);margin-right:10px}
+.section-intro{font-size:16.5px;color:var(--gray);margin:0 0 20px}
+h3.sub{font-size:17.5px;color:var(--ink);margin:30px 0 10px;font-weight:700}
+p{margin:0 0 15px} p.lead{font-size:18px;color:var(--ink);font-weight:600}
+strong{color:var(--ink);font-weight:700}
+code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
+table.api{width:100%;border-collapse:collapse;margin:14px 0 22px;background:white;font-size:14px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.api th,table.api td{padding:10px 13px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.api thead th{background:var(--panel);color:var(--ink);font-size:11.5px;text-transform:uppercase;letter-spacing:.07em}
+table.api tbody tr:last-child td{border-bottom:none}
+
+.callout{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid}
+.callout .ti{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px}
+.callout p{font-size:15px;margin:0 0 6px}.callout p:last-child{margin-bottom:0}
+.callout.tip{background:var(--tip-bg);border-color:var(--tip-bd)}.callout.tip .ti{color:var(--tip-ti)}
+.callout.insight{background:var(--insight-bg);border-color:var(--insight-bd)}.callout.insight .ti{color:var(--insight-ti)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-bd)}.callout.warn .ti{color:var(--warn-ti)}
+.callout.recap{background:var(--recap-bg);border-color:var(--recap-bd)}.callout.recap .ti{color:var(--recap-ti)}
+
+.code-block{margin:18px 0 8px;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}
+.code-header{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#161616}
+.code-header .dot{width:10px;height:10px;border-radius:50%}
+.code-header .dot.r{background:#FF5F56}.code-header .dot.y{background:#FFBD2E}.code-header .dot.g{background:#27C93F}
+.code-header .fname{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}
+.code-body{background:var(--code-bg);color:var(--code-default);padding:16px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.75;overflow-x:auto;white-space:pre}
+.code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
+.code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
+.code-body .def{color:var(--code-default)}
+.annotations{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:6px 20px 14px;margin-bottom:28px}
+.annotation{padding:11px 0;border-top:1px solid #EEF2F7}
+.annotation:first-child{border-top:0}
+.annotation b{color:var(--blue);font-size:14px}
+.annotation p{margin:3px 0 0;font-size:14.5px;color:var(--ink)}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 26px}
+.compare .col{background:white;border:1px solid var(--border);border-radius:8px;padding:17px 19px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.compare .col h4{margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink)}
+.compare .col p,.compare .col li{font-size:14.5px}
+.compare .col ul{margin:6px 0 0;padding-left:18px}
+
+.card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0 26px}
+.card-grid.three{grid-template-columns:repeat(3,1fr)}
+.card{background:white;border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.card h4{margin:0 0 7px;color:var(--ink);font-size:16px;font-weight:700}
+.card p{font-size:14.5px;margin:0 0 6px;color:var(--gray)}
+.card p:last-child{margin-bottom:0}
+.card code.inline{font-size:.82em}
+
+figure{margin:24px 0 8px;text-align:center;background:linear-gradient(180deg,#fff,#FAFBFD);border:1px solid var(--border);border-radius:10px;padding:26px 14px 18px}
+figcaption{font-size:13.5px;color:var(--gray);margin-top:12px;font-style:italic}
+.mermaid{display:flex;justify-content:center}
+.mermaid svg{max-width:100%;height:auto}
+.mermaid-label{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--blue);text-align:left;margin:0 0 4px}
+.mermaid-group{margin-bottom:28px}
+.mermaid-group:last-child{margin-bottom:0}
+
+.pk{color:var(--blue-dark);font-weight:700}
+.fk{color:var(--gray);font-style:italic}
+
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
+@media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:30px}.card-grid,.card-grid.three,.compare{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="page">
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9CA3AF"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2F63E8"/>
+    </marker>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#141414" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="crumb">Day 01 of 9 · SQL Foundations</div>
+<h1 class="title">SQL Foundations</h1>
+<p class="subtitle">What SQL is, why it matters, and your first queries — against the <code class="inline">world</code> database.</p>
+
+<div class="objectives">
+  <h2>What you'll be able to do after this lesson</h2>
+  <ul>
+    <li>Explain what SQL, a database, and a DBMS are — and how they relate to each other.</li>
+    <li>Tell relational and non-relational databases apart, and know why this course uses MySQL.</li>
+    <li>Read an entity-relationship diagram: entities, attributes, and the three relationship types.</li>
+    <li>Write your first real queries: <code class="inline">SELECT</code>, <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>, <code class="inline">DISTINCT</code>, <code class="inline">COUNT</code>, <code class="inline">ORDER BY</code>.</li>
+    <li>Recognize the mistakes almost every beginner makes in their first week, before you make them.</li>
+  </ul>
+</div>
+
+<div class="callout tip">
+  <div class="ti">Before you start</div>
+  <p>Run <code class="inline">world_db.sql</code> once against your local MySQL server — it creates the <code class="inline">world</code> database and loads it with data. Everything below queries that database. If you haven't installed MySQL yet, jump ahead to Section 8.</p>
+</div>
+
+<h2 class="section"><span class="num">1</span>What is SQL?</h2>
+<p class="section-intro">Structured Query Language — the language you use to talk to a database.</p>
+
+<p>Think about how you get information out of a spreadsheet: you scroll, you sort a column, maybe
+you write a filter formula. A database holds the same kind of tabular data, but usually far more of
+it — millions or billions of rows, spread across dozens of related tables. Scrolling isn't an
+option. Instead, you write a precise, structured sentence describing exactly what you want, and the
+database engine goes and gets it. That sentence is SQL.</p>
+
+<p>SQL was created at IBM in the early 1970s (originally called SEQUEL) to work with a new idea at
+the time — the <em>relational model</em>, where data lives in tables connected by shared keys
+instead of rigid hierarchical file structures. It was standardized by ANSI in 1986 and by ISO
+shortly after, which is why the core of SQL — <code class="inline">SELECT</code>,
+<code class="inline">WHERE</code>, <code class="inline">JOIN</code>, and so on — looks nearly
+identical whether you're using MySQL, PostgreSQL, SQL Server, or Oracle. Each engine adds its own
+extensions and quirks around that shared core (you'll see MySQL-specific syntax called out as it
+comes up), but the fundamentals you learn this week transfer directly to any of them.</p>
+
+<div class="card-grid three">
+  <div class="card"><h4>The language of databases</h4><p>Just like English or French lets you talk to a person, SQL lets you talk to a database — ask it questions, and tell it what to change.</p></div>
+  <div class="card"><h4>Declarative, not step-by-step</h4><p>You describe <em>what</em> result you want, not <em>how</em> to compute it row by row — the database engine decides the fastest way to actually get it.</p></div>
+  <div class="card"><h4>Still the industry standard</h4><p>Five decades old and still how the overwhelming majority of business data is stored and queried, from startups to banks.</p></div>
+</div>
+
+<div class="callout insight">
+  <div class="ti">Why not just use Python/pandas?</div>
+  <p>You will, later — but pandas loads data into memory on one machine; a database can hold far more than that, is built for many people querying it at once, and enforces rules (like "an order must belong to a real account") that a loose CSV file can't. In practice, data analysts move data <em>from</em> a database <em>into</em> pandas with a SQL query, not the other way around. SQL is usually the first step, not a competing tool.</p>
+</div>
+
+<h2 class="section"><span class="num">2</span>What is a database?</h2>
+<p class="section-intro">A structured collection of data, organized for efficient retrieval.</p>
+<p>A database doesn't just sit there holding data — it's managed by a <strong>DBMS</strong>
+(Database Management System), the actual software (MySQL, in this course) that writes data to disk,
+reads it back, and enforces the rules you define. When people say "the database," they usually mean
+both things at once: the data itself, and the engine running underneath it. Four things a DBMS is
+responsible for:</p>
+<div class="card-grid">
+  <div class="card"><h4>Data Storage</h4><p>Stores data persistently on disk or in memory, ensuring durability and availability even after a crash or power failure — a plain in-memory Python list vanishes the moment the program stops; a database doesn't.</p></div>
+  <div class="card"><h4>Data Retrieval</h4><p>Lets you pull data back out efficiently: filtering, sorting, and aggregating, using indexes behind the scenes so a lookup on a billion-row table can still take milliseconds.</p></div>
+  <div class="card"><h4>Data Manipulation</h4><p>Lets you insert new records, update existing ones, and delete what's unwanted — safely, even while other people or programs are reading and writing at the same time.</p></div>
+  <div class="card"><h4>Data Security</h4><p>Enforces access control — authentication (who are you), authorization (what are you allowed to touch), and encryption, so not everyone with a login can see or change everything.</p></div>
+</div>
+
+<h2 class="section"><span class="num">3</span>Relational vs. non-relational</h2>
+<p class="section-intro">Two fundamentally different ways to shape data — and why this course picks one of them.</p>
+<div class="compare">
+  <div class="col">
+    <h4>Relational (RDBMS)</h4>
+    <p>Organizes data into fixed-shape tables of rows and columns, with relationships enforced between them via keys. Every row in a table has exactly the same columns — strict, predictable structure.</p>
+    <p><strong>Best for:</strong> data with clear structure and relationships — orders, accounts, transactions, inventory. Queried with SQL — what this course uses.</p>
+    <ul><li>MySQL</li><li>PostgreSQL</li><li>SQL Server</li></ul>
+  </div>
+  <div class="col">
+    <h4>Non-relational (NoSQL)</h4>
+    <p>Stores data as key-value pairs, flexible documents, or graphs. Two "rows" in the same collection can have completely different fields — loose, flexible structure.</p>
+    <p><strong>Best for:</strong> large volumes of unstructured or fast-changing data — logs, session caches, content with wildly varying shape.</p>
+    <ul><li>MongoDB</li><li>Cassandra</li><li>Redis</li></ul>
+  </div>
+</div>
+<div class="callout recap">
+  <div class="ti">Why this course is relational</div>
+  <p>Data analysis is overwhelmingly about tables — sales by region, orders by customer, events by channel. The relational model's strict structure is exactly what makes it possible to ask precise aggregate questions ("total revenue per account") reliably. That precision is worth the flexibility it trades away.</p>
+</div>
+
+<h2 class="section"><span class="num">4</span>Database design: entities, attributes, relationships</h2>
+<p class="section-intro">The three building blocks every table design starts from.</p>
+<div class="card-grid three">
+  <div class="card"><h4>Entities</h4><p>The main data objects or concepts in the system — e.g. customers, products, orders, employees. Each entity usually becomes one table.</p></div>
+  <div class="card"><h4>Attributes</h4><p>The properties of each entity — e.g. customer name, product price, order date. Each attribute usually becomes one column.</p></div>
+  <div class="card"><h4>Relationships</h4><p>How entities connect — e.g. an order belongs to a customer, and a customer can have many orders. Enforced via primary/foreign keys.</p></div>
+</div>
+
+<figure>
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
+  <!-- Customer table card -->
+  <g filter="url(#soft-shadow)">
+    <rect x="30" y="120" width="190" height="92" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.75"/>
+  </g>
+  <rect x="30" y="120" width="190" height="30" rx="8" fill="#2F63E8"/>
+  <rect x="30" y="142" width="190" height="8" fill="#2F63E8"/>
+  <text x="125" y="140" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="700" font-size="14" fill="#fff">Customer</text>
+  <text x="45" y="168" font-family="IBM Plex Mono" font-size="11" class="pk" fill="#2F63E8" font-weight="700">PK  id</text>
+  <text x="45" y="186" font-family="IBM Plex Mono" font-size="11" fill="#141414">    name</text>
+  <text x="45" y="204" font-family="IBM Plex Mono" font-size="11" fill="#141414">    email</text>
+
+  <!-- attribute ovals -->
+  <ellipse cx="90" cy="35" rx="55" ry="24" fill="#fff" stroke="#E5E7EB" stroke-width="1.5" filter="url(#soft-shadow)"/>
+  <text x="90" y="40" text-anchor="middle" font-family="Nunito Sans" font-size="12" fill="#141414">"Nour Adel"</text>
+  <ellipse cx="205" cy="35" rx="60" ry="24" fill="#fff" stroke="#E5E7EB" stroke-width="1.5" filter="url(#soft-shadow)"/>
+  <text x="205" y="40" text-anchor="middle" font-family="Nunito Sans" font-size="12" fill="#141414">nour@mail.com</text>
+  <line x1="100" y1="58" x2="105" y2="120" stroke="#9CA3AF" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="195" y1="58" x2="150" y2="120" stroke="#9CA3AF" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <line x1="220" y1="166" x2="345" y2="166" stroke="#9CA3AF" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <polygon points="378,140 425,166 378,192 331,166" fill="#F3F4F6" stroke="#2F63E8" stroke-width="1.75" filter="url(#soft-shadow)"/>
+  <text x="378" y="171" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">places</text>
+  <line x1="425" y1="166" x2="550" y2="166" stroke="#9CA3AF" stroke-width="1.75" marker-end="url(#arrow)"/>
+
+  <!-- Order table card -->
+  <g filter="url(#soft-shadow)">
+    <rect x="550" y="120" width="200" height="92" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.75"/>
+  </g>
+  <rect x="550" y="120" width="200" height="30" rx="8" fill="#2F63E8"/>
+  <rect x="550" y="142" width="200" height="8" fill="#2F63E8"/>
+  <text x="650" y="140" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="700" font-size="14" fill="#fff">Order</text>
+  <text x="565" y="168" font-family="IBM Plex Mono" font-size="11" fill="#2F63E8" font-weight="700">PK  id</text>
+  <text x="565" y="186" font-family="IBM Plex Mono" font-size="11" fill="#5B6472">FK  customer_id</text>
+  <text x="565" y="204" font-family="IBM Plex Mono" font-size="11" fill="#141414">    total</text>
+
+  <ellipse cx="610" cy="35" rx="46" ry="24" fill="#fff" stroke="#E5E7EB" stroke-width="1.5" filter="url(#soft-shadow)"/>
+  <text x="610" y="40" text-anchor="middle" font-family="Nunito Sans" font-size="12" fill="#141414">2026-01-14</text>
+  <ellipse cx="715" cy="35" rx="46" ry="24" fill="#fff" stroke="#E5E7EB" stroke-width="1.5" filter="url(#soft-shadow)"/>
+  <text x="715" y="40" text-anchor="middle" font-family="Nunito Sans" font-size="12" fill="#141414">$248.00</text>
+  <line x1="620" y1="58" x2="620" y2="120" stroke="#9CA3AF" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="705" y1="58" x2="680" y2="120" stroke="#9CA3AF" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <text x="125" y="244" text-anchor="middle" font-family="IBM Plex Mono" font-size="11.5" fill="#5B6472">Rectangle = Entity</text>
+  <text x="378" y="244" text-anchor="middle" font-family="IBM Plex Mono" font-size="11.5" fill="#5B6472">Diamond = Relationship</text>
+  <text x="650" y="244" text-anchor="middle" font-family="IBM Plex Mono" font-size="11.5" fill="#5B6472">Oval = Attribute</text>
+</svg>
+<figcaption>Chen-notation ER diagram, with real-looking sample data flowing through it — an order belongs to a customer, and a customer can place many orders. <span class="pk">PK</span> = primary key (uniquely identifies a row), <span class="fk">FK</span> = foreign key (points to another table's PK).</figcaption>
+</figure>
+
+<h2 class="section"><span class="num">5</span>Three types of relationships</h2>
+<p class="section-intro">Established by a <strong>primary key</strong> and a <strong>foreign key</strong> — every relationship you'll ever model reduces to one of these three shapes.</p>
+
+<figure>
+  <div class="mermaid-group">
+    <p class="mermaid-label">1 : 1 — every country has exactly one capital</p>
+    <div class="mermaid">
+erDiagram
+    COUNTRY ||--|| CAPITAL_CITY : "has"
+    COUNTRY {
+        char code PK
+        string name
+    }
+    CAPITAL_CITY {
+        int id PK
+        char country_code FK "UNIQUE"
+        string name
+    }
+    </div>
+  </div>
+
+  <div class="mermaid-group">
+    <p class="mermaid-label">1 : N — a mother can have many children, each with exactly one mother</p>
+    <div class="mermaid">
+erDiagram
+    MOTHER ||--o{ CHILD : "has"
+    MOTHER {
+        int id PK
+        string name
+    }
+    CHILD {
+        int id PK
+        int mother_id FK
+        string name
+    }
+    </div>
+  </div>
+
+  <div class="mermaid-group">
+    <p class="mermaid-label">N : N — one author may have many books, and one book may have many authors</p>
+    <div class="mermaid">
+erDiagram
+    BOOK ||--o{ BOOK_AUTHOR : ""
+    AUTHOR ||--o{ BOOK_AUTHOR : ""
+    BOOK {
+        int id PK
+        string title
+    }
+    AUTHOR {
+        int id PK
+        string name
+    }
+    BOOK_AUTHOR {
+        int id PK
+        int book_id FK
+        int author_id FK
+    }
+    </div>
+  </div>
+<figcaption>The FK's UNIQUE constraint on capital_city is what makes the top diagram 1:1 instead of 1:N — book_author is the junction table that makes the bottom diagram possible at all.</figcaption>
+</figure>
+
+<p>The N:N case needs a <strong>junction table</strong> in the middle — <code class="inline">book_author</code>
+above — holding its own primary key plus the two foreign keys, because a foreign key can only point
+to <em>one</em> row, so there's no way to link "many books to many authors" with a single FK column
+on either side.</p>
+
+<h2 class="section"><span class="num">6</span>CRUD &amp; SQL statement types</h2>
+<p class="section-intro">Every operation you'll ever perform on a database — and every SQL statement you'll ever write — falls into one of a small number of buckets.</p>
+<div class="card-grid">
+  <div class="card"><h4>01 · Create</h4><p>Create a database or table; insert a new record or column.</p><code class="inline">CREATE TABLE</code> <code class="inline">INSERT INTO</code></div>
+  <div class="card"><h4>02 · Read</h4><p>Select existing record(s) — the operation this whole lesson focuses on.</p><code class="inline">SELECT</code></div>
+  <div class="card"><h4>03 · Update</h4><p>Modify an existing table's data.</p><code class="inline">UPDATE ... SET</code></div>
+  <div class="card"><h4>04 · Delete</h4><p>Remove a record, column, table, or database.</p><code class="inline">DELETE FROM</code> <code class="inline">DROP TABLE</code></div>
+</div>
+<p>Zoom out one level further, and SQL statements themselves split into four formal categories —
+worth knowing the names even though this course lives almost entirely in the first one:</p>
+<div class="card-grid">
+  <div class="card"><h4>DML — Data Manipulation</h4><p><code class="inline">SELECT</code>, <code class="inline">INSERT</code>, <code class="inline">UPDATE</code>, <code class="inline">DELETE</code>. Working with the rows inside tables that already exist.</p></div>
+  <div class="card"><h4>DDL — Data Definition</h4><p><code class="inline">CREATE</code>, <code class="inline">ALTER</code>, <code class="inline">DROP</code>. Building and changing the tables themselves — you've already run one DDL statement if you set up <code class="inline">world_db.sql</code>.</p></div>
+  <div class="card"><h4>DCL — Data Control</h4><p><code class="inline">GRANT</code>, <code class="inline">REVOKE</code>. Who's allowed to do what — relevant once a database has more than one user.</p></div>
+  <div class="card"><h4>TCL — Transaction Control</h4><p><code class="inline">COMMIT</code>, <code class="inline">ROLLBACK</code>. Making a batch of changes permanent, or undoing them if something went wrong mid-way.</p></div>
+</div>
+
+<h2 class="section"><span class="num">7</span>Why SQL for data analysis</h2>
+<p class="lead">You manage a bookstore. Which books sold the most this month?</p>
+<p>You could open the sales spreadsheet and manually tally rows — for a small shop, maybe that
+takes twenty minutes. Now imagine 50,000 transactions a month across 200 stores. Manual tallying
+stops being an option, and this is exactly the gap SQL closes:</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">motivating_example.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span>
+    title,
+    <span class="fn">SUM</span>(quantity_sold) <span class="kw">AS</span> total_sold
+<span class="kw">FROM</span> sales
+<span class="kw">GROUP BY</span> title
+<span class="kw">ORDER BY</span> total_sold <span class="kw">DESC</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>No manual digging</b><p>One query answers it, instantly, no matter whether the table has 50 rows or 50 million.</p></div>
+  <div class="annotation"><b>Scales to real questions</b><p>Top-sellers, revenue trends, average order value, new customers this month — same idea, every time: describe the shape of the answer you want.</p></div>
+  <div class="annotation"><b>A core analyst skill</b><p>This is how raw transactional data turns into a decision someone can act on. Don't worry about <code class="inline">GROUP BY</code> yet — Day 02 covers it properly; for now just notice how little code that question actually needed.</p></div>
+</div>
+<p>The same handful of ideas — filter, sort, group, aggregate — answers an enormous range of
+business questions: What are the top-selling products by quantity? What's the average order value?
+Which shipping destinations are most common? How many new customers did we acquire last month?
+Every one of those is a small variation on the query above.</p>
+
+<h2 class="section"><span class="num">8</span>MySQL</h2>
+<div class="card-grid three">
+  <div class="card"><h4>Free &amp; open-source</h4><p>A widely-used relational database management system (RDBMS) — no license cost to get started, and the source code itself is public.</p></div>
+  <div class="card"><h4>Scales from small to large</h4><p>Fine for a student project on a laptop, and also runs some of the highest-traffic services in the world.</p></div>
+  <div class="card"><h4>Who uses it</h4><p>Facebook, Twitter, Airbnb, Uber, GitHub, YouTube, and CMS platforms like WordPress and Drupal.</p></div>
+</div>
+<div class="callout tip">
+  <div class="ti">Installing MySQL</div>
+  <p>Windows installer: <code class="inline">dev.mysql.com/downloads/installer</code>. Choose the "Full" setup type so MySQL Server and MySQL Workbench (the GUI you'll run queries from) both install together.</p>
+  <p>Once installed, run <code class="inline">world_db.sql</code> to load this lesson's database.</p>
+</div>
+
+<h2 class="section"><span class="num">9</span>The <code class="inline">world</code> database</h2>
+<p class="section-intro">Everything from here on queries this database. Three tables, chained by a foreign key:</p>
+<figure>
+<div class="mermaid">
+erDiagram
+    country ||--o{ city : "has many"
+    country ||--o{ countrylanguage : "has many"
+    country {
+        char Code PK
+        char Name
+        char Continent
+        int Population
+    }
+    city {
+        int ID PK
+        char Name
+        char CountryCode FK
+    }
+    countrylanguage {
+        char CountryCode FK
+        char Language
+    }
+</div>
+<figcaption>country → city and country → countrylanguage, both one-to-many.</figcaption>
+</figure>
+<p>This lesson stays inside <code class="inline">country</code> — a single table is plenty to
+practice on. You'll bring in <code class="inline">city</code> and
+<code class="inline">countrylanguage</code> once JOINs are introduced on Day 03, at which point this
+diagram becomes directly useful again: every JOIN you write is just "follow one of these arrows."</p>
+
+<h2 class="section"><span class="num">10</span>Anatomy of a SELECT</h2>
+<p>Every query in this lesson has the same skeleton — learn this shape once and you can read (and
+predict the structure of) almost any SELECT you'll ever encounter:</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">skeleton</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> &lt;columns&gt;
+<span class="kw">FROM</span> &lt;table&gt;
+<span class="com">-- [WHERE &lt;condition&gt;]      not yet — Day 02</span>
+<span class="kw">ORDER BY</span> &lt;column&gt;
+<span class="kw">LIMIT</span> &lt;count&gt;;</div>
+</div>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> Region, Continent, Name
+<span class="kw">FROM</span> country;
+
+<span class="com">-- SELECT * means "give me every column"</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> country;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Name columns explicitly</b><p>Clearer what the query returns, and it won't silently break — or silently return an extra unwanted column — if someone adds a column to the table later.</p></div>
+  <div class="annotation"><b>SELECT *</b><p>Fine for a quick look at a table you don't know yet. Risky to leave in real, shared work.</p></div>
+</div>
+
+<h2 class="section"><span class="num">11</span>LIMIT &amp; OFFSET</h2>
+<p><code class="inline">LIMIT</code> caps how many rows come back. <code class="inline">OFFSET</code>
+skips a number of rows before it starts counting — together, this is exactly how "page 2 of
+results" works on any website with a paginated table.</p>
+<figure>
+<svg viewBox="0 0 640 130" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
+  <g font-family="IBM Plex Mono" font-size="10.5">
+    <g filter="url(#soft-shadow)">
+    <rect x="10"  y="45" width="70" height="34" rx="7" fill="#F3F4F6" stroke="#E5E7EB"/>
+    <rect x="88"  y="45" width="70" height="34" rx="7" fill="#F3F4F6" stroke="#E5E7EB"/>
+    <rect x="166" y="45" width="70" height="34" rx="7" fill="#2F63E8" stroke="#2F63E8"/>
+    <rect x="244" y="45" width="70" height="34" rx="7" fill="#2F63E8" stroke="#2F63E8"/>
+    <rect x="322" y="45" width="70" height="34" rx="7" fill="#2F63E8" stroke="#2F63E8"/>
+    <rect x="400" y="45" width="70" height="34" rx="7" fill="#fff" stroke="#E5E7EB"/>
+    <rect x="478" y="45" width="70" height="34" rx="7" fill="#fff" stroke="#E5E7EB"/>
+    <rect x="556" y="45" width="70" height="34" rx="7" fill="#fff" stroke="#E5E7EB"/>
+    </g>
+    <text x="45"  y="66" text-anchor="middle" fill="#9CA3AF">row 1</text>
+    <text x="123" y="66" text-anchor="middle" fill="#9CA3AF">row 2</text>
+    <text x="201" y="66" text-anchor="middle" fill="#fff" font-weight="700">row 3</text>
+    <text x="279" y="66" text-anchor="middle" fill="#fff" font-weight="700">row 4</text>
+    <text x="357" y="66" text-anchor="middle" fill="#fff" font-weight="700">row 5</text>
+    <text x="435" y="66" text-anchor="middle" fill="#9CA3AF">row 6</text>
+    <text x="513" y="66" text-anchor="middle" fill="#9CA3AF">row 7</text>
+    <text x="591" y="66" text-anchor="middle" fill="#9CA3AF">row 8</text>
+  </g>
+  <line x1="10" y1="30" x2="158" y2="30" stroke="#9CA3AF" stroke-width="1.5"/>
+  <text x="84" y="20" text-anchor="middle" font-family="Nunito Sans" font-size="12" fill="#5B6472">OFFSET 2 — skipped</text>
+  <line x1="166" y1="30" x2="392" y2="30" stroke="#2F63E8" stroke-width="2"/>
+  <text x="279" y="20" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="12" fill="#2F63E8">LIMIT 3 — returned</text>
+</svg>
+<figcaption>LIMIT 3 OFFSET 2 on an 8-row table — skip the first 2, return the next 3.</figcaption>
+</figure>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
+  <div class="code-body"><span class="com">-- standard SQL</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> country
+<span class="kw">LIMIT</span> 3 <span class="kw">OFFSET</span> 2;
+
+<span class="com">-- MySQL shortcut: LIMIT skip, count</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> country
+<span class="kw">LIMIT</span> 2,3;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Same result</b><p>Both return 3 rows, after skipping the first 2.</p></div>
+  <div class="annotation"><b>Prefer OFFSET</b><p>The shortcut form is easy to misread — is the first number the skip or the count? Most people default to the explicit <code class="inline">OFFSET</code> form for anything they'll hand to someone else.</p></div>
+</div>
+
+<h2 class="section"><span class="num">12</span>DISTINCT</h2>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT DISTINCT</span> Region
+<span class="kw">FROM</span> country;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Collapses duplicates</b><p>Down to one row per unique value — without it, you'd get one row <em>per country</em>, with <code class="inline">'Asia'</code> repeated for every Asian country.</p></div>
+  <div class="annotation"><b>Answers a different question</b><p><code class="inline">DISTINCT</code> asks "what are the possible values?" — not "what's the value for each row?"</p></div>
+  <div class="annotation"><b>Combine with COUNT</b><p><code class="inline">COUNT(DISTINCT Region)</code> collapses both ideas into a single number — how many unique values exist.</p></div>
+</div>
+
+<h2 class="section"><span class="num">13</span>Aggregation: COUNT</h2>
+<p><code class="inline">COUNT</code> is your first <strong>aggregate function</strong> — instead of
+returning one row per input row, it collapses many rows into a single summary number.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT COUNT</span>(*) <span class="kw">AS</span> CNTRY_CNT <span class="kw">FROM</span> country;
+<span class="kw">SELECT COUNT</span>(Code) no_of_countries <span class="kw">FROM</span> country;
+<span class="kw">SELECT COUNT</span>(<span class="kw">DISTINCT</span> Region) <span class="kw">AS</span> Regions_CNT <span class="kw">FROM</span> country;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>COUNT(*)</b><p>Counts every row, full stop — doesn't care what's inside any particular column.</p></div>
+  <div class="annotation"><b>COUNT(col)</b><p>Counts only rows where that column is <em>not</em> <code class="inline">NULL</code> — with a fully-populated column this rarely differs from <code class="inline">COUNT(*)</code>, but the distinction matters a lot once a column can be missing.</p></div>
+  <div class="annotation"><b>AS is optional</b><p><code class="inline">COUNT(*) CNTRY_CNT</code> works identically to writing <code class="inline">AS</code> — but spelling it out is usually clearer to read back later.</p></div>
+</div>
+
+<h2 class="section"><span class="num">14</span>ORDER BY</h2>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
+  <div class="code-body"><span class="com">-- Top 5 countries by population</span>
+<span class="kw">SELECT</span> Name, Population
+<span class="kw">FROM</span> country
+<span class="kw">ORDER BY</span> Population <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 5;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>ASC is the default</b><p>Ascending order happens automatically — rarely written out. <code class="inline">DESC</code> (descending) is the one you'll see explicitly.</p></div>
+  <div class="annotation"><b>Sort by anything</b><p>You can sort by a column that isn't even in your <code class="inline">SELECT</code> list.</p></div>
+  <div class="annotation"><b>ORDER BY + LIMIT = "top N"</b><p>Together, these two clauses are how you answer almost any "top N" or "bottom N" business question.</p></div>
+</div>
+
+<div class="callout warn">
+  <div class="ti">Before you move on — common first-week mistakes</div>
+  <p><strong>Forgetting the semicolon:</strong> MySQL clients often wait silently for more input instead of running your query if the trailing <code class="inline">;</code> is missing — end every statement with it, always.</p>
+  <p><strong>Assuming <code class="inline">LIMIT 5</code> means "the first 5 rows":</strong> without <code class="inline">ORDER BY</code>, a table has no guaranteed row order — say so explicitly if order matters.</p>
+  <p><strong>Reusing an alias in <code class="inline">WHERE</code>:</strong> <code class="inline">SELECT Population AS pop FROM country WHERE pop > 1000000</code> fails — the alias doesn't exist yet when <code class="inline">WHERE</code> runs. Use the real column name there; aliases are safe in <code class="inline">ORDER BY</code>.</p>
+</div>
+
+<div class="callout recap">
+  <div class="ti">Next: Day 02</div>
+  <p>Filtering &amp; Aggregation — WHERE conditions, GROUP BY, and DATE functions, on a new dataset: <code class="inline">parch_and_posey</code>.</p>
+</div>
+
+<footer>Day 01 · SQL Foundations · self-paced</footer>
+</div>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#EEF6FF',
+      primaryBorderColor: '#2F63E8',
+      primaryTextColor: '#141414',
+      lineColor: '#2F63E8',
+      tertiaryColor: '#F3F4F6',
+      fontFamily: "'IBM Plex Mono', monospace",
+      fontSize: '13.5px',
+      attributeBackgroundColorOdd: '#FFFFFF',
+      attributeBackgroundColorEven: '#F3F4F6'
+    },
+    er: {
+      diagramPadding: 24,
+      entityPadding: 16,
+      minEntityWidth: 130,
+      minEntityHeight: 70,
+      fontSize: 13,
+      useMaxWidth: true
+    }
+  });
+</script>
+</body></html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 02 — Filtering &amp; Aggregation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+:root{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+  --tip-bg:#EEF6FF; --tip-bd:#2E6FB5; --tip-ti:#1F4E82;
+  --warn-bg:#FDECEA; --warn-bd:#C0392B; --warn-ti:#7B1F14;
+  --recap-bg:#FFF8E1; --recap-bd:#B45309; --recap-ti:#8A4B00;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
+.page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
+.crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
+.subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
+.objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
+.objectives h2{font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);margin:0 0 10px;font-weight:700}
+.objectives ul{margin:0;padding-left:20px}.objectives li{font-size:15px;margin-bottom:6px}
+h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:26px;color:var(--ink);margin:52px 0 8px;padding-bottom:10px;border-bottom:2px solid var(--ink);font-weight:700}
+h2.section .num{color:var(--blue);margin-right:10px}
+.section-intro{font-size:16.5px;color:var(--gray);margin:0 0 20px}
+h3.sub{font-size:17.5px;color:var(--ink);margin:30px 0 10px;font-weight:700}
+p{margin:0 0 15px} p.lead{font-size:18px;color:var(--ink);font-weight:600}
+strong{color:var(--ink);font-weight:700}
+code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
+table.api{width:100%;border-collapse:collapse;margin:14px 0 22px;background:white;font-size:14px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.api th,table.api td{padding:10px 13px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.api thead th{background:var(--panel);color:var(--ink);font-size:11.5px;text-transform:uppercase;letter-spacing:.07em}
+table.api tbody tr:last-child td{border-bottom:none}
+
+.callout{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid}
+.callout .ti{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px}
+.callout p{font-size:15px;margin:0 0 6px}.callout p:last-child{margin-bottom:0}
+.callout.tip{background:var(--tip-bg);border-color:var(--tip-bd)}.callout.tip .ti{color:var(--tip-ti)}
+.callout.insight{background:var(--insight-bg);border-color:var(--insight-bd)}.callout.insight .ti{color:var(--insight-ti)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-bd)}.callout.warn .ti{color:var(--warn-ti)}
+.callout.recap{background:var(--recap-bg);border-color:var(--recap-bd)}.callout.recap .ti{color:var(--recap-ti)}
+
+.code-block{margin:18px 0 8px;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}
+.code-header{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#161616}
+.code-header .dot{width:10px;height:10px;border-radius:50%}
+.code-header .dot.r{background:#FF5F56}.code-header .dot.y{background:#FFBD2E}.code-header .dot.g{background:#27C93F}
+.code-header .fname{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}
+.code-body{background:var(--code-bg);color:var(--code-default);padding:16px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.75;overflow-x:auto;white-space:pre}
+.code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
+.code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
+.code-body .def{color:var(--code-default)}
+.annotations{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:6px 20px 14px;margin-bottom:28px}
+.annotation{padding:11px 0;border-top:1px solid #EEF2F7}
+.annotation:first-child{border-top:0}
+.annotation b{color:var(--blue);font-size:14px}
+.annotation p{margin:3px 0 0;font-size:14.5px;color:var(--ink)}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 26px}
+.compare .col{background:white;border:1px solid var(--border);border-radius:8px;padding:17px 19px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.compare .col h4{margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink)}
+.compare .col p,.compare .col li{font-size:14.5px}
+.compare .col ul{margin:6px 0 0;padding-left:18px}
+.compare .col.bad{border-color:#E8B7B1;background:#FCF2F0}.compare .col.bad h4{color:var(--warn-ti)}
+.compare .col.good{border-color:#B7DEC2;background:#F0F8F2}.compare .col.good h4{color:var(--insight-ti)}
+
+.card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0 26px}
+.card-grid.three{grid-template-columns:repeat(3,1fr)}
+.card{background:white;border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.card h4{margin:0 0 7px;color:var(--ink);font-size:16px;font-weight:700}
+.card p{font-size:14.5px;margin:0 0 6px;color:var(--gray)}
+.card p:last-child{margin-bottom:0}
+
+figure{margin:24px 0 8px;text-align:center;background:linear-gradient(180deg,#fff,#FAFBFD);border:1px solid var(--border);border-radius:10px;padding:26px 14px 18px}
+figcaption{font-size:13.5px;color:var(--gray);margin-top:12px;font-style:italic}
+.mermaid{display:flex;justify-content:center}
+.mermaid svg{max-width:100%;height:auto}
+
+.mistakes{margin:14px 0 26px}
+.mistake{display:grid;grid-template-columns:38px 1fr;gap:14px;padding:14px 4px;border-top:1px solid #EEF2F7}
+.mistake:first-child{border-top:none}
+.mistake .num{background:var(--warn-bd);color:white;width:28px;height:28px;border-radius:50%;text-align:center;line-height:28px;font-weight:700;font-size:13px;font-family:'IBM Plex Mono',monospace}
+.mistake h4{margin:2px 0 4px;color:var(--warn-ti);font-size:15px}
+.mistake p{margin:0;font-size:14.5px}
+.mistake .fix{display:block;margin-top:6px;font-size:14px;color:var(--insight-ti)}
+.mistake .fix strong{color:var(--insight-ti)}
+
+.pk{color:var(--blue-dark);font-weight:700}
+.fk{color:var(--gray);font-style:italic}
+
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
+@media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:30px}.card-grid,.card-grid.three,.compare{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="page">
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9CA3AF"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2F63E8"/>
+    </marker>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#141414" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="crumb">Day 02 of 9 · Filtering &amp; Aggregation</div>
+<h1 class="title">Filtering &amp; Aggregation</h1>
+<p class="subtitle">WHERE · AND/OR · BETWEEN · IN · NULL · LIKE · GROUP BY · DATE functions — on a new dataset, <code class="inline">parch_and_posey</code>.</p>
+
+<div class="objectives">
+  <h2>What you'll be able to do after this lesson</h2>
+  <ul>
+    <li>Filter rows with WHERE, comparison operators, AND/OR, BETWEEN, IN, and NULL checks.</li>
+    <li>Match text patterns with LIKE.</li>
+    <li>Aggregate per group with GROUP BY, and know when WHERE can't do the job but HAVING can.</li>
+    <li>Pull pieces out of a date/time column and reason about date ranges.</li>
+  </ul>
+</div>
+
+<div class="callout tip">
+  <div class="ti">Before you start</div>
+  <p>Run <code class="inline">Parch &amp; Posey Database.sql</code> once — it creates the <code class="inline">parch_and_posey</code> database. Then <code class="inline">USE parch_and_posey;</code>, same as Day 01's <code class="inline">USE world;</code>.</p>
+</div>
+
+<h2 class="section"><span class="num">1</span>The dataset</h2>
+<p class="section-intro">A fictional paper-sales company — bigger and more realistic than Day 01's <code class="inline">world</code> database.</p>
+<p>Parch &amp; Posey sells three kinds of paper — standard, poster, and glossy — to large corporate
+clients, through 50 sales reps organized into 4 regions across the US. Every one of those business
+facts becomes a table. Five of them, chained together entirely by one-to-many relationships:</p>
+<figure>
+<div class="mermaid">
+erDiagram
+    REGION ||--o{ SALES_REPS : "has"
+    SALES_REPS ||--o{ ACCOUNTS : "manages"
+    ACCOUNTS ||--o{ ORDERS : "places"
+    ACCOUNTS ||--o{ WEB_EVENTS : "generates"
+
+    REGION {
+        int id PK
+        varchar name
+    }
+
+    SALES_REPS {
+        int id PK
+        varchar name
+        int region_id FK
+    }
+
+    ACCOUNTS {
+        int id PK
+        varchar name
+        varchar website
+        numeric latitude
+        numeric longitude
+        varchar primary_poc
+        int sales_rep_id FK
+    }
+
+    ORDERS {
+        int id PK
+        int account_id FK
+        timestamp occurred_at
+        int standard_qty
+        int gloss_qty
+        int poster_qty
+        int total
+        numeric standard_amt_usd
+        numeric gloss_amt_usd
+        numeric poster_amt_usd
+        numeric total_amt_usd
+    }
+
+    WEB_EVENTS {
+        int id PK
+        int account_id FK
+        timestamp occurred_at
+        varchar channel
+    }
+</div>
+<figcaption>The full parch_and_posey schema — region → sales_reps → accounts → {orders, web_events}, every column shown, all one-to-many.</figcaption>
+</figure>
+<p>You won't need JOINs to query any single table in this lesson (that's Day 03), but keep this
+shape in mind — it's exactly why <code class="inline">account_id</code> shows up as a column on
+both <code class="inline">orders</code> and <code class="inline">web_events</code>: both tables sit
+one level below <code class="inline">accounts</code> in the same chain.</p>
+
+<h2 class="section"><span class="num">2</span>Quick review: Day 01 on a new dataset</h2>
+<p class="section-intro">Same syntax, unfamiliar table names — a deliberate warm-up before anything new.</p>
+<p>The walkthrough opens with <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>,
+<code class="inline">DISTINCT</code>, and <code class="inline">ORDER BY</code> again — now against
+<code class="inline">orders</code>, <code class="inline">web_events</code>, and
+<code class="inline">accounts</code> instead of <code class="inline">country</code>. If any of that
+feels shaky, this is the moment to revisit Day 01, because everything below assumes it's second
+nature.</p>
+
+<h2 class="section"><span class="num">3</span>WHERE — filtering rows</h2>
+<p>WHERE narrows which rows a query returns, evaluated <em>before</em>
+<code class="inline">SELECT</code>/<code class="inline">ORDER BY</code>/<code class="inline">LIMIT</code>
+get a chance to do anything — think of it as a gate that rows have to pass through first.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> *
+<span class="kw">FROM</span> orders
+<span class="kw">WHERE</span> total_amt_usd &gt; 100000
+<span class="kw">ORDER BY</span> total_amt_usd <span class="kw">DESC</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Comparison operators</b><p><code class="inline">=</code>, <code class="inline">&gt;</code>, <code class="inline">&lt;</code>, <code class="inline">&gt;=</code>, <code class="inline">&lt;=</code> all work exactly as you'd expect from arithmetic.</p></div>
+  <div class="annotation"><b>Not-equal, three ways</b><p><code class="inline">!=</code>, <code class="inline">&lt;&gt;</code> (standard SQL), and <code class="inline">WHERE NOT account_id = 1001</code> all mean the same thing — <code class="inline">!=</code> is the one you'll see most in practice.</p></div>
+</div>
+
+<h2 class="section"><span class="num">4</span>AND / OR — combining conditions</h2>
+<div class="compare">
+  <div class="col good"><h4>AND — narrows</h4><p>Both conditions must hold. <code class="inline">channel = 'facebook' AND account_id = 1001</code> returns only Facebook events, and only for that one account — the smallest of the four possible result sets.</p></div>
+  <div class="col bad"><h4>OR — widens</h4><p>Either can hold. Swap in <code class="inline">OR</code> and you get every Facebook event from <em>any</em> account, plus every event (any channel) from account 1001 — often a much bigger, looser result than intended.</p></div>
+</div>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="com">-- AND: narrow — only Facebook events from account 1001</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> web_events
+<span class="kw">WHERE</span> channel = <span class="str">'facebook'</span>
+  <span class="kw">AND</span> account_id = 1001;
+
+<span class="com">-- OR: wide — Facebook events from anyone, plus every event from account 1001</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> web_events
+<span class="kw">WHERE</span> channel = <span class="str">'facebook'</span>
+   <span class="kw">OR</span> account_id = 1001;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Same shape, different meaning</b><p>Only the keyword changed — the row counts these two return can differ by an order of magnitude on a real dataset.</p></div>
+</div>
+<div class="callout warn">
+  <div class="ti">The most common real-world SQL bug</div>
+  <p>Mixing up AND/OR is grammatically valid in exactly the same spot but changes the result drastically — and MySQL will never warn you, because both versions are perfectly correct SQL. The only defense is reading each condition back and asking "does this describe what I actually mean?"</p>
+</div>
+
+<h2 class="section"><span class="num">5</span>BETWEEN — range filtering</h2>
+<figure>
+<svg viewBox="0 0 620 100" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
+  <line x1="30" y1="55" x2="590" y2="55" stroke="#E5E7EB" stroke-width="3"/>
+  <line x1="180" y1="55" x2="440" y2="55" stroke="#2F63E8" stroke-width="5"/>
+  <circle cx="180" cy="55" r="6" fill="#2F63E8" filter="url(#soft-shadow)"/>
+  <circle cx="440" cy="55" r="6" fill="#2F63E8" filter="url(#soft-shadow)"/>
+  <text x="180" y="35" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#2F63E8" font-weight="700">500</text>
+  <text x="440" y="35" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#2F63E8" font-weight="700">999</text>
+  <text x="310" y="80" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="12.5" fill="#2F63E8">BETWEEN 500 AND 999 — both ends included</text>
+</svg>
+<figcaption>total_amt_usd BETWEEN 500 AND 999</figcaption>
+</figure>
+<p><code class="inline">WHERE total_amt_usd BETWEEN 500 AND 999</code> is shorthand for
+<code class="inline">WHERE total_amt_usd &gt;= 500 AND total_amt_usd &lt;= 999</code> —
+<strong>both endpoints inclusive</strong>. It works on dates too:
+<code class="inline">WHERE occurred_at BETWEEN '2014-12-30' AND '2015-01-01'</code> — a pattern you'll
+use constantly once real reporting periods (last week, last quarter) enter the picture.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="com">-- numeric range</span>
+<span class="kw">SELECT</span> id, total_amt_usd
+<span class="kw">FROM</span> orders
+<span class="kw">WHERE</span> total_amt_usd <span class="kw">BETWEEN</span> 500 <span class="kw">AND</span> 999;
+
+<span class="com">-- date range — same keyword, no numeric/date distinction to remember</span>
+<span class="kw">SELECT</span> id, occurred_at
+<span class="kw">FROM</span> orders
+<span class="kw">WHERE</span> occurred_at <span class="kw">BETWEEN</span> <span class="str">'2014-12-30'</span> <span class="kw">AND</span> <span class="str">'2015-01-01'</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Written out with AND/OR, this gets long fast</b><p><code class="inline">WHERE total_amt_usd &gt;= 500 AND total_amt_usd &lt;= 999</code> says exactly the same thing — <code class="inline">BETWEEN</code> is purely a shorter way to write a two-sided AND.</p></div>
+</div>
+
+<h2 class="section"><span class="num">6</span>IN vs OR</h2>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="com">-- gets unwieldy fast</span>
+<span class="kw">WHERE</span> channel = <span class="str">'facebook'</span> <span class="kw">OR</span> channel = <span class="str">'twitter'</span> <span class="kw">OR</span> channel = <span class="str">'organic'</span>
+
+<span class="com">-- identical result, one line</span>
+<span class="kw">WHERE</span> channel <span class="kw">IN</span> (<span class="str">'facebook'</span>, <span class="str">'twitter'</span>, <span class="str">'organic'</span>)</div>
+</div>
+<div class="annotations"><div class="annotation"><b>NOT IN works too</b><p>Excludes every value in the list instead of matching it — handy for "everything except these three legacy channels."</p></div></div>
+
+<h2 class="section"><span class="num">7</span>NULL checks</h2>
+<p><code class="inline">NULL</code> means "no value was ever recorded here" — it is not
+<code class="inline">0</code>, not an empty string <code class="inline">''</code>, and ordinary
+<code class="inline">=</code> silently fails to test for it (<code class="inline">WHERE x = NULL</code>
+matches nothing, with no error). Use <code class="inline">IS NULL</code> /
+<code class="inline">IS NOT NULL</code> instead.</p>
+<div class="callout insight">
+  <div class="ti">Why this dataset won't show it</div>
+  <p>Parch &amp; Posey happens to have no <code class="inline">NULL</code>s anywhere, so
+  <code class="inline">WHERE primary_poc IS NULL</code> returns 0 rows here. The syntax is exactly
+  what you'd reach for on a real, messier dataset — missing phone numbers, unfilled optional fields,
+  a join that didn't find a match (you'll see that scenario properly on Day 03).</p>
+</div>
+
+<h2 class="section"><span class="num">8</span>LIKE — pattern matching</h2>
+<p>Two wildcards: <code class="inline">%</code> matches any number of characters (including zero),
+<code class="inline">_</code> matches exactly one.</p>
+<table class="api"><thead><tr><th>Pattern</th><th>Matches</th></tr></thead><tbody>
+<tr><td><code class="inline">'A%'</code></td><td>starts with A</td></tr>
+<tr><td><code class="inline">'%a%'</code></td><td>contains a, anywhere</td></tr>
+<tr><td><code class="inline">'_a%'</code></td><td>'a' is the 2nd character</td></tr>
+<tr><td><code class="inline">'_a___'</code></td><td>exactly 5 characters, 'a' 2nd</td></tr>
+<tr><td><code class="inline">'%ct'</code></td><td>ends with 'ct'</td></tr>
+</tbody></table>
+
+<h2 class="section"><span class="num">9</span>GROUP BY — aggregating per bucket</h2>
+<p>Aggregate functions (<code class="inline">COUNT</code>, <code class="inline">SUM</code>,
+<code class="inline">AVG</code>, <code class="inline">MIN</code>, <code class="inline">MAX</code>)
+collapse <em>all</em> matching rows into one number, unless you tell them to collapse separately
+per group:</p>
+<figure>
+<div class="mermaid">
+flowchart TD
+    r1["direct"]:::direct --> bDirect
+    r2["facebook"]:::facebook --> bFacebook
+    r3["direct"]:::direct --> bDirect
+    r4["twitter"]:::twitter --> bTwitter
+    r5["facebook"]:::facebook --> bFacebook
+    r6["direct"]:::direct --> bDirect
+    bDirect["direct — COUNT(*) = 3"]:::direct
+    bFacebook["facebook — COUNT(*) = 2"]:::facebook
+    bTwitter["twitter — COUNT(*) = 1"]:::twitter
+
+    classDef direct fill:#EEF6FF,stroke:#2F63E8,color:#1E4BC4,stroke-width:2px
+    classDef facebook fill:#FFF8E1,stroke:#B45309,color:#B45309,stroke-width:2px
+    classDef twitter fill:#E8F5E9,stroke:#1E8449,color:#1E8449,stroke-width:2px
+    linkStyle 0,2,5 stroke:#2F63E8,stroke-width:2px
+    linkStyle 1,4 stroke:#B45309,stroke-width:2px
+    linkStyle 3 stroke:#1E8449,stroke-width:2px
+</div>
+<figcaption>web_events rows, in original table order, sorted by GROUP BY channel into buckets by color — COUNT(*) then runs once per bucket.</figcaption>
+</figure>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> Cnt
+<span class="kw">FROM</span> web_events
+<span class="kw">GROUP BY</span> channel
+<span class="kw">ORDER BY</span> Cnt <span class="kw">DESC</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>The rule</b><p>Every column in <code class="inline">SELECT</code> that <em>isn't</em> wrapped in an aggregate function must appear in <code class="inline">GROUP BY</code>.</p></div>
+  <div class="annotation"><b>Multi-column groups</b><p><code class="inline">GROUP BY account_id, channel</code> gives one row per <em>combination</em> — this account, that channel.</p></div>
+</div>
+
+<h2 class="section"><span class="num">10</span>DATE functions</h2>
+<p>MySQL pulls pieces out of a <code class="inline">TIMESTAMP</code> with dedicated functions:
+<code class="inline">YEAR()</code>, <code class="inline">MONTH()</code>,
+<code class="inline">DAY()</code>, <code class="inline">HOUR()</code>,
+<code class="inline">DATE()</code> (strips the time, keeps the date),
+<code class="inline">MONTHNAME()</code>, <code class="inline">DAYNAME()</code>.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="com">-- three equivalent ways to get just the year</span>
+<span class="kw">SELECT</span> <span class="fn">YEAR</span>(occurred_at) <span class="kw">FROM</span> orders;
+<span class="kw">SELECT</span> <span class="fn">EXTRACT</span>(<span class="kw">YEAR FROM</span> occurred_at) <span class="kw">FROM</span> orders;
+<span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(occurred_at, <span class="str">'%Y'</span>) <span class="kw">FROM</span> orders;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Pick one, be consistent</b><p>All three return the same value — <code class="inline">YEAR()</code> is usually the clearest to read back later.</p></div>
+</div>
+
+<h3 class="sub">Shifting and truncating dates</h3>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="com">-- expected delivery = order date + 7 days</span>
+<span class="kw">SELECT</span> occurred_at, <span class="fn">DATE_ADD</span>(occurred_at, <span class="kw">INTERVAL</span> 7 <span class="kw">DAY</span>) <span class="kw">AS</span> expected_delivery
+<span class="kw">FROM</span> orders;
+
+<span class="com">-- how many days ago did this order happen?</span>
+<span class="kw">SELECT</span> occurred_at, <span class="fn">DATEDIFF</span>(<span class="fn">CURDATE</span>(), occurred_at) <span class="kw">AS</span> days_ago
+<span class="kw">FROM</span> orders;
+
+<span class="com">-- bucket every order into the month it happened, ignoring the day/time</span>
+<span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(occurred_at, <span class="str">'%Y-%m'</span>) <span class="kw">AS</span> order_month, <span class="fn">COUNT</span>(*)
+<span class="kw">FROM</span> orders
+<span class="kw">GROUP BY</span> order_month;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>DATE_ADD / DATE_SUB</b><p><code class="inline">DATE_ADD(date, INTERVAL n DAY)</code> shifts a date forward; swap in <code class="inline">DATE_SUB</code> — or a negative interval — to shift backward. <code class="inline">INTERVAL</code> also accepts <code class="inline">MONTH</code>, <code class="inline">YEAR</code>, <code class="inline">HOUR</code>, and more.</p></div>
+  <div class="annotation"><b>DATEDIFF</b><p>Returns the number of days between two dates — handy for "how long ago," or for measuring the gap between an order date and a delivery date.</p></div>
+  <div class="annotation"><b>DATE_FORMAT + GROUP BY</b><p>This is how monthly/yearly reports get built: format every timestamp down to just <code class="inline">'YYYY-MM'</code>, then group on that string — every order in the same month collapses into one row.</p></div>
+</div>
+
+<h3 class="sub">DATE_FORMAT specifiers</h3>
+<p>The full reference for <code class="inline">DATE_FORMAT(date, format)</code> — combine any of these
+inside one format string, e.g. <code class="inline">'%W, %M %e %Y'</code> → <code class="inline">"Tuesday, January 14 2025"</code>.</p>
+<table class="api"><thead><tr><th>Specifier</th><th>Meaning</th><th>Example</th></tr></thead><tbody>
+<tr><td><code class="inline">%Y</code></td><td>4-digit year</td><td>2025</td></tr>
+<tr><td><code class="inline">%y</code></td><td>2-digit year</td><td>25</td></tr>
+<tr><td><code class="inline">%M</code></td><td>full month name</td><td>January</td></tr>
+<tr><td><code class="inline">%b</code></td><td>abbreviated month name</td><td>Jan</td></tr>
+<tr><td><code class="inline">%m</code></td><td>month, zero-padded</td><td>01</td></tr>
+<tr><td><code class="inline">%c</code></td><td>month, no padding</td><td>1</td></tr>
+<tr><td><code class="inline">%d</code></td><td>day of month, zero-padded</td><td>04</td></tr>
+<tr><td><code class="inline">%e</code></td><td>day of month, no padding</td><td>4</td></tr>
+<tr><td><code class="inline">%W</code></td><td>full weekday name</td><td>Tuesday</td></tr>
+<tr><td><code class="inline">%a</code></td><td>abbreviated weekday name</td><td>Tue</td></tr>
+<tr><td><code class="inline">%j</code></td><td>day of year (001–366)</td><td>014</td></tr>
+<tr><td><code class="inline">%H</code></td><td>hour, 24-hour, zero-padded</td><td>14</td></tr>
+<tr><td><code class="inline">%h</code></td><td>hour, 12-hour, zero-padded</td><td>02</td></tr>
+<tr><td><code class="inline">%i</code></td><td>minutes, zero-padded</td><td>05</td></tr>
+<tr><td><code class="inline">%s</code></td><td>seconds, zero-padded</td><td>09</td></tr>
+<tr><td><code class="inline">%p</code></td><td>AM or PM</td><td>PM</td></tr>
+</tbody></table>
+
+<div class="callout recap">
+  <div class="ti">Next: Day 03</div>
+  <p>JOINs + CASE — bringing sales_reps, accounts, orders, and web_events together, plus your first CASE statements.</p>
+</div>
+
+<footer>Day 02 · Filtering &amp; Aggregation · self-paced</footer>
+</div>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#EEF6FF',
+      primaryBorderColor: '#2F63E8',
+      primaryTextColor: '#141414',
+      lineColor: '#2F63E8',
+      tertiaryColor: '#F3F4F6',
+      fontFamily: "'IBM Plex Mono', monospace",
+      fontSize: '13.5px',
+      attributeBackgroundColorOdd: '#FFFFFF',
+      attributeBackgroundColorEven: '#F3F4F6'
+    },
+    er: {
+      diagramPadding: 24,
+      entityPadding: 16,
+      minEntityWidth: 130,
+      minEntityHeight: 70,
+      fontSize: 13,
+      useMaxWidth: true
+    }
+  });
+</script>
+</body></html>
