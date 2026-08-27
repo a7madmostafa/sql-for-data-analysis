@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 03 — JOINs + CASE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+:root{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+  --tip-bg:#EEF6FF; --tip-bd:#2E6FB5; --tip-ti:#1F4E82;
+  --warn-bg:#FDECEA; --warn-bd:#C0392B; --warn-ti:#7B1F14;
+  --recap-bg:#FFF8E1; --recap-bd:#B45309; --recap-ti:#8A4B00;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
+.page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
+.crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
+.subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
+.objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
+.objectives h2{font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);margin:0 0 10px;font-weight:700}
+.objectives ul{margin:0;padding-left:20px}.objectives li{font-size:15px;margin-bottom:6px}
+h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:26px;color:var(--ink);margin:52px 0 8px;padding-bottom:10px;border-bottom:2px solid var(--ink);font-weight:700}
+h2.section .num{color:var(--blue);margin-right:10px}
+.section-intro{font-size:16.5px;color:var(--gray);margin:0 0 20px}
+h3.sub{font-size:17.5px;color:var(--ink);margin:30px 0 10px;font-weight:700}
+p{margin:0 0 15px} p.lead{font-size:18px;color:var(--ink);font-weight:600}
+strong{color:var(--ink);font-weight:700}
+code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
+table.api{width:100%;border-collapse:collapse;margin:14px 0 22px;background:white;font-size:14px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.api th,table.api td{padding:10px 13px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.api thead th{background:var(--panel);color:var(--ink);font-size:11.5px;text-transform:uppercase;letter-spacing:.07em}
+table.api tbody tr:last-child td{border-bottom:none}
+
+.callout{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid}
+.callout .ti{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px}
+.callout p{font-size:15px;margin:0 0 6px}.callout p:last-child{margin-bottom:0}
+.callout.tip{background:var(--tip-bg);border-color:var(--tip-bd)}.callout.tip .ti{color:var(--tip-ti)}
+.callout.insight{background:var(--insight-bg);border-color:var(--insight-bd)}.callout.insight .ti{color:var(--insight-ti)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-bd)}.callout.warn .ti{color:var(--warn-ti)}
+.callout.recap{background:var(--recap-bg);border-color:var(--recap-bd)}.callout.recap .ti{color:var(--recap-ti)}
+
+.code-block{margin:18px 0 8px;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}
+.code-header{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#161616}
+.code-header .dot{width:10px;height:10px;border-radius:50%}
+.code-header .dot.r{background:#FF5F56}.code-header .dot.y{background:#FFBD2E}.code-header .dot.g{background:#27C93F}
+.code-header .fname{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}
+.code-body{background:var(--code-bg);color:var(--code-default);padding:16px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.75;overflow-x:auto;white-space:pre}
+.code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
+.code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
+.code-body .def{color:var(--code-default)}
+.annotations{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:6px 20px 14px;margin-bottom:28px}
+.annotation{padding:11px 0;border-top:1px solid #EEF2F7}
+.annotation:first-child{border-top:0}
+.annotation b{color:var(--blue);font-size:14px}
+.annotation p{margin:3px 0 0;font-size:14.5px;color:var(--ink)}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 26px}
+.compare .col{background:white;border:1px solid var(--border);border-radius:8px;padding:17px 19px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.compare .col h4{margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink)}
+.compare .col p,.compare .col li{font-size:14.5px}
+.compare .col ul{margin:6px 0 0;padding-left:18px}
+.compare .col.bad{border-color:#E8B7B1;background:#FCF2F0}.compare .col.bad h4{color:var(--warn-ti)}
+.compare .col.good{border-color:#B7DEC2;background:#F0F8F2}.compare .col.good h4{color:var(--insight-ti)}
+
+.card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0 26px}
+.card-grid.three{grid-template-columns:repeat(3,1fr)}
+.card{background:white;border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.card h4{margin:0 0 7px;color:var(--ink);font-size:16px;font-weight:700}
+.card p{font-size:14.5px;margin:0 0 6px;color:var(--gray)}
+.card p:last-child{margin-bottom:0}
+
+figure{margin:24px 0 8px;text-align:center;background:linear-gradient(180deg,#fff,#FAFBFD);border:1px solid var(--border);border-radius:10px;padding:26px 14px 18px}
+figcaption{font-size:13.5px;color:var(--gray);margin-top:12px;font-style:italic}
+.mermaid{display:flex;justify-content:center}
+.mermaid svg{max-width:100%;height:auto}
+
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
+@media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:30px}.card-grid,.card-grid.three,.compare{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="page">
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9CA3AF"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2F63E8"/>
+    </marker>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#141414" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="crumb">Day 03 of 9 · JOINs + CASE</div>
+<h1 class="title">JOINs + CASE</h1>
+<p class="subtitle">Bringing every table together, and labeling what you find — INNER · LEFT/RIGHT · anti-joins · UNION · HAVING · CASE.</p>
+
+<div class="objectives">
+  <h2>What you'll be able to do after this lesson</h2>
+  <ul>
+    <li>Combine rows from multiple tables with JOIN, and know when a plain (INNER) JOIN silently drops rows you wanted.</li>
+    <li>Keep unmatched rows with LEFT/RIGHT JOIN, and use that same pattern to write an anti-join.</li>
+    <li>Emulate MySQL's missing FULL JOIN with UNION.</li>
+    <li>Aggregate and filter across joined tables with GROUP BY and HAVING.</li>
+    <li>Add conditional logic with CASE — labeling rows, and bucketing continuous values into tiers.</li>
+  </ul>
+</div>
+
+<div class="callout tip">
+  <div class="ti">Before you start</div>
+  <p>This lesson reuses Day 02's <code class="inline">parch_and_posey</code> database — run <code class="inline">Parch &amp; Posey Database.sql</code> first if you haven't already, then <code class="inline">USE parch_and_posey;</code>. No new setup script this time; today is about bringing all five tables together instead of querying one at a time.</p>
+</div>
+
+<h2 class="section"><span class="num">1</span>From relationships to JOINs</h2>
+<p class="section-intro">Day 01 introduced three relationship types. Today, they become real SQL.</p>
+<p>Day 01 introduced 1:1, 1:N, and N:N using a primary key/foreign key pair. Here's the idea that
+connects that lesson to this one: <strong>JOIN is the SQL operation that follows a foreign key back
+to the row it points to.</strong> Every relationship type is just a different pattern of JOINs —
+and every table in <code class="inline">parch_and_posey</code> is chained together by exactly one
+of these two shapes.</p>
+<div class="card-grid">
+  <div class="card"><h4>1:N — one JOIN</h4><p><code class="inline">region → sales_reps</code>, <code class="inline">sales_reps → accounts</code>, <code class="inline">accounts → orders/web_events</code>. Every relationship in this dataset, and everything in today's lesson, is this shape.</p></div>
+  <div class="card"><h4>N:N — two JOINs</h4><p>Needs a junction table in the middle — Day 01's book↔author via <code class="inline">book_author</code>. Not present in this dataset, but recognize the shape when you see it elsewhere.</p></div>
+</div>
+<div class="mermaid">
+erDiagram
+    AUTHOR ||--o{ AUTHOR_BOOK : "writes"
+    BOOK ||--o{ AUTHOR_BOOK : "written by"
+    AUTHOR {
+        int id PK
+        string name
+    }
+    BOOK {
+        int id PK
+        string title
+    }
+    AUTHOR_BOOK {
+        int id PK
+        int author_id FK
+        int book_id FK
+    }
+</div>
+<p>An N:N JOIN reaches the far side in two hops: <code class="inline">book JOIN author_book ON
+... JOIN author ON ...</code> — one JOIN to get from <code class="inline">book</code> to the
+junction row, a second to get from the junction row to <code class="inline">author</code>. Today's
+lesson never needs this — <code class="inline">parch_and_posey</code> is 1:N end to end — but the
+technique is exactly this diagram, chained.</p>
+
+<h2 class="section"><span class="num">2</span>Anatomy of a JOIN</h2>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">skeleton</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> &lt;columns&gt;
+<span class="kw">FROM</span> &lt;left_table&gt;
+<span class="kw">JOIN</span> &lt;right_table&gt;
+    <span class="kw">ON</span> &lt;left_table&gt;.&lt;fk_column&gt; = &lt;right_table&gt;.&lt;pk_column&gt;;</div>
+</div>
+<p><code class="inline">ON</code> is the join condition — it tells MySQL which rows from each table
+belong together, by matching a foreign key on one side to the primary key it points to on the
+other. Table aliases (<code class="inline">FROM orders o JOIN accounts a</code>) exist because real
+queries reference the same table names repeatedly — <code class="inline">o.account_id = a.id</code>
+is a lot less noisy than spelling out <code class="inline">orders.account_id = accounts.id</code>
+every time, especially once you're joining three or four tables.</p>
+<div class="callout warn">
+  <div class="ti">Get ON wrong and you get a cross join</div>
+  <p>Omit <code class="inline">ON</code>, or write a condition that doesn't actually relate the two
+  tables, and MySQL pairs <em>every</em> row of the left table with <em>every</em> row of the right
+  table. For <code class="inline">orders</code> × <code class="inline">accounts</code> in this
+  dataset, that's tens of thousands of nonsense rows — not an error, just silently wrong data.</p>
+</div>
+
+<h2 class="section"><span class="num">3</span>INNER JOIN basics</h2>
+<p>Plain <code class="inline">JOIN</code> is shorthand for <code class="inline">INNER JOIN</code> —
+it returns only the rows that find a match on <em>both</em> sides.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> orders.id, accounts.name, orders.occurred_at
+<span class="kw">FROM</span> orders
+<span class="kw">JOIN</span> accounts
+    <span class="kw">ON</span> orders.account_id = accounts.id;
+
+<span class="com">-- same thing, with aliases</span>
+<span class="kw">SELECT</span> o.id, a.name, o.occurred_at
+<span class="kw">FROM</span> orders <span class="kw">AS</span> o
+<span class="kw">JOIN</span> accounts <span class="kw">AS</span> a
+    <span class="kw">ON</span> o.account_id = a.id;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>AS is optional</b><p><code class="inline">FROM orders o</code> works identically to <code class="inline">FROM orders AS o</code> — most people drop the <code class="inline">AS</code> for table aliases even while keeping it for column aliases.</p></div>
+  <div class="annotation"><b>Columns from both sides</b><p>Once tables are joined, you pick columns from either one in the same <code class="inline">SELECT</code> list — <code class="inline">o.occurred_at</code> and <code class="inline">a.name</code> live in different tables but read like one combined row.</p></div>
+</div>
+
+<h2 class="section"><span class="num">4</span>Multi-table JOINs</h2>
+<p>Each additional <code class="inline">JOIN</code> follows one more foreign key — chaining three or
+four tables together is just repeating the pattern from Section 2.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="com">-- 3 tables: orders -> accounts -> sales_reps</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
+<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> a.sales_rep_id = s.id;
+
+<span class="com">-- 4 tables, computing a unit price per order</span>
+<span class="kw">SELECT</span> r.name <span class="kw">AS</span> region, a.name <span class="kw">AS</span> account,
+       o.total_amt_usd / (o.total + 0.01) <span class="kw">AS</span> unit_price
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
+<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> a.sales_rep_id = s.id
+<span class="kw">JOIN</span> region r <span class="kw">ON</span> s.region_id = r.id;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Order rarely matters</b><p>MySQL works out the join order internally — write the JOINs in whatever sequence reads clearest, usually following the FK chain from the table you care about most.</p></div>
+  <div class="annotation"><b>+ 0.01 trick</b><p>A cheap guard against dividing by zero on the handful of orders where <code class="inline">total</code> happens to be <code class="inline">0</code> — shifts the denominator just enough to avoid an error without meaningfully changing the result.</p></div>
+  <div class="annotation"><b>Each JOIN = one more hop</b><p><code class="inline">region → sales_reps → accounts → orders</code> — four tables, three JOINs, following the same chain diagrammed back in Day 02.</p></div>
+</div>
+
+<h2 class="section"><span class="num">5</span>JOIN + GROUP BY</h2>
+<p>Nothing new syntactically — the JOIN happens first, combining rows from multiple tables, and
+<code class="inline">GROUP BY</code> then works on the result exactly as it did in Day 02.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> a.name <span class="kw">AS</span> account_name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
+<span class="kw">GROUP BY</span> a.name
+<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>;
+
+<span class="kw">SELECT</span> s.name, w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> occurrences
+<span class="kw">FROM</span> web_events w
+<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> w.account_id = a.id
+<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> s.id = a.sales_rep_id
+<span class="kw">GROUP BY</span> s.name, w.channel
+<span class="kw">ORDER BY</span> occurrences <span class="kw">DESC</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Same GROUP BY rule as Day 02</b><p>Every non-aggregated column in <code class="inline">SELECT</code> — <code class="inline">s.name</code>, <code class="inline">w.channel</code> — still has to appear in <code class="inline">GROUP BY</code>, whether it came from a JOIN or not.</p></div>
+</div>
+
+<h2 class="section"><span class="num">6</span>JOIN + HAVING</h2>
+<p><code class="inline">WHERE</code> filters rows before grouping; <code class="inline">HAVING</code>
+filters groups after aggregation — the same rule from Day 02, now applied across joined tables.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="com">-- sales reps who manage more than 5 accounts</span>
+<span class="kw">SELECT</span> s.id, s.name, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_accounts
+<span class="kw">FROM</span> accounts a
+<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> s.id = a.sales_rep_id
+<span class="kw">GROUP BY</span> s.id, s.name
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; 5;
+
+<span class="com">-- WHERE COUNT(*) > 5 here would be a syntax error —</span>
+<span class="com">-- COUNT(*) doesn't exist yet at the point WHERE runs</span></div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Accounts with more than 20 orders</b><p><code class="inline">GROUP BY a.id, a.name HAVING COUNT(*) &gt; 20</code> — same shape, different table pair.</p></div>
+  <div class="annotation"><b>Accounts that spent under $1,000 total</b><p><code class="inline">HAVING SUM(o.total_amt_usd) &lt; 1000</code> — <code class="inline">HAVING</code> works with any aggregate, not just <code class="inline">COUNT</code>.</p></div>
+</div>
+
+<h2 class="section"><span class="num">7</span>LEFT / RIGHT JOIN</h2>
+<p><code class="inline">LEFT JOIN</code> keeps every row from the left table regardless of whether a
+match exists on the right — unmatched columns from the right table come back
+<code class="inline">NULL</code> instead of dropping the row. <code class="inline">RIGHT JOIN</code>
+is the mirror image: keep everything on the right, matched or not.</p>
+<figure>
+<svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
+  <text x="105" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" font-weight="700" fill="#5B6472">accounts</text>
+  <text x="535" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" font-weight="700" fill="#5B6472">orders</text>
+
+  <g filter="url(#soft-shadow)"><rect x="20" y="30" width="170" height="40" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.5"/></g>
+  <text x="105" y="55" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Acme</text>
+  <g filter="url(#soft-shadow)"><rect x="20" y="90" width="170" height="40" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.5"/></g>
+  <text x="105" y="115" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Boaz Co</text>
+  <g filter="url(#soft-shadow)"><rect x="20" y="150" width="170" height="40" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.5"/></g>
+  <text x="105" y="175" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Cursor Inc</text>
+  <g filter="url(#soft-shadow)"><rect x="20" y="210" width="170" height="40" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.5"/></g>
+  <text x="105" y="235" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Delta LLC</text>
+
+  <g filter="url(#soft-shadow)"><rect x="450" y="30" width="170" height="40" rx="8" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1.5"/></g>
+  <text x="535" y="55" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Order #1</text>
+  <g filter="url(#soft-shadow)"><rect x="450" y="90" width="170" height="40" rx="8" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1.5"/></g>
+  <text x="535" y="115" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Order #2</text>
+  <g filter="url(#soft-shadow)"><rect x="450" y="150" width="170" height="40" rx="8" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1.5"/></g>
+  <text x="535" y="175" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Order #3</text>
+
+  <line x1="190" y1="50" x2="450" y2="50" stroke="#2F63E8" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <line x1="190" y1="110" x2="450" y2="110" stroke="#2F63E8" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <line x1="190" y1="170" x2="450" y2="170" stroke="#2F63E8" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+
+  <line x1="190" y1="230" x2="300" y2="230" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <circle cx="316" cy="230" r="13" fill="#FDECEA" stroke="#C0392B" stroke-width="1.5"/>
+  <text x="316" y="235" text-anchor="middle" font-family="IBM Plex Mono" font-weight="700" font-size="13" fill="#C0392B">?</text>
+  <text x="340" y="226" font-family="Nunito Sans" font-size="12.5" fill="#7B1F14">no match on orders —</text>
+  <text x="340" y="242" font-family="Nunito Sans" font-size="12.5" fill="#7B1F14">LEFT JOIN keeps the row anyway, order columns come back NULL</text>
+</svg>
+<figcaption>LEFT JOIN from accounts to orders — Delta LLC has no orders, but LEFT JOIN keeps it in the result with NULLs where order columns would be.</figcaption>
+</figure>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="com">-- every account, whether or not it has orders</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> accounts
+<span class="kw">LEFT JOIN</span> orders
+    <span class="kw">ON</span> orders.account_id = accounts.id;
+
+<span class="com">-- every order, even if its account can't be resolved</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> orders
+<span class="kw">RIGHT JOIN</span> accounts
+    <span class="kw">ON</span> orders.account_id = accounts.id;
+
+<span class="com">-- OUTER is optional noise: LEFT OUTER JOIN == LEFT JOIN</span></div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Unmatched side = NULL</b><p>Every column from the table that didn't find a match comes back <code class="inline">NULL</code> for that row — the row itself still shows up.</p></div>
+</div>
+
+<h2 class="section"><span class="num">8</span>Anti-joins — finding non-matches</h2>
+<p>A <code class="inline">LEFT JOIN</code> plus <code class="inline">WHERE ... IS NULL</code> isolates
+exactly the rows that found <em>no</em> match — this pattern is called an
+<strong>anti-join</strong>.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="com">-- accounts with NO orders at all</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> accounts a
+<span class="kw">LEFT JOIN</span> orders o
+    <span class="kw">ON</span> a.id = o.account_id
+<span class="kw">WHERE</span> o.id <span class="kw">IS NULL</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Why this works</b><p>Every unmatched row has <code class="inline">o.id</code> — and every other <code class="inline">orders</code> column — as <code class="inline">NULL</code>. Filtering on that isolates exactly the accounts the LEFT JOIN couldn't match, same Delta LLC row from the diagram above.</p></div>
+  <div class="annotation"><b>A very common real question</b><p>"Which customers/leads never converted" or "which accounts have never ordered" is almost always this exact pattern — LEFT JOIN toward the table you expect a match in, then filter for where it didn't happen.</p></div>
+</div>
+
+<h2 class="section"><span class="num">9</span>FULL JOIN — MySQL has no such keyword</h2>
+<p>Some databases support <code class="inline">FULL JOIN</code> directly (everything from both
+sides, matched or not). MySQL doesn't — you get the same result by taking the
+<code class="inline">UNION</code> of a <code class="inline">LEFT JOIN</code> and a
+<code class="inline">RIGHT JOIN</code>.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> *
+<span class="kw">FROM</span> orders
+<span class="kw">LEFT JOIN</span> accounts
+    <span class="kw">ON</span> orders.account_id = accounts.id
+
+<span class="kw">UNION</span>
+
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> orders
+<span class="kw">RIGHT JOIN</span> accounts
+    <span class="kw">ON</span> orders.account_id = accounts.id;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>UNION drops duplicates</b><p>Rows that matched appear in both halves (the LEFT JOIN result and the RIGHT JOIN result) but <code class="inline">UNION</code> only keeps one copy — <code class="inline">UNION ALL</code> would keep both if you ever wanted the duplicates.</p></div>
+  <div class="annotation"><b>Same column count required</b><p>Both <code class="inline">SELECT</code>s must return the same number of columns, in compatible types — MySQL matches them up positionally, not by name.</p></div>
+</div>
+
+<h2 class="section"><span class="num">10</span>CASE — conditional logic inside a query</h2>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">skeleton</span></div>
+  <div class="code-body"><span class="kw">CASE</span>
+    <span class="kw">WHEN</span> &lt;condition_1&gt; <span class="kw">THEN</span> &lt;result_1&gt;
+    <span class="kw">WHEN</span> &lt;condition_2&gt; <span class="kw">THEN</span> &lt;result_2&gt;
+    <span class="kw">ELSE</span> &lt;fallback&gt;
+<span class="kw">END</span> <span class="kw">AS</span> &lt;column_alias&gt;</div>
+</div>
+<p>Conditions are checked top to bottom — the first one that's true wins, and the rest are skipped,
+so order matters whenever ranges could overlap. <code class="inline">ELSE</code> is optional;
+without it, rows that hit no <code class="inline">WHEN</code> come back <code class="inline">NULL</code>
+instead of a fallback value.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> id, account_id, total_amt_usd,
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> total_amt_usd &gt; 2000 <span class="kw">THEN</span> <span class="str">'Large'</span>
+        <span class="kw">ELSE</span> <span class="str">'Small'</span>
+    <span class="kw">END</span> <span class="kw">AS</span> order_level
+<span class="kw">FROM</span> orders;
+
+<span class="com">-- CASE can guard against bad math, too</span>
+<span class="kw">SELECT</span> account_id,
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> standard_qty = 0 <span class="kw">OR</span> standard_qty <span class="kw">IS NULL</span> <span class="kw">THEN</span> 0
+        <span class="kw">ELSE</span> standard_amt_usd / standard_qty
+    <span class="kw">END</span> <span class="kw">AS</span> unit_price
+<span class="kw">FROM</span> orders;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Works anywhere an expression can go</b><p><code class="inline">SELECT</code> to label rows, wrapped in an aggregate (<code class="inline">SUM(CASE WHEN ... THEN 1 ELSE 0 END)</code> is a conditional count), or referenced in <code class="inline">GROUP BY</code>/<code class="inline">HAVING</code>/<code class="inline">ORDER BY</code> by its alias.</p></div>
+</div>
+
+<h2 class="section"><span class="num">11</span>CASE + GROUP BY — bucketing into tiers</h2>
+<p>A <code class="inline">CASE</code> inside — or alongside — an aggregate is how you bucket
+continuous values (order totals, account lifetime spend) into discrete tiers for reporting, with no
+separate lookup table required.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="com">-- bucket every order into a size category, then count each bucket</span>
+<span class="kw">SELECT</span>
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> total &gt;= 2000 <span class="kw">THEN</span> <span class="str">'At Least 2000'</span>
+        <span class="kw">WHEN</span> total <span class="kw">BETWEEN</span> 1000 <span class="kw">AND</span> 2000 <span class="kw">THEN</span> <span class="str">'Between 1000 and 2000'</span>
+        <span class="kw">ELSE</span> <span class="str">'Less than 1000'</span>
+    <span class="kw">END</span> <span class="kw">AS</span> order_category,
+    <span class="fn">COUNT</span>(*) <span class="kw">AS</span> order_count
+<span class="kw">FROM</span> orders
+<span class="kw">GROUP BY</span> 1;
+
+<span class="com">-- customer lifetime value tiers, based on total spend per account</span>
+<span class="kw">SELECT</span> a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_spent,
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amt_usd) &gt; 200000 <span class="kw">THEN</span> <span class="str">'top'</span>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amt_usd) &gt; 100000 <span class="kw">THEN</span> <span class="str">'middle'</span>
+        <span class="kw">ELSE</span> <span class="str">'low'</span>
+    <span class="kw">END</span> <span class="kw">AS</span> customer_level
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
+<span class="kw">GROUP BY</span> a.name
+<span class="kw">ORDER BY</span> total_spent <span class="kw">DESC</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>GROUP BY 1</b><p>Groups by the first column in <code class="inline">SELECT</code> — here, the <code class="inline">CASE</code> expression itself — instead of repeating the whole <code class="inline">CASE</code> block a second time in <code class="inline">GROUP BY</code>.</p></div>
+  <div class="annotation"><b>CASE around an aggregate</b><p>The condition checks <code class="inline">SUM(...)</code>, not a raw column — it's evaluated once per group, after the aggregation, not per row.</p></div>
+  <div class="annotation"><b>Order of WHENs matters</b><p>First match wins — the widest, catch-all range (<code class="inline">'low'</code> here) has to come last, or it would swallow everything above it too.</p></div>
+</div>
+
+<h2 class="section"><span class="num">12</span>CASE + HAVING</h2>
+<p><code class="inline">HAVING</code> treats a <code class="inline">CASE</code>-derived value like any
+other aggregate result — you can filter on the same expression a <code class="inline">CASE</code>
+uses to decide its label.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> s.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales,
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">BETWEEN</span> 1 <span class="kw">AND</span> 5000 <span class="kw">THEN</span> <span class="str">'Under 5k'</span>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">BETWEEN</span> 5001 <span class="kw">AND</span> 10000 <span class="kw">THEN</span> <span class="str">'5-10k'</span>
+        <span class="kw">ELSE</span> <span class="str">'+10k'</span>
+    <span class="kw">END</span> <span class="kw">AS</span> sales_category
+<span class="kw">FROM</span> accounts a
+<span class="kw">JOIN</span> orders o <span class="kw">ON</span> a.id = o.account_id
+<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> s.id = a.sales_rep_id
+<span class="kw">GROUP BY</span> a.id, a.sales_rep_id, s.name
+<span class="kw">HAVING</span> <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">BETWEEN</span> 1 <span class="kw">AND</span> 5000;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>HAVING re-checks the condition directly</b><p>It re-evaluates <code class="inline">SUM(o.total_amt_usd)</code> itself here — MySQL doesn't let <code class="inline">HAVING</code> reuse the <code class="inline">CASE</code> expression's own alias for filtering, only for display.</p></div>
+</div>
+
+<div class="callout recap">
+  <div class="ti">Next: Day 04</div>
+  <p>String Functions, Subqueries, CTEs, Temp Tables, and Views — a query inside a query, and cleaner ways to reuse one.</p>
+</div>
+
+<footer>Day 03 · JOINs + CASE · self-paced</footer>
+</div>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#EEF6FF',
+      primaryBorderColor: '#2F63E8',
+      primaryTextColor: '#141414',
+      lineColor: '#2F63E8',
+      tertiaryColor: '#F3F4F6',
+      fontFamily: "'IBM Plex Mono', monospace",
+      fontSize: '13.5px',
+      attributeBackgroundColorOdd: '#FFFFFF',
+      attributeBackgroundColorEven: '#F3F4F6'
+    },
+    er: {
+      diagramPadding: 24,
+      entityPadding: 16,
+      minEntityWidth: 130,
+      minEntityHeight: 70,
+      fontSize: 13,
+      useMaxWidth: true
+    }
+  });
+</script>
+</body></html>
