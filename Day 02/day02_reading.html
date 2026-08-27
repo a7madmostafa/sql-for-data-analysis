@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <style>
 :root{
   --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
@@ -80,8 +79,6 @@ table.api tbody tr:last-child td{border-bottom:none}
 
 figure{margin:24px 0 8px;text-align:center;background:linear-gradient(180deg,#fff,#FAFBFD);border:1px solid var(--border);border-radius:10px;padding:26px 14px 18px}
 figcaption{font-size:13.5px;color:var(--gray);margin-top:12px;font-style:italic}
-.mermaid{display:flex;justify-content:center}
-.mermaid svg{max-width:100%;height:auto}
 
 .mistakes{margin:14px 0 26px}
 .mistake{display:grid;grid-template-columns:38px 1fr;gap:14px;padding:14px 4px;border-top:1px solid #EEF2F7}
@@ -103,15 +100,9 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
 
 <svg width="0" height="0" style="position:absolute">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#9CA3AF"/>
-    </marker>
-    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#2F63E8"/>
-    </marker>
-    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#141414" flood-opacity="0.16"/>
-    </filter>
+    <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
+      <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
+    </pattern>
   </defs>
 </svg>
 
@@ -141,11 +132,6 @@ clients, through 50 sales reps organized into 4 regions across the US. Every one
 facts becomes a table. Five of them, chained together entirely by one-to-many relationships:</p>
 <figure>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 450" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
-  <defs>
-    <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
-      <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
-    </pattern>
-  </defs>
   <rect x="0" y="0" width="900" height="450" fill="#ffffff"/>
   <rect x="0" y="0" width="900" height="450" fill="url(#erd-grid)"/>
 
@@ -341,14 +327,16 @@ get a chance to do anything — think of it as a gate that rows have to pass thr
 
 <h2 class="section"><span class="num">5</span>BETWEEN — range filtering</h2>
 <figure>
-<svg viewBox="0 0 620 100" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
-  <line x1="30" y1="55" x2="590" y2="55" stroke="#E5E7EB" stroke-width="3"/>
-  <line x1="180" y1="55" x2="440" y2="55" stroke="#2F63E8" stroke-width="5"/>
-  <circle cx="180" cy="55" r="6" fill="#2F63E8" filter="url(#soft-shadow)"/>
-  <circle cx="440" cy="55" r="6" fill="#2F63E8" filter="url(#soft-shadow)"/>
-  <text x="180" y="35" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#2F63E8" font-weight="700">500</text>
-  <text x="440" y="35" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#2F63E8" font-weight="700">999</text>
-  <text x="310" y="80" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="12.5" fill="#2F63E8">BETWEEN 500 AND 999 — both ends included</text>
+<svg viewBox="0 0 620 100" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
+  <rect x="0" y="0" width="620" height="100" fill="#ffffff"/>
+  <rect x="0" y="0" width="620" height="100" fill="url(#erd-grid)"/>
+  <line x1="30" y1="55" x2="590" y2="55" stroke="#333" stroke-width="2"/>
+  <line x1="180" y1="55" x2="440" y2="55" stroke="#1f6fb2" stroke-width="4"/>
+  <circle cx="180" cy="55" r="6" fill="#1f6fb2" stroke="#333" stroke-width="1"/>
+  <circle cx="440" cy="55" r="6" fill="#1f6fb2" stroke="#333" stroke-width="1"/>
+  <text x="180" y="35" text-anchor="middle" font-size="12" fill="#1f6fb2" font-weight="bold">500</text>
+  <text x="440" y="35" text-anchor="middle" font-size="12" fill="#1f6fb2" font-weight="bold">999</text>
+  <text x="310" y="80" text-anchor="middle" font-weight="bold" font-size="12.5" fill="#1f6fb2">BETWEEN 500 AND 999 — both ends included</text>
 </svg>
 <figcaption>total_amt_usd BETWEEN 500 AND 999</figcaption>
 </figure>
@@ -415,25 +403,46 @@ matches nothing, with no error). Use <code class="inline">IS NULL</code> /
 collapse <em>all</em> matching rows into one number, unless you tell them to collapse separately
 per group:</p>
 <figure>
-<div class="mermaid">
-flowchart TD
-    r1["direct"]:::direct --> bDirect
-    r2["facebook"]:::facebook --> bFacebook
-    r3["direct"]:::direct --> bDirect
-    r4["twitter"]:::twitter --> bTwitter
-    r5["facebook"]:::facebook --> bFacebook
-    r6["direct"]:::direct --> bDirect
-    bDirect["direct — COUNT(*) = 3"]:::direct
-    bFacebook["facebook — COUNT(*) = 2"]:::facebook
-    bTwitter["twitter — COUNT(*) = 1"]:::twitter
+<svg viewBox="0 0 620 220" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
+  <rect x="0" y="0" width="620" height="220" fill="#ffffff"/>
+  <rect x="0" y="0" width="620" height="220" fill="url(#erd-grid)"/>
+  <text x="10" y="14" font-size="11" fill="#666">web_events rows, in original table order —</text>
 
-    classDef direct fill:#EEF6FF,stroke:#2F63E8,color:#1E4BC4,stroke-width:2px
-    classDef facebook fill:#FFF8E1,stroke:#B45309,color:#B45309,stroke-width:2px
-    classDef twitter fill:#E8F5E9,stroke:#1E8449,color:#1E8449,stroke-width:2px
-    linkStyle 0,2,5 stroke:#2F63E8,stroke-width:2px
-    linkStyle 1,4 stroke:#B45309,stroke-width:2px
-    linkStyle 3 stroke:#1E8449,stroke-width:2px
-</div>
+  <g font-size="12" font-weight="bold">
+    <rect x="10"  y="22" width="90" height="34" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.6"/>
+    <text x="55" y="43" text-anchor="middle" fill="#1f6fb2">direct</text>
+    <rect x="110" y="22" width="90" height="34" fill="#ffffff" stroke="#b8860b" stroke-width="1.6"/>
+    <text x="155" y="43" text-anchor="middle" fill="#b8860b">facebook</text>
+    <rect x="210" y="22" width="90" height="34" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.6"/>
+    <text x="255" y="43" text-anchor="middle" fill="#1f6fb2">direct</text>
+    <rect x="310" y="22" width="90" height="34" fill="#ffffff" stroke="#2e7d32" stroke-width="1.6"/>
+    <text x="355" y="43" text-anchor="middle" fill="#2e7d32">twitter</text>
+    <rect x="410" y="22" width="90" height="34" fill="#ffffff" stroke="#b8860b" stroke-width="1.6"/>
+    <text x="455" y="43" text-anchor="middle" fill="#b8860b">facebook</text>
+    <rect x="510" y="22" width="90" height="34" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.6"/>
+    <text x="555" y="43" text-anchor="middle" fill="#1f6fb2">direct</text>
+  </g>
+
+  <text x="10" y="70" font-size="11" fill="#666">GROUP BY channel sorts each row into its bucket by color —</text>
+  <g stroke-width="1.6" fill="none">
+    <path d="M55,80 L105,150" stroke="#1f6fb2"/>
+    <path d="M255,80 L105,150" stroke="#1f6fb2"/>
+    <path d="M555,80 L105,150" stroke="#1f6fb2"/>
+    <path d="M155,80 L305,150" stroke="#b8860b"/>
+    <path d="M455,80 L305,150" stroke="#b8860b"/>
+    <path d="M355,80 L505,150" stroke="#2e7d32"/>
+  </g>
+
+  <rect x="20"  y="150" width="170" height="56" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.6"/>
+  <rect x="220" y="150" width="170" height="56" fill="#ffffff" stroke="#b8860b" stroke-width="1.6"/>
+  <rect x="420" y="150" width="170" height="56" fill="#ffffff" stroke="#2e7d32" stroke-width="1.6"/>
+  <text x="105" y="174" text-anchor="middle" font-weight="bold" font-size="14" fill="#1f6fb2">direct</text>
+  <text x="105" y="194" font-size="12">COUNT(*) = 3</text>
+  <text x="305" y="174" text-anchor="middle" font-weight="bold" font-size="14" fill="#b8860b">facebook</text>
+  <text x="305" y="194" font-size="12">COUNT(*) = 2</text>
+  <text x="505" y="174" text-anchor="middle" font-weight="bold" font-size="14" fill="#2e7d32">twitter</text>
+  <text x="505" y="194" font-size="12">COUNT(*) = 1</text>
+</svg>
 <figcaption>web_events rows, in original table order, sorted by GROUP BY channel into buckets by color — COUNT(*) then runs once per bucket.</figcaption>
 </figure>
 <div class="code-block">
@@ -516,29 +525,4 @@ inside one format string, e.g. <code class="inline">'%W, %M %e %Y'</code> → <c
 
 <footer>Day 02 · Filtering &amp; Aggregation · self-paced</footer>
 </div>
-<script>
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'base',
-    themeVariables: {
-      primaryColor: '#EEF6FF',
-      primaryBorderColor: '#2F63E8',
-      primaryTextColor: '#141414',
-      lineColor: '#2F63E8',
-      tertiaryColor: '#F3F4F6',
-      fontFamily: "'IBM Plex Mono', monospace",
-      fontSize: '13.5px',
-      attributeBackgroundColorOdd: '#FFFFFF',
-      attributeBackgroundColorEven: '#F3F4F6'
-    },
-    er: {
-      diagramPadding: 24,
-      entityPadding: 16,
-      minEntityWidth: 130,
-      minEntityHeight: 70,
-      fontSize: 13,
-      useMaxWidth: true
-    }
-  });
-</script>
 </body></html>

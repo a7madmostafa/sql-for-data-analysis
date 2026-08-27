@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <style>
 :root{
   --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
@@ -80,8 +79,6 @@ table.api tbody tr:last-child td{border-bottom:none}
 
 figure{margin:24px 0 8px;text-align:center;background:linear-gradient(180deg,#fff,#FAFBFD);border:1px solid var(--border);border-radius:10px;padding:26px 14px 18px}
 figcaption{font-size:13.5px;color:var(--gray);margin-top:12px;font-style:italic}
-.mermaid{display:flex;justify-content:center}
-.mermaid svg{max-width:100%;height:auto}
 
 footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
 @media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:30px}.card-grid,.card-grid.three,.compare{grid-template-columns:1fr}}
@@ -91,15 +88,9 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
 
 <svg width="0" height="0" style="position:absolute">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#9CA3AF"/>
-    </marker>
-    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#2F63E8"/>
-    </marker>
-    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#141414" flood-opacity="0.16"/>
-    </filter>
+    <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
+      <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
+    </pattern>
   </defs>
 </svg>
 
@@ -134,25 +125,53 @@ of these two shapes.</p>
   <div class="card"><h4>1:N — one JOIN</h4><p><code class="inline">region → sales_reps</code>, <code class="inline">sales_reps → accounts</code>, <code class="inline">accounts → orders/web_events</code>. Every relationship in this dataset, and everything in today's lesson, is this shape.</p></div>
   <div class="card"><h4>N:N — two JOINs</h4><p>Needs a junction table in the middle — Day 01's book↔author via <code class="inline">book_author</code>. Not present in this dataset, but recognize the shape when you see it elsewhere.</p></div>
 </div>
-<div class="mermaid">
-erDiagram
-    AUTHOR ||--o{ AUTHOR_BOOK : "writes"
-    BOOK ||--o{ AUTHOR_BOOK : "written by"
-    AUTHOR {
-        int id PK
-        string name
-    }
-    BOOK {
-        int id PK
-        string title
-    }
-    AUTHOR_BOOK {
-        int id PK
-        int author_id FK
-        int book_id FK
-    }
-</div>
-<p>An N:N JOIN reaches the far side in two hops: <code class="inline">book JOIN author_book ON
+<figure>
+<svg viewBox="0 0 780 130" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
+  <rect x="0" y="0" width="780" height="130" fill="#ffffff"/>
+  <rect x="0" y="0" width="780" height="130" fill="url(#erd-grid)"/>
+
+  <line x1="190" y1="47" x2="280" y2="47" stroke="#333" stroke-width="1.4"/>
+  <path d="M202,41 L202,53" stroke="#333" stroke-width="1.4" fill="none"/>
+  <path d="M280,35 L268,47 L280,59" stroke="#333" stroke-width="1.4" fill="none"/>
+
+  <line x1="490" y1="47" x2="580" y2="47" stroke="#333" stroke-width="1.4"/>
+  <path d="M490,35 L502,47 L490,59" stroke="#333" stroke-width="1.4" fill="none"/>
+  <path d="M568,41 L568,53" stroke="#333" stroke-width="1.4" fill="none"/>
+
+  <rect x="20" y="20" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="20" y="20" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">book</text>
+  <line x1="54" y1="50" x2="54" y2="102" stroke="#333" stroke-width="1"/>
+  <line x1="20" y1="76" x2="190" y2="76" stroke="#333" stroke-width="1"/>
+  <text x="37" y="67" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
+  <text x="66" y="67" font-size="13">id</text>
+  <text x="66" y="93" font-size="13">title</text>
+
+  <rect x="280" y="20" width="210" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="280" y="20" width="210" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="385" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">book_author</text>
+  <line x1="314" y1="50" x2="314" y2="128" stroke="#333" stroke-width="1"/>
+  <line x1="280" y1="76" x2="490" y2="76" stroke="#333" stroke-width="1"/>
+  <line x1="280" y1="102" x2="490" y2="102" stroke="#333" stroke-width="1"/>
+  <text x="297" y="67" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
+  <text x="326" y="67" font-size="13">id</text>
+  <text x="297" y="93" text-anchor="middle" font-weight="bold" font-size="12">FK</text>
+  <text x="326" y="93" font-size="13">book_id</text>
+  <text x="297" y="119" text-anchor="middle" font-weight="bold" font-size="12">FK</text>
+  <text x="326" y="119" font-size="13">author_id</text>
+
+  <rect x="580" y="20" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="580" y="20" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="665" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">author</text>
+  <line x1="614" y1="50" x2="614" y2="102" stroke="#333" stroke-width="1"/>
+  <line x1="580" y1="76" x2="750" y2="76" stroke="#333" stroke-width="1"/>
+  <text x="597" y="67" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
+  <text x="626" y="67" font-size="13">id</text>
+  <text x="626" y="93" font-size="13">name</text>
+</svg>
+<figcaption>book ↔ book_author ↔ author — the same N:N shape from Day 01, now reached with two JOINs.</figcaption>
+</figure>
+<p>An N:N JOIN reaches the far side in two hops: <code class="inline">book JOIN book_author ON
 ... JOIN author ON ...</code> — one JOIN to get from <code class="inline">book</code> to the
 junction row, a second to get from the junction row to <code class="inline">author</code>. Today's
 lesson never needs this — <code class="inline">parch_and_posey</code> is 1:N end to end — but the
@@ -274,35 +293,37 @@ match exists on the right — unmatched columns from the right table come back
 <code class="inline">NULL</code> instead of dropping the row. <code class="inline">RIGHT JOIN</code>
 is the mirror image: keep everything on the right, matched or not.</p>
 <figure>
-<svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">
-  <text x="105" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" font-weight="700" fill="#5B6472">accounts</text>
-  <text x="535" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" font-weight="700" fill="#5B6472">orders</text>
+<svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
+  <rect x="0" y="0" width="640" height="270" fill="#ffffff"/>
+  <rect x="0" y="0" width="640" height="270" fill="url(#erd-grid)"/>
+  <text x="105" y="18" text-anchor="middle" font-size="12" font-weight="bold" fill="#666">accounts</text>
+  <text x="535" y="18" text-anchor="middle" font-size="12" font-weight="bold" fill="#666">orders</text>
 
-  <g filter="url(#soft-shadow)"><rect x="20" y="30" width="170" height="40" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.5"/></g>
-  <text x="105" y="55" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Acme</text>
-  <g filter="url(#soft-shadow)"><rect x="20" y="90" width="170" height="40" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.5"/></g>
-  <text x="105" y="115" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Boaz Co</text>
-  <g filter="url(#soft-shadow)"><rect x="20" y="150" width="170" height="40" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.5"/></g>
-  <text x="105" y="175" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Cursor Inc</text>
-  <g filter="url(#soft-shadow)"><rect x="20" y="210" width="170" height="40" rx="8" fill="#fff" stroke="#2F63E8" stroke-width="1.5"/></g>
-  <text x="105" y="235" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Delta LLC</text>
+  <rect x="20" y="30" width="170" height="40" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="55" text-anchor="middle" font-weight="bold" font-size="13">Acme</text>
+  <rect x="20" y="90" width="170" height="40" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="115" text-anchor="middle" font-weight="bold" font-size="13">Boaz Co</text>
+  <rect x="20" y="150" width="170" height="40" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="175" text-anchor="middle" font-weight="bold" font-size="13">Cursor Inc</text>
+  <rect x="20" y="210" width="170" height="40" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="235" text-anchor="middle" font-weight="bold" font-size="13">Delta LLC</text>
 
-  <g filter="url(#soft-shadow)"><rect x="450" y="30" width="170" height="40" rx="8" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1.5"/></g>
-  <text x="535" y="55" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Order #1</text>
-  <g filter="url(#soft-shadow)"><rect x="450" y="90" width="170" height="40" rx="8" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1.5"/></g>
-  <text x="535" y="115" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Order #2</text>
-  <g filter="url(#soft-shadow)"><rect x="450" y="150" width="170" height="40" rx="8" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1.5"/></g>
-  <text x="535" y="175" text-anchor="middle" font-family="Nunito Sans" font-weight="700" font-size="13" fill="#141414">Order #3</text>
+  <rect x="450" y="30" width="170" height="40" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="535" y="55" text-anchor="middle" font-weight="bold" font-size="13">Order #1</text>
+  <rect x="450" y="90" width="170" height="40" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="535" y="115" text-anchor="middle" font-weight="bold" font-size="13">Order #2</text>
+  <rect x="450" y="150" width="170" height="40" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="535" y="175" text-anchor="middle" font-weight="bold" font-size="13">Order #3</text>
 
-  <line x1="190" y1="50" x2="450" y2="50" stroke="#2F63E8" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
-  <line x1="190" y1="110" x2="450" y2="110" stroke="#2F63E8" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
-  <line x1="190" y1="170" x2="450" y2="170" stroke="#2F63E8" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <line x1="190" y1="50" x2="450" y2="50" stroke="#1f6fb2" stroke-width="1.6"/>
+  <line x1="190" y1="110" x2="450" y2="110" stroke="#1f6fb2" stroke-width="1.6"/>
+  <line x1="190" y1="170" x2="450" y2="170" stroke="#1f6fb2" stroke-width="1.6"/>
 
-  <line x1="190" y1="230" x2="300" y2="230" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="5,4"/>
-  <circle cx="316" cy="230" r="13" fill="#FDECEA" stroke="#C0392B" stroke-width="1.5"/>
-  <text x="316" y="235" text-anchor="middle" font-family="IBM Plex Mono" font-weight="700" font-size="13" fill="#C0392B">?</text>
-  <text x="340" y="226" font-family="Nunito Sans" font-size="12.5" fill="#7B1F14">no match on orders —</text>
-  <text x="340" y="242" font-family="Nunito Sans" font-size="12.5" fill="#7B1F14">LEFT JOIN keeps the row anyway, order columns come back NULL</text>
+  <line x1="190" y1="230" x2="300" y2="230" stroke="#333" stroke-width="1.4" stroke-dasharray="5,4"/>
+  <circle cx="316" cy="230" r="13" fill="#ffffff" stroke="#c0392b" stroke-width="1.6"/>
+  <text x="316" y="235" text-anchor="middle" font-weight="bold" font-size="13" fill="#c0392b">?</text>
+  <text x="340" y="226" font-size="12.5" fill="#666">no match on orders —</text>
+  <text x="340" y="242" font-size="12.5" fill="#666">LEFT JOIN keeps the row anyway, order columns come back NULL</text>
 </svg>
 <figcaption>LEFT JOIN from accounts to orders — Delta LLC has no orders, but LEFT JOIN keeps it in the result with NULLs where order columns would be.</figcaption>
 </figure>
@@ -466,29 +487,4 @@ uses to decide its label.</p>
 
 <footer>Day 03 · JOINs + CASE · self-paced</footer>
 </div>
-<script>
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'base',
-    themeVariables: {
-      primaryColor: '#EEF6FF',
-      primaryBorderColor: '#2F63E8',
-      primaryTextColor: '#141414',
-      lineColor: '#2F63E8',
-      tertiaryColor: '#F3F4F6',
-      fontFamily: "'IBM Plex Mono', monospace",
-      fontSize: '13.5px',
-      attributeBackgroundColorOdd: '#FFFFFF',
-      attributeBackgroundColorEven: '#F3F4F6'
-    },
-    er: {
-      diagramPadding: 24,
-      entityPadding: 16,
-      minEntityWidth: 130,
-      minEntityHeight: 70,
-      fontSize: 13,
-      useMaxWidth: true
-    }
-  });
-</script>
 </body></html>

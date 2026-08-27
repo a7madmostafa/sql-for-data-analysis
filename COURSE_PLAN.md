@@ -82,9 +82,11 @@ changes what backs Days 03–05:
     ("html is more rich"), then went through iteration on diagram richness, prose depth, and a
     code-block color-contrast bug before Days 01–03 were rebuilt as `day0N_reading.html` and the
     old `.md`/`.pptx`/`build.py`/`_slide_kit/` files were removed. See `CLAUDE.md`'s "Reading
-    material format" section for the current design system and diagram-tooling rules (Mermaid
-    `erDiagram`/`flowchart` by default, hand SVG only when Mermaid's grammar can't express the
-    diagram) — apply that to Day 04 onward, not the pptx approach described in older entries below.
+    material format" section for the current design system and diagram rules — every diagram is
+    hand-drawn inline SVG in one consistent crow's-foot "blueprint" style (white background + grid
+    pattern, `#333` strokes, `#dfe3e8` headers, `#1f6fb2` titles, Segoe UI, no shadows); Mermaid was
+    tried for ERDs first, then dropped in favor of this style once the user compared both — apply
+    that to Day 04 onward, not the pptx approach described in older entries below.
     Where relevant, the reading calls out MySQL-vs-SQLite differences (e.g. `DATE_FORMAT` vs
     `STRFTIME`, `CONCAT()` vs `||`, `AUTO_INCREMENT` vs `AUTOINCREMENT`) — most relevant in Day 04
     (string functions) and Day 05 (dual connections), since Days 06–09 run on SQLite.
@@ -185,9 +187,10 @@ changes what backs Days 03–05:
   fixed regardless of description length, so a 3-line description overflowed into the next card.
   Now sized dynamically, same fix pattern already used for `code_slide`'s notes column.
 - **Superseded:** `day03_reading.md` + `Day 03 - JOINs + CASE.pptx` + `build.py` were later replaced
-  by `day03_reading.html`, applying the same design system as Days 01–02 (Mermaid `erDiagram` for
-  the N:N book/author_book relationship, a hand-drawn SVG for the LEFT JOIN unmatched-row example
-  since it shows specific record instances rather than a table schema). This entry is kept for
+  by `day03_reading.html`, applying the same design system as Days 01–02 (hand-drawn crow's-foot SVG
+  for the N:N book/book_author/author relationship — Mermaid was used briefly here too before being
+  dropped course-wide — and a hand-drawn SVG for the LEFT JOIN unmatched-row example, since it shows
+  specific record instances rather than a table schema). This entry is kept for
   provenance only. Subfolders (`D03_01_Materials/` etc.) were also later flattened away — see the
   "Flat lesson-day folders" convention above.
 
@@ -202,10 +205,9 @@ changes what backs Days 03–05:
   worth keeping close to verbatim in `Reading_04.md`.
 - Views: `SQL Advanced.ipynb`'s Views section is an empty placeholder — use `OLD SQL/SQL_05/CTE and
   Views.sql` instead.
-- Note: `SQL 03/Case.sql` and `SQL 03/Subquery and CTE.sql` at the repo root are unmodified copies of
-  the *old* sources — Case.sql's content now belongs in Day 03, not here; Subquery-and-CTE.sql is
-  superseded by `SQL Advanced.ipynb` as the primary source but can still supply extra examples.
-- Build: `Walkthrough_04`, `Exercises_04`, `Reading_04.md`, `Slides_04`.
+- Build: `day04_reading.html` (see `CLAUDE.md`'s "Reading material format"), the walkthrough SQL,
+  exercises + solutions, and a `README.md` — flat in `Day 04/`, no subfolders (see "Flat lesson-day
+  folders" above).
 
 ### Day 05 — Window Functions, Stored Procedures, and Python (MySQL + SQLite)
 - Window functions and stored procedures are thin-to-empty in every available source:
@@ -280,13 +282,16 @@ changes what backs Days 03–05:
 1. ~~Exact slide-deck format~~ — resolved, then superseded: originally a real `.pptx` via a shared
    `_slide_kit/deckkit.py` builder; later replaced entirely by a single self-contained
    `day0N_reading.html` per day (Days 01–03 rebuilt, `_slide_kit/` removed) — see CLAUDE.md's
-   "Reading material format" section. Diagrams are Mermaid (`erDiagram`/`flowchart`, preferred) or
-   hand-drawn inline SVG when Mermaid can't express the shape — still no raster image generation.
+   "Reading material format" section. Diagrams are every one hand-drawn inline SVG in a consistent
+   crow's-foot "blueprint" style (Mermaid was tried for ERDs first, then dropped course-wide once
+   the user preferred a pre-existing hand-drawn asset's look) — still no raster image generation.
 2. Day 03/04 file names for the rewritten `Walkthrough` SQL (placeholder names used above) — apply
    the `day0N_` prefix standard once named.
-3. Whether to physically move/rename `SQL 03` (the staged root folder) into `Day 03` now, or treat
-   it purely as scratch input and build `Day 03` fresh — its contents now span Day 03 (Case.sql →
-   partially) and Day 04 (Subquery and CTE.sql) rather than mapping to one day.
+3. ~~Whether to move `SQL 03` (staged root folder) into `Day 03`~~ — resolved: built `Day 03` fresh
+   from `OLD SQL/SQL_03/` directly (see Day 03's DONE entry), and confirmed `SQL 03/`'s contents
+   were unmodified duplicates already archived under `OLD SQL/SQL_03/` and `OLD SQL/SQL_04/` — the
+   root `SQL 03/` staging copy was removed as redundant scratch. Day 04 sources from
+   `OLD SQL/SQL_04/` directly when it's built.
 4. How deep Day 05's Stored Procedures section should go, given it's written fresh with no source
    material — current plan is intentionally shallow ("recognize and read one," not "write complex
    ones").

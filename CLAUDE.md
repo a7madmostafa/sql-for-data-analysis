@@ -45,22 +45,40 @@ change if it's ever needed again).
   `.warn`/`.recap` variants, `.code-block` + `.code-header` + `.code-body` + `.annotations` (code
   followed by a numbered explanation list), `.compare` with `.good`/`.bad` columns, `.card-grid`
   (2- or 3-column), `figure`/`figcaption`.
-- **Diagrams — pick the right tool per diagram, don't default to one:**
-  - **Mermaid `erDiagram`** (loaded via CDN, `<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js">`,
-    initialized in a `<script>` before `</body>` with `theme:'base'` and this repo's color tokens
-    in `themeVariables`) for any real entity-relationship diagram — table schemas, FK
-    relationships. This is the default for ERDs: auto-layout beats hand-placed SVG coordinates for
-    correctness and clarity, confirmed directly by the user comparing both. Also usable for
-    non-ER diagrams via `flowchart TD`/`LR` (e.g. Day 02's GROUP BY bucketing diagram uses
-    `classDef`/`linkStyle` for per-node/per-edge coloring instead of hand-drawn arrows).
-  - **Hand-drawn inline SVG** only when Mermaid's diagram grammar can't express the thing being
-    taught — e.g. Day 01's Chen-notation diagram (entity=rectangle/attribute=oval/relationship=
-    diamond legend) has no Mermaid equivalent. Reuse the shared `<defs>` block (arrow markers
-    `#arrow`/`#arrow-blue`, `#soft-shadow` drop-shadow filter) declared once near the top of
-    `<body>`. This used to be the default for every diagram; it no longer is — reach for Mermaid
-    first.
-  - Never embed raster images for diagrams (no image-generation capability) — vector only, either
-    Mermaid or hand SVG.
+- **Diagrams — every diagram is hand-drawn inline SVG in one consistent "blueprint" style,
+  no Mermaid.** This course briefly used Mermaid (`erDiagram`/`flowchart` via CDN) for ERDs, on the
+  reasoning that auto-layout beats hand-placed coordinates — but the user later pointed to a
+  pre-existing hand-drawn ERD asset (`Day 02/day02_reading.html`'s dataset diagram, originally
+  `parch_and_posey_erd.svg`) and said its crow's-foot style should be used for every diagram in the
+  course; Mermaid was removed entirely (CDN `<script>`, `.mermaid` CSS, and the `mermaid.initialize`
+  block) from all three days' HTML files. Do not reintroduce Mermaid — match this style instead:
+  - **White background + subtle grid**: `<pattern id="erd-grid">` (18×18 cell, `#e6edf3` 1px
+    lines) declared once in the shared `<defs>` block near the top of `<body>`, referenced via
+    `<rect fill="url(#erd-grid)"/>` behind every diagram.
+  - **Table/entity cards**: square corners (no `rx`), white fill, `#333` stroke at `1.4`
+    stroke-width. Header bar same width, height `30`, fill `#dfe3e8`, `#333` stroke; title
+    centered, `fill="#1f6fb2"`, bold, `font-size 15`. A vertical divider line at `x+34` separates a
+    label gutter (`PK`/`FK`, bold, size `12`, centered in the gutter) from column names (size `13`,
+    left-aligned at roughly `x+46`). Row height `26`; horizontal divider lines between rows (not
+    after the last one). This is the exact structure of `Day 02/day02_reading.html`'s schema
+    diagram — copy its markup as the template for a new table card.
+  - **Relationships**: `#333` `1.4`-width polylines/lines between cards, with real crow's-foot
+    notation drawn as small paths, not colored circles — a "one" end is a short perpendicular tick
+    (`<path d="M x,y-6 L x,y+6"/>`), a "many" end is a three-point chevron opening away from the
+    entity (`<path d="M x,y-12 L x-12,y L x,y+12"/>`, mirrored for the opposite direction).
+  - **Font**: `Segoe UI, Arial, sans-serif` set once on the root `<svg font-family="...">` — text
+    elements inherit it, no per-element `font-family` needed. This differs from the page's own
+    Bricolage/Nunito/IBM-Plex-Mono system deliberately; diagrams are a distinct visual language from
+    prose.
+  - **No drop shadows, no rounded corners, no soft pastel fills** — flat and crisp. A relationship
+    diagram that isn't a schema (e.g. Day 01's LIMIT/OFFSET row-strip, Day 02's BETWEEN number-line,
+    Day 03's LEFT JOIN unmatched-row example) still uses the white+grid background, `#333`/`#1f6fb2`
+    palette, and Segoe UI, even though it isn't drawing PK/FK table cards.
+  - The one intentional exception to crow's-foot notation specifically (not to the visual palette)
+    is Day 01's Chen-notation diagram (rectangle=entity, oval=attribute, diamond=relationship) —
+    it's teaching a different, named notation, so it keeps its own shapes, restyled to the same
+    palette/font/grid-background rather than redrawn as crow's-foot.
+  - Never embed raster images for diagrams (no image-generation capability) — vector only.
 - **Known bug classes to avoid:**
   - `.code-body` needs an explicit base `color` (the default-text token) — without it, any SQL
     token not wrapped in a `.kw`/`.fn`/`.str`/`.com` span inherits the page's near-black body text
@@ -87,4 +105,4 @@ change if it's ever needed again).
 - Exercises reference tables by name only (`region, sales_reps, accounts, orders, web_events` / `city, country, countrylanguage`); the corresponding database script must be run first or the table won't exist.
 - Every lesson day is a flat folder (no subfolders) with a `README.md` indexing its files — add one when a new day is built. When adding a new exercise, keep that day's `day0N_exercises.sql`, `day0N_exercises_solutions.sql`, and walkthrough file numbered consistently — the solution file's section/question numbers must match the exercise file's.
 - Project datasets (Days 06–09) are committed directly when small enough — don't blanket-exclude `*.sqlite`/`*.db`/`*.csv` in `.gitignore`; only skip a specific file that's actually too large for git (e.g. European Soccer's `database.sqlite` at 299 MB, over GitHub's 100 MB hard limit), and link out to it instead.
-- Opening a `day0N_reading.html` file needs internet access once, to fetch Google Fonts and the Mermaid CDN script — everything else in the file is self-contained.
+- Opening a `day0N_reading.html` file needs internet access once, to fetch Google Fonts — everything else in the file, including every diagram, is self-contained inline SVG.
