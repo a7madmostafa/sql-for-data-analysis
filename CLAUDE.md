@@ -6,24 +6,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A 9-day self-paced MySQL / SQL-for-Data-Analysis course (see `COURSE_PLAN.md` for the full build plan and source-material provenance, and `README.md` for the day-by-day table of contents). The published content is `.sql` scripts and notebooks (seed data + teaching queries + practice exercises) and a single self-contained `day0N_reading.html` per lesson day (concepts, diagrams, worked examples) — no build/lint/test tooling ships with the course itself, and no separate slide deck: reading material used to be split across a Markdown write-up plus a `.pptx` deck, but that split was replaced with one HTML file per day (see "Reading material format" below) — Days 01–03 have already been rebuilt this way.
 
-Each lesson day (`Day 01`–`Day 05`) follows the same layout, subfolders ordered by a `D0N_0M_` prefix
-so they list in read order: `D0N_01_Materials/` (the day's database-setup script plus
-`day0N_reading.html`), `D0N_02_Walkthrough/` (the explained, titled SQL or notebook), `D0N_03_Exercises/`
-(`day0N_exercises.sql` + `day0N_exercises_solutions.sql`, business-framed, numbered `N.M` to match
-the walkthrough's section numbers). Project days (`Day 06`–`Day 09`) instead get a `Reading_0N.md`,
-a `project_0N.ipynb`, and a `Data_0N.md` pointing to the (uncommitted) dataset source. Every file
-inside a day's subfolders is prefixed `day0N_` so it stays unambiguous outside its folder (e.g. an
-editor tab bar showing files from multiple days at once) — this convention started with Day 01 and
-applies going forward. `OLD SQL/` and `Updated MySQL Tutorial/` are archived reference material,
+`Databases/` at the repo root holds every shared database-provisioning script (`world_db.sql`,
+`Parch & Posey Database.sql`, and any future one) — not inside a lesson day's own folder, since
+`Parch & Posey Database.sql` alone is shared by Days 02–05. Any new database a later day introduces
+goes here too.
+
+Each lesson day (`Day 01`–`Day 05`) is one **flat folder, no subfolders** — `day0N_reading.html`,
+the walkthrough SQL/notebook, `day0N_exercises.sql` + `day0N_exercises_solutions.sql`
+(business-framed, numbered `N.M` to match the walkthrough's section numbers), and a `README.md`
+indexing that day's files, a "what you'll learn" summary, and the order to work through them. Days
+01–03 originally used numbered subfolders (`D0N_01_Materials/`, `D0N_02_Walkthrough/`,
+`D0N_03_Exercises/`) to force read-order in a plain file browser — dropped once every file already
+carried a unique `day0N_` prefix, since the subfolder numbering was solving a problem the filename
+prefix already solved; the per-day `README.md` is what now provides the "what order do I open these
+in" guidance the subfolders used to. Every file is still prefixed `day0N_` so it stays unambiguous
+outside its folder (e.g. an editor tab bar showing files from multiple days at once) — that part of
+the convention is unchanged. Project days (`Day 06`–`Day 09`) instead get a `Reading_0N.md`, a
+`project_0N.ipynb`, and a `Data_0N.md` pointing to the (uncommitted) dataset source — flat already,
+no subfolders to remove. `OLD SQL/` and `Updated MySQL Tutorial/` are archived reference material,
 excluded from git via `.gitignore` — treat them as read-only source material, not something to edit
 or ship.
 
 ## Reading material format
 
-Each `D0N_01_Materials/day0N_reading.html` is one self-contained file — no build step, open it
-directly in a browser. It replaced an earlier split of a Markdown write-up plus a separately-built
-`.pptx` slide deck (that tooling, `_slide_kit/` and each day's `build.py`, is gone — see git history
-before this change if it's ever needed again).
+Each `day0N_reading.html` is one self-contained file — no build step, open it directly in a
+browser. It replaced an earlier split of a Markdown write-up plus a separately-built `.pptx` slide
+deck (that tooling, `_slide_kit/` and each day's `build.py`, is gone — see git history before this
+change if it's ever needed again).
 
 - **Design system** (shared across every day's HTML, copy the `<style>` block from the most
   recently built day rather than reinventing it): fonts are Bricolage Grotesque (headings), Nunito
@@ -66,25 +75,16 @@ before this change if it's ever needed again).
 
 ## Structure
 
-- `Day 01/` — intro module using the sample **`world`** database (`city`, `country`, `countrylanguage` tables: cities, countries, and languages spoken per country).
-  - `D01_01_Materials/` — `world_db.sql` (full `CREATE DATABASE world` + schema + seed data dump —
-    run this first to provision the database) and `day01_reading.html`.
-  - `D01_02_Walkthrough/day01_sql_foundations.sql` — annotated walkthrough queries, organized into numbered `-- SECTION N — TOPIC` blocks (exploring the server, SELECT, LIMIT/OFFSET, DISTINCT, aggregation/COUNT, ORDER BY) against `world`.
-  - `D01_03_Exercises/` — `day01_exercises.sql` (business-framed practice questions numbered `N.M`) and `day01_exercises_solutions.sql` (matching answer key).
-- `Day 02/` — the **Parch & Posey** module, a fictional paper-sales company (from Udacity's SQL for Data Analysis course, adapted for MySQL here).
-  - `D02_01_Materials/` — `Parch & Posey Database.sql` (MySQL `CREATE DATABASE parch_and_posey` + schema + seed data, ~16k lines, mostly `INSERT` statements — run this first for this module); `Parch_and_Posey.md` + `parch_and_posey_erd.svg` (detailed schema reference — full column list per table, kept as reference material distinct from the lesson itself); `day02_reading.html` (full schema as a Mermaid ERD, `DATE_FORMAT` specifiers as an inline table rather than the old `dates_specifiers.jpg`).
-  - `D02_02_Walkthrough/day02_filtering_and_aggregation.sql` — organized into numbered `-- SECTION N — TOPIC` blocks (LIMIT/OFFSET, DISTINCT, ORDER BY, aggregation, WHERE, AND/OR, BETWEEN, IN vs OR, NULL checks, LIKE, GROUP BY, DATE functions). New teaching content should follow this same section-header convention.
-  - `D02_03_Exercises/` — `day02_exercises.sql` (practice questions mirroring the walkthrough's sections, numbered `N.M`) and `day02_exercises_solutions.sql` (reference answers keyed to the same numbering).
-- `Day 03/` — JOINs + CASE, still on `parch_and_posey` (run Day 02's DB script first — no separate setup script here).
-  - `D03_01_Materials/day03_reading.html` (bridges Day 01's 1:1/1:N/N:N relationship types to actual JOIN syntax via a Mermaid N:N diagram, a hand-drawn SVG for the LEFT JOIN unmatched-row case since it's showing specific record instances rather than a schema, plus HAVING vs WHERE and CASE).
-  - `D03_02_Walkthrough/day03_joins_and_case.sql` — 10 numbered sections: INNER JOIN basics, multi-table JOINs, JOIN+GROUP BY, JOIN+HAVING, LEFT/RIGHT JOIN, anti-joins, FULL JOIN via UNION, CASE basics, CASE+GROUP BY (tiering), CASE+HAVING.
-  - `D03_03_Exercises/` — `day03_exercises.sql` + `day03_exercises_solutions.sql`, same numbering/business-framing convention. Deliberately avoids subqueries/CTEs (that's Day 04) — one sourced question needing a subquery was reworked to use `COUNT(DISTINCT ...)` instead.
+- `Databases/` — `world_db.sql` (full `CREATE DATABASE world` + schema + seed data dump) and `Parch & Posey Database.sql` (MySQL `CREATE DATABASE parch_and_posey` + schema + seed data, ~16k lines, mostly `INSERT` statements) — see `Databases/README.md`.
+- `Day 01/` — intro module using the sample **`world`** database (`city`, `country`, `countrylanguage` tables: cities, countries, and languages spoken per country). `day01_reading.html`, `day01_sql_foundations.sql` (annotated walkthrough, numbered `-- SECTION N — TOPIC` blocks: exploring the server, SELECT, LIMIT/OFFSET, DISTINCT, aggregation/COUNT, ORDER BY), `day01_exercises.sql` + `day01_exercises_solutions.sql` (business-framed, numbered `N.M`), `README.md` (this day's index).
+- `Day 02/` — the **Parch & Posey** module, a fictional paper-sales company (from Udacity's SQL for Data Analysis course, adapted for MySQL here). `day02_reading.html` (full schema as a hand-drawn crow's-foot ERD SVG — copied directly from the same markup used to build the schema diagram, `DATE_FORMAT` specifiers as an inline table rather than a `.jpg`); `day02_filtering_and_aggregation.sql` (walkthrough, numbered `-- SECTION N — TOPIC` blocks: LIMIT/OFFSET, DISTINCT, ORDER BY, aggregation, WHERE, AND/OR, BETWEEN, IN vs OR, NULL checks, LIKE, GROUP BY, DATE functions — new teaching content should follow this same convention); `day02_exercises.sql` + `day02_exercises_solutions.sql`; `README.md`. (`Parch_and_Posey.md` + `parch_and_posey_erd.svg`, a separate schema-reference doc, were dropped as redundant once the schema lived directly in `day02_reading.html`.)
+- `Day 03/` — JOINs + CASE, still on `parch_and_posey` (run `Databases/Parch & Posey Database.sql` first — no separate setup script here). `day03_reading.html` (bridges Day 01's 1:1/1:N/N:N relationship types to actual JOIN syntax, plus HAVING vs WHERE and CASE); `day03_joins_and_case.sql` (walkthrough, 10 numbered sections: INNER JOIN basics, multi-table JOINs, JOIN+GROUP BY, JOIN+HAVING, LEFT/RIGHT JOIN, anti-joins, FULL JOIN via UNION, CASE basics, CASE+GROUP BY (tiering), CASE+HAVING); `day03_exercises.sql` + `day03_exercises_solutions.sql` (same numbering/business-framing convention, deliberately avoids subqueries/CTEs — that's Day 04; one sourced question needing a subquery was reworked to use `COUNT(DISTINCT ...)` instead); `README.md`.
 
 ## Working with this repo
 
 - To run any script: load it into a MySQL client (MySQL Shell/Workbench, `mysql` CLI, or the VS Code MySQL extension) pointed at a local MySQL server. There's no connection config checked in — connection details are supplied by whatever client opens the file.
-- The two schema/seed files (`world_db.sql`, `D02_01_Materials/Parch & Posey Database.sql`) are idempotent-ish (`CREATE TABLE IF NOT EXISTS`, `INSERT IGNORE`) — safe to re-run.
+- The two schema/seed files (`Databases/world_db.sql`, `Databases/Parch & Posey Database.sql`) are idempotent-ish (`CREATE TABLE IF NOT EXISTS`, `INSERT IGNORE`) — safe to re-run.
 - Exercises reference tables by name only (`region, sales_reps, accounts, orders, web_events` / `city, country, countrylanguage`); the corresponding database script must be run first or the table won't exist.
-- When adding a new exercise, keep the day's `D0N_03_Exercises/*_exercises.sql`, `D0N_03_Exercises/*_exercises_solutions.sql`, and `D0N_02_Walkthrough/*` walkthrough file numbered consistently — the solution file's section/question numbers must match the exercise file's.
+- Every lesson day is a flat folder (no subfolders) with a `README.md` indexing its files — add one when a new day is built. When adding a new exercise, keep that day's `day0N_exercises.sql`, `day0N_exercises_solutions.sql`, and walkthrough file numbered consistently — the solution file's section/question numbers must match the exercise file's.
 - Project datasets (Days 06–09) are committed directly when small enough — don't blanket-exclude `*.sqlite`/`*.db`/`*.csv` in `.gitignore`; only skip a specific file that's actually too large for git (e.g. European Soccer's `database.sqlite` at 299 MB, over GitHub's 100 MB hard limit), and link out to it instead.
 - Opening a `day0N_reading.html` file needs internet access once, to fetch Google Fonts and the Mermaid CDN script — everything else in the file is self-contained.

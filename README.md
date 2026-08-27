@@ -4,16 +4,17 @@ A 9-day self-paced MySQL course: five days of core SQL syntax and Python connect
 four applied projects on real datasets. See [`COURSE_PLAN.md`](COURSE_PLAN.md) for the full build
 plan and source-material notes.
 
-Each lesson day (01–05) contains:
-- `D0N_01_Materials/` — the day's database-setup script and a single self-contained
-  `day0N_reading.html` (concepts, diagrams, worked examples, gotchas — open it directly in a
-  browser, no server needed)
-- `D0N_02_Walkthrough/` — the explained, titled SQL (or notebook) to run alongside the reading
-- `D0N_03_Exercises/` — practice questions (`day0N_exercises.sql`) and a reference answer key
-  (`day0N_exercises_solutions.sql`)
+`Databases/` holds the shared database-provisioning scripts for every MySQL-backed day — run the
+relevant one once before starting that day.
 
-Subfolders are numbered so they list in read order; every file inside them is prefixed `day0N_` so
-it's unambiguous even outside its folder.
+Each lesson day (01–05) is one flat folder — no subfolders, every file already prefixed `day0N_` so
+it's unambiguous even outside its folder — containing:
+- a single self-contained `day0N_reading.html` (concepts, diagrams, worked examples, gotchas — open
+  it directly in a browser, no server needed) — start here
+- the explained, titled SQL walkthrough (or notebook) to run alongside the reading
+- practice questions (`day0N_exercises.sql`) and a reference answer key
+  (`day0N_exercises_solutions.sql`)
+- a `README.md` indexing that day's files, what you'll learn, and the order to work through them
 
 Each project day (06–09) contains a `Reading_0N.md` (business framing), a `project_0N.ipynb`
 notebook, and a `Data_0N.md` pointing to the dataset source.
@@ -35,7 +36,6 @@ notebook, and a `Data_0N.md` pointing to the dataset source.
 ## Setup
 
 Each MySQL-backed day expects a local MySQL server. Run the relevant database script once before
-starting that day (`Day 01/D01_01_Materials/world_db.sql` for Day 01; `Day 02/D02_01_Materials/
-Parch & Posey Database.sql` for Days 02–05). From Day 05 onward you'll also need Python packages
-listed in `requirements.txt` and a `.env` file (see `.env.example`) holding your local MySQL
-credentials.
+starting that day (`Databases/world_db.sql` for Day 01; `Databases/Parch & Posey Database.sql` for
+Days 02–05). From Day 05 onward you'll also need Python packages listed in `requirements.txt` and a
+`.env` file (see `.env.example`) holding your local MySQL credentials.

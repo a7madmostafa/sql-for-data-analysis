@@ -1,0 +1,25 @@
+# Day 01 — SQL Foundations
+
+Intro module using the sample **`world`** database (`country`, `city`, `countrylanguage` — cities,
+countries, and languages spoken per country).
+
+## What you'll learn
+
+- Explain what SQL, a database, and a DBMS are — and how they relate to each other.
+- Tell relational and non-relational databases apart, and know why this course uses MySQL.
+- Read an entity-relationship diagram: entities, attributes, and the three relationship types.
+- Write your first real queries: `SELECT`, `LIMIT`/`OFFSET`, `DISTINCT`, `COUNT`, `ORDER BY`.
+- Recognize the mistakes almost every beginner makes in their first week, before you make them.
+
+## Files
+
+| File | What it is |
+|---|---|
+| `day01_reading.html` | Start here. Concepts, diagrams, and worked examples — open directly in a browser. |
+| `day01_sql_foundations.sql` | The annotated walkthrough — run alongside the reading. |
+| `day01_exercises.sql` | Practice questions, business-framed. Try these before looking at the solutions. |
+| `day01_exercises_solutions.sql` | Answer key, numbered to match the exercises. |
+
+**Before you start:** run `../Databases/world_db.sql` once — creates and loads the `world` database.
+
+**Order:** `Databases/world_db.sql` → `day01_reading.html` → `day01_sql_foundations.sql` → `day01_exercises.sql`.

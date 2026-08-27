@@ -1,0 +1,25 @@
+# Day 02 — Filtering & Aggregation
+
+The **Parch & Posey** module, a fictional paper-sales company (`region`, `sales_reps`, `accounts`,
+`orders`, `web_events`).
+
+## What you'll learn
+
+- Filter rows with `WHERE`, comparison operators, `AND`/`OR`, `BETWEEN`, `IN`, and `NULL` checks.
+- Match text patterns with `LIKE`.
+- Aggregate per group with `GROUP BY`, and know when `WHERE` can't do the job but `HAVING` can.
+- Pull pieces out of a date/time column and reason about date ranges with `DATE` functions.
+
+## Files
+
+| File | What it is |
+|---|---|
+| `day02_reading.html` | Start here. Concepts, diagrams, and worked examples — open directly in a browser. |
+| `day02_filtering_and_aggregation.sql` | The annotated walkthrough — run alongside the reading. |
+| `day02_exercises.sql` | Practice questions, business-framed. Try these before looking at the solutions. |
+| `day02_exercises_solutions.sql` | Answer key, numbered to match the exercises. |
+
+**Before you start:** run `../Databases/Parch & Posey Database.sql` once — creates and loads the
+`parch_and_posey` database. Shared by Days 02–05.
+
+**Order:** `Databases/Parch & Posey Database.sql` → `day02_reading.html` → `day02_filtering_and_aggregation.sql` → `day02_exercises.sql`.

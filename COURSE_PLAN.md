@@ -61,40 +61,50 @@ changes what backs Days 03–05:
   every day's exercises file would literally be named `exercises.sql`, indistinguishable in an
   editor's tab bar. Established with Day 01; apply to Day 02 (currently still `sql_for_beginners.sql`
   / `exercises.sql` / `exercises_solutions.sql`) when it's next touched.
-- **Subfolder naming standard:** each day's subfolders are prefixed `D0N_0M_` (e.g. `D01_01_Materials`,
-  `D01_02_Walkthrough`, `D01_03_Exercises`) so they list in read order in a plain file browser —
-  established with Day 01, applies to Days 02–05 too.
-- **Lesson-day layout** (Days 1–5), each folder gets:
-  - `D0N_01_Materials/` — a single self-contained `day0N_reading.html` (concepts, worked examples,
-    gotchas, diagrams — open directly in a browser, no build step) plus the day's
-    database-provisioning script (e.g. `world_db.sql`). **Format history:** Days 01–03 originally
-    shipped as a `day0N_reading.md` write-up plus a separately-built `.pptx` deck (via a shared
-    `_slide_kit/deckkit.py` builder) — the user found maintaining two formats per day friction-prone
-    and asked for one consolidated file instead. An HTML candidate and a consolidated-Markdown
-    candidate were both prototyped side by side for Days 01–02; HTML won ("html is more rich"), then
-    went through iteration on diagram richness, prose depth, and a code-block color-contrast bug
-    before Days 01–03 were rebuilt as `day0N_reading.html` and the old `.md`/`.pptx`/`build.py`/
-    `_slide_kit/` files were removed. See `CLAUDE.md`'s "Reading material format" section for the
-    current design system and diagram-tooling rules (Mermaid `erDiagram`/`flowchart` by default,
-    hand SVG only when Mermaid's grammar can't express the diagram) — apply that to Day 04 onward,
-    not the pptx approach described in older entries below. Where relevant, the reading calls out
-    MySQL-vs-SQLite differences (e.g. `DATE_FORMAT` vs `STRFTIME`, `CONCAT()` vs `||`,
-    `AUTO_INCREMENT` vs `AUTOINCREMENT`) — most relevant in Day 04 (string functions) and Day 05
-    (dual connections), since Days 06–09 run on SQLite.
-  - `D0N_02_Walkthrough/` — the explained, titled SQL script (or notebook, for Day 5). Renamed from
+- **Flat lesson-day folders, no subfolders:** each day is one flat folder. Days 01–03 originally used
+  numbered subfolders (`D0N_01_Materials`, `D0N_02_Walkthrough`, `D0N_03_Exercises`, prefixed
+  `D0N_0M_` so they'd list in read order in a plain file browser) — dropped once every file already
+  carried a unique `day0N_` prefix, making the subfolder numbering redundant with the filename
+  prefix. A per-day `README.md` (see below) now provides the "what order do I open these in"
+  guidance the subfolders used to. Don't recreate subfolders for Day 04 onward.
+- **Shared `Databases/` folder:** every MySQL database-provisioning script (`world_db.sql`, `Parch &
+  Posey Database.sql`, and any future one) lives in a root-level `Databases/` folder, not inside the
+  lesson day that first introduces it — `Parch & Posey Database.sql` alone is shared by Days 02–05,
+  so keeping it inside `Day 02/` was misleading about ownership. Originally these scripts lived
+  inside each day's own materials folder; moved out once that became clear.
+- **Lesson-day layout** (Days 1–5), each flat folder gets:
+  - a single self-contained `day0N_reading.html` (concepts, worked examples, gotchas, diagrams —
+    open directly in a browser, no build step). **Format history:** Days 01–03
+    originally shipped as a `day0N_reading.md` write-up plus a separately-built `.pptx` deck (via a
+    shared `_slide_kit/deckkit.py` builder) — the user found maintaining two formats per day
+    friction-prone and asked for one consolidated file instead. An HTML candidate and a
+    consolidated-Markdown candidate were both prototyped side by side for Days 01–02; HTML won
+    ("html is more rich"), then went through iteration on diagram richness, prose depth, and a
+    code-block color-contrast bug before Days 01–03 were rebuilt as `day0N_reading.html` and the
+    old `.md`/`.pptx`/`build.py`/`_slide_kit/` files were removed. See `CLAUDE.md`'s "Reading
+    material format" section for the current design system and diagram-tooling rules (Mermaid
+    `erDiagram`/`flowchart` by default, hand SVG only when Mermaid's grammar can't express the
+    diagram) — apply that to Day 04 onward, not the pptx approach described in older entries below.
+    Where relevant, the reading calls out MySQL-vs-SQLite differences (e.g. `DATE_FORMAT` vs
+    `STRFTIME`, `CONCAT()` vs `||`, `AUTO_INCREMENT` vs `AUTOINCREMENT`) — most relevant in Day 04
+    (string functions) and Day 05 (dual connections), since Days 06–09 run on SQLite.
+  - the explained, titled SQL walkthrough script (or notebook, for Day 5). Renamed from
     "Live_Session" — this is self-paced, nothing here is actually live.
-  - `D0N_03_Exercises/` — `day0N_exercises.sql` + `day0N_exercises_solutions.sql`, business-framed,
-    numbered `N.M` to match the walkthrough's section numbers (the pattern already used in Day 02,
-    modulo the `day0N_` prefix)
+  - `day0N_exercises.sql` + `day0N_exercises_solutions.sql`, business-framed, numbered `N.M` to
+    match the walkthrough's section numbers (the pattern already used in Day 02, modulo the
+    `day0N_` prefix)
+  - `README.md` indexing that day's files, the order to work through them, and a "what you'll
+    learn" summary mirroring the reading's own objectives list
 - **Project-day layout** (Days 6–9), each folder gets:
   - `Reading_0N.md` — business framing + the question list for that project
   - `project_0N.ipynb` — the working notebook (adapted from the source notebooks below)
   - `Data_0N.md` — Kaggle source link + download instructions (data itself is **not** committed;
     the European Soccer `.sqlite` alone is 299 MB — same "link, don't commit" pattern the old
     material already used via `Kaggle Dataset.txt` / `data.docx` pointers)
-- **Database reuse:** Day 01 keeps its own `world` setup. Day 02's `D02_01_Materials/` DB setup and
-  schema reference (`parch_and_posey`) is shared by Days 02–05 — Days 03–05 don't duplicate
-  it, their reading material just says "run Day 02's script first."
+  - `README.md`, same as lesson days
+- **Database reuse:** Day 01 keeps its own `world` setup. Day 02's DB setup script
+  (`parch_and_posey`) is shared by Days 02–05 — Days 03–05 don't duplicate it, their reading
+  material just says "run Day 02's script first."
 - **Root additions:** `README.md` (9-day table of contents), `.env.example` (MySQL credentials
   template for Day 05+), `requirements.txt` (Python packages used from Day 05 on).
 - **Version control:** `git init` this directory as a repo. `.gitignore` excludes `OLD SQL/` and
@@ -128,7 +138,8 @@ changes what backs Days 03–05:
   `D0N_01_Materials/build.py` will reuse — see `_slide_kit/README.md`.
 - **Superseded:** `day01_reading.md` + `Day 01 - SQL Foundations.pptx` + `build.py` were later
   replaced by a single `day01_reading.html` (see the format-history note above) — `_slide_kit/` is
-  gone entirely, this entry is kept for provenance only.
+  gone entirely, this entry is kept for provenance only. Subfolders (`D01_01_Materials/` etc.) were
+  also later flattened away — see the "Flat lesson-day folders" convention above.
 
 ### Day 02 — Filtering & Aggregation — DONE
 - Migrated onto the Day 01 convention: `D02_02_Walkthrough/day02_filtering_and_aggregation.sql`
@@ -147,8 +158,12 @@ changes what backs Days 03–05:
   questions — exercises already had enough variety without them.
 - **Superseded:** `day02_reading.md`/`Day 02 - Filtering & Aggregation.pptx`/`build.py` were later
   replaced by `day02_reading.html` — `dates_specifiers.jpg` was dropped too, replaced by an inline
-  `DATE_FORMAT` specifier table in the HTML. `Parch_and_Posey.md` + `parch_and_posey_erd.svg` stay
-  (schema reference, not lesson reading). This entry is kept for provenance only.
+  `DATE_FORMAT` specifier table in the HTML. `parch_and_posey_erd.svg`'s markup was copied directly
+  into `day02_reading.html`'s dataset section (same crow's-foot style, kept as-is rather than
+  redrawn) — once the schema lived in the reading itself, `Parch_and_Posey.md` and the standalone
+  `parch_and_posey_erd.svg` were redundant and were deleted too. This entry is kept for provenance
+  only. Subfolders (`D02_01_Materials/` etc.) were also later flattened away — see the "Flat
+  lesson-day folders" convention above.
 
 ### Day 03 — JOINs + CASE — DONE
 - Primary source: `Updated MySQL Tutorial/2- Intermediate/SQL Intermediate.ipynb` — its JOIN section
@@ -173,7 +188,8 @@ changes what backs Days 03–05:
   by `day03_reading.html`, applying the same design system as Days 01–02 (Mermaid `erDiagram` for
   the N:N book/author_book relationship, a hand-drawn SVG for the LEFT JOIN unmatched-row example
   since it shows specific record instances rather than a table schema). This entry is kept for
-  provenance only.
+  provenance only. Subfolders (`D03_01_Materials/` etc.) were also later flattened away — see the
+  "Flat lesson-day folders" convention above.
 
 ### Day 04 — String Functions, Subqueries, CTEs, Temp Tables, Views
 - String functions: `Updated MySQL Tutorial/3- Advanced/string operations.sql` (`LTRIM`/`RTRIM`/

@@ -2,15 +2,15 @@
 -- SQL PRACTICE EXERCISES — world database
 -- ============================================================
 -- Before starting:
---   1. Run "D01_01_Materials/world_db.sql" once to create and load the database.
+--   1. Run "Databases/world_db.sql" once to create and load the database.
 --   2. Tables available: country, city, countrylanguage — see
---      D01_01_Materials/day01_reading.md for what each one holds.
+--      day01_reading.html for what each one holds.
 --
 -- Instructions:
 --   Every question is framed as something a real stakeholder would ask.
 --   Write your query directly below each question, then run it to check
 --   your answer. Try to solve each one WITHOUT looking at
---   D01_02_Walkthrough/day01_sql_foundations.sql first — use it afterwards
+--   day01_sql_foundations.sql first — use it afterwards
 --   only if you get stuck. See day01_exercises_solutions.sql to check your answers.
 --
 --   Day 01 only covers SELECT, LIMIT/OFFSET, DISTINCT, ORDER BY, and

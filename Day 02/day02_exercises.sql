@@ -2,9 +2,8 @@
 -- SQL PRACTICE EXERCISES — Parch & Posey Database
 -- ============================================================
 -- Before starting:
---   1. Run "D02_01_Materials/Parch & Posey Database.sql" once to create and
---      load the database.
---   2. See "D02_01_Materials/day02_reading.md" (or Parch_and_Posey.md) for
+--   1. Run "Databases/Parch & Posey Database.sql" once to create and load the database.
+--   2. See "day02_reading.html" for
 --      the table/column reference and relationships.
 --
 -- Tables available: region, sales_reps, accounts, orders, web_events
@@ -14,7 +13,7 @@
 --   Posey (Finance, Marketing, Sales leadership, Compliance...) would
 --   actually ask. Translate the ask into a query yourself — the wording
 --   won't hand you table/column names as directly as
---   D02_02_Walkthrough/day02_filtering_and_aggregation.sql did. Questions
+--   day02_filtering_and_aggregation.sql did. Questions
 --   get harder as sections progress, and later sections
 --   deliberately combine techniques from earlier ones (WHERE + GROUP BY,
 --   ORDER BY + LIMIT, etc.) — that's intentional, not a typo.

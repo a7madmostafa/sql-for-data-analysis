@@ -2,9 +2,9 @@
 -- SQL PRACTICE EXERCISES — Parch & Posey Database
 -- ============================================================
 -- Before starting:
---   1. Run "D02_01_Materials/Parch & Posey Database.sql" (from Day 02) once
+--   1. Run "Databases/Parch & Posey Database.sql" once
 --      to create and load the database, if you haven't already.
---   2. See "D03_01_Materials/day03_reading.md" for how JOIN syntax maps
+--   2. See "day03_reading.html" for how JOIN syntax maps
 --      onto the relationship types from Day 01, plus the parch_and_posey
 --      schema recap.
 --
