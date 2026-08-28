@@ -16,9 +16,9 @@ it's unambiguous even outside its folder — containing:
 - a `README.md` indexing that day's files, what you'll learn, and the order to work through them
 
 Each project day (06–09) contains:
-- `Reading_0N.md` (business framing)
-- `project_0N.ipynb` (the working notebook)
-- `Data_0N.md` (pointing to the dataset source)
+- `day0N_reading.html` (the business case, the dataset — including where to get it, since none of
+  these are committed — and the full question list, same format as the lesson days above)
+- `project_0N.ipynb` (the working notebook, run through jupysql's `%sql`/`%%sql` magic from Day 05)
 
 ## Table of Contents
 
@@ -26,10 +26,10 @@ Each project day (06–09) contains:
 |---|---|---|---|
 | [01](Day%2001) | SQL Foundations — SELECT, LIMIT/OFFSET, DISTINCT, ORDER BY, COUNT | `world` (MySQL) | done |
 | [02](Day%2002) | WHERE, operators, BETWEEN, IN, NULL, LIKE, GROUP BY, aggregates, DATE functions | `parch_and_posey` (MySQL) | done |
-| [03](Day%2003) | JOINs (INNER/multi-table/HAVING/LEFT/RIGHT/UNION) + CASE | `parch_and_posey` (MySQL) | done |
-| 04 | String Functions, Subqueries, CTEs, Temp Tables, Views | `parch_and_posey` (MySQL) | planned |
-| 05 | Window Functions, Stored Procedures, Python → MySQL & SQLite | `parch_and_posey` (MySQL) + SQLite | planned |
-| 06 | Project: NBA — draft/game/player analysis | NBA dataset (SQLite) | planned |
+| [03](Day%2003) | JOINs (INNER/multi-table/HAVING/LEFT/RIGHT/UNION) + CASE + String Functions | `parch_and_posey` (MySQL) | done |
+| [04](Day%2004) | Subqueries, CTEs, Views, Window Functions & Stored Procedures | `parch_and_posey` (MySQL) | done |
+| [05](Day%2005) | Python Connectivity — MySQL & SQLite | `parch_and_posey` (MySQL) + SQLite | done |
+| [06](Day%2006) | Project: NBA — draft/game/player analysis | NBA dataset (SQLite) | done |
 | 07 | Project: European Soccer — JOIN/VIEW-heavy walkthrough | Soccer dataset (SQLite) | planned |
 | 08 | Project: FitBit / Bellabeat — CTE-heavy, date/string mechanics | FitBit dataset (SQLite) | planned |
 | 09 | Project: World Development Indicators — capstone, window functions | WDI dataset (SQLite) | planned |

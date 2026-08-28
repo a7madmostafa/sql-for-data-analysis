@@ -223,11 +223,28 @@ footer a{color:var(--gray-muted)}
     </div>
   </div>
 
-  <div class="day-card planned">
+  <div class="day-card">
     <div class="day-num">DAY 06</div>
     <div class="day-body">
       <div class="day-head"><span class="day-title">Project: NBA</span><span class="db-tag">NBA dataset (SQLite)</span></div>
-      <p class="day-topics">Draft/game/player analysis. Not built yet.</p>
+      <p class="day-topics">First applied project — 20 real questions on draft trends and franchise history, against a real 16-table dataset. No new SQL, no MySQL/.env needed.</p>
+      <details class="day-details">
+        <summary><span class="caret">▸</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Read and orient yourself in an unfamiliar 16-table schema before writing a single query.</li>
+            <li>Answer real business questions with filtering, aggregation, and every JOIN shape from Day 03 — including the anti-join pattern — applied to data that wasn't pre-shaped for these exact questions.</li>
+            <li>Bucket dates with SQLite's <code class="inline">STRFTIME()</code> (by year, decade, month) — the SQLite counterpart to MySQL's <code class="inline">DATE_FORMAT()</code>.</li>
+            <li>Sanity-check a surprising query result instead of reporting it at face value — twice in this project, the obvious query is quietly wrong.</li>
+            <li>Turn a query result into a quick chart with <code class="inline">pandas.plot()</code>.</li>
+          </ul>
+          <p class="before-start"><strong>Before you start:</strong> the reading has the download link — grab <code class="inline">nba.sqlite</code> from Kaggle (~2.3 GB, not committed to this repo) and place it at <code class="inline">Day 06/nba.sqlite</code>. No MySQL server or <code class="inline">.env</code> needed — this day runs entirely on SQLite.</p>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="Day%2006/day06_reading.html">Reading</a>
+        <a href="Day%2006/project_06.ipynb" download><svg class="dl-icon"><use href="#icon-download"/></svg>Notebook</a>
+      </div>
     </div>
   </div>
 
