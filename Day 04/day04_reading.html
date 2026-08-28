@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Day 04 — String Functions, Subqueries, CTEs, Temp Tables &amp; Views</title>
+<title>Day 04 — Subqueries, CTEs, Views, Window Functions &amp; Stored Procedures</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -95,19 +95,21 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
   </defs>
 </svg>
 
-<div class="crumb">Day 04 of 9 · String Functions, Subqueries, CTEs, Temp Tables &amp; Views</div>
-<h1 class="title">String Functions, Subqueries, CTEs, Temp Tables &amp; Views</h1>
-<p class="subtitle">Cleaning and reshaping text, then four different ways to reuse a query's result: nested, named, materialized, or saved.</p>
+<div class="crumb">Day 04 of 9 · Subqueries, CTEs, Views, Window Functions &amp; Stored Procedures</div>
+<h1 class="title">Subqueries, CTEs, Views, Window Functions &amp; Stored Procedures</h1>
+<p class="subtitle">Four ways to reuse a query's result — nested, named, materialized, or saved — then ranking and running totals without collapsing rows, and reusable logic saved inside the database itself.</p>
 
 <div class="objectives">
   <h2>What you'll be able to do after this lesson</h2>
   <ul>
-    <li>Trim, slice, and rebuild text with LTRIM/RTRIM/TRIM, LEFT/RIGHT/SUBSTRING/LOCATE, CONCAT, REPLACE, LOWER/UPPER/LENGTH.</li>
-    <li>Fill in gaps left by a CASE expression with COALESCE/IFNULL.</li>
     <li>Write a scalar subquery (one value) and a row subquery (a tuple, matched with IN).</li>
     <li>Use a subquery as a derived table in FROM, then rewrite the same idea more readably with a CTE.</li>
     <li>Chain multiple CTEs together, and know when to reach for a temporary table or a view instead.</li>
     <li>Choose the right tool — subquery, CTE, temp table, or view — for a given reuse scenario.</li>
+    <li>Compute a running total, rank, or row-to-row comparison with a window function, without collapsing rows the way GROUP BY does.</li>
+    <li>Reset a window per group with PARTITION BY, and tell RANK/DENSE_RANK/ROW_NUMBER apart by how each handles ties.</li>
+    <li>Look at a neighboring row with LAG/LEAD, for month-over-month style comparisons.</li>
+    <li>Write, and CALL, a stored procedure with IN and OUT parameters, using DELIMITER correctly.</li>
   </ul>
 </div>
 
@@ -118,163 +120,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
   then <code class="inline">USE parch_and_posey;</code>. No new setup script today.</p>
 </div>
 
-<h2 class="section"><span class="num">1</span>Trimming whitespace</h2>
-<p class="section-intro">Real data is rarely clean — exports and manual entry leave stray spaces around text.</p>
-<table class="api">
-  <thead><tr><th>Function</th><th>Removes</th></tr></thead>
-  <tbody>
-    <tr><td><code class="inline">LTRIM(str)</code></td><td>Leading (left-side) spaces only.</td></tr>
-    <tr><td><code class="inline">RTRIM(str)</code></td><td>Trailing (right-side) spaces only.</td></tr>
-    <tr><td><code class="inline">TRIM(str)</code></td><td>Both sides at once.</td></tr>
-  </tbody>
-</table>
-<p><strong>Business question:</strong> a CSV export from a legacy CRM padded every point-of-contact
-name with stray spaces — clean it up before the data gets loaded anywhere else.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> <span class="fn">LTRIM</span>(<span class="str">'     Alexander Freberg'</span>) <span class="kw">AS</span> left_trim;
-<span class="kw">SELECT</span> <span class="fn">RTRIM</span>(<span class="str">'Alexander Freberg          '</span>) <span class="kw">AS</span> right_trim;
-<span class="kw">SELECT</span> <span class="fn">TRIM</span>(<span class="str">'     Alexander Freberg          '</span>) <span class="kw">AS</span> trim_both;</div>
-</div>
-<div class="annotations">
-  <div class="annotation"><b>Only whitespace, by default</b><p>Plain <code class="inline">TRIM(str)</code> strips spaces. MySQL's fuller form, <code class="inline">TRIM(BOTH '.' FROM str)</code>, trims a specific character instead — rarely needed, but good to know it exists.</p></div>
-</div>
-
-<h2 class="section"><span class="num">2</span>Extracting parts of a string</h2>
-<p><code class="inline">LEFT</code>/<code class="inline">RIGHT</code> grab a fixed number of
-characters from either end; <code class="inline">SUBSTRING</code> grabs a slice from any starting
-position; <code class="inline">LOCATE</code> finds <em>where</em> a character sits so the other three
-don't have to hardcode a position.</p>
-<figure>
-<svg viewBox="0 0 560 190" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
-  <rect x="0" y="0" width="560" height="190" fill="#ffffff"/>
-  <rect x="0" y="0" width="560" height="190" fill="url(#erd-grid)"/>
-
-  <!-- 13 character cells for "zero-grad.com" -->
-  <g font-size="16" font-weight="bold" text-anchor="middle">
-    <rect x="30" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="48" y="74">z</text>
-    <rect x="66" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="84" y="74">e</text>
-    <rect x="102" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="120" y="74">r</text>
-    <rect x="138" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="156" y="74">o</text>
-    <rect x="174" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="192" y="74">-</text>
-    <rect x="210" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="228" y="74">g</text>
-    <rect x="246" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="264" y="74">r</text>
-    <rect x="282" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="300" y="74">a</text>
-    <rect x="318" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="336" y="74">d</text>
-    <rect x="354" y="50" width="36" height="36" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="372" y="74" fill="#1f4e82">.</text>
-    <rect x="390" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="408" y="74">c</text>
-    <rect x="426" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="444" y="74">o</text>
-    <rect x="462" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="480" y="74">m</text>
-  </g>
-
-  <!-- 1-indexed position numbers -->
-  <g font-size="11" fill="#666" text-anchor="middle">
-    <text x="48" y="100">1</text><text x="84" y="100">2</text><text x="120" y="100">3</text>
-    <text x="156" y="100">4</text><text x="192" y="100">5</text><text x="228" y="100">6</text>
-    <text x="264" y="100">7</text><text x="300" y="100">8</text><text x="336" y="100">9</text>
-    <text x="372" y="100">10</text><text x="408" y="100">11</text><text x="444" y="100">12</text>
-    <text x="480" y="100">13</text>
-  </g>
-
-  <!-- LEFT(str, 4) bracket -->
-  <path d="M30,38 L30,32 L174,32 L174,38" fill="none" stroke="#333" stroke-width="1.4"/>
-  <text x="102" y="20" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#333">LEFT(str, 4) = 'zero'</text>
-
-  <!-- RIGHT(str, 3) bracket -->
-  <path d="M390,38 L390,32 L498,32 L498,38" fill="none" stroke="#333" stroke-width="1.4"/>
-  <text x="444" y="20" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#333">RIGHT(str, 3) = 'com'</text>
-
-  <!-- LOCATE arrow pointing at the "." cell -->
-  <path d="M372,118 L372,102" stroke="#2e6fb5" stroke-width="1.6" fill="none"/>
-  <path d="M366,110 L372,102 L378,110" stroke="#2e6fb5" stroke-width="1.6" fill="none"/>
-  <text x="372" y="135" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f4e82">LOCATE('.', str) = 10</text>
-  <text x="372" y="152" text-anchor="middle" font-size="11.5" fill="#666">SUBSTRING(str, 1, 9) reaches the same 'zero-grad'</text>
-</svg>
-<figcaption>str = 'zero-grad.com' — LEFT/RIGHT count from either end; LOCATE returns a 1-indexed position that SUBSTRING can then slice from.</figcaption>
-</figure>
-<p><strong>Business question:</strong> marketing wants a 4-letter account-code abbreviation for a
-print report, and a data-quality check that every account's <code class="inline">website</code>
-follows the expected <code class="inline">www.company.com</code> pattern.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> name, <span class="fn">LEFT</span>(name, 4) <span class="kw">AS</span> account_code
-<span class="kw">FROM</span> accounts;
-
-<span class="com">-- SUBSTRING(str, start, length) — 1-indexed, same indexing LOCATE returns</span>
-<span class="com">-- every website looks like 'www.walmart.com' — this pulls out everything before the FIRST dot</span>
-<span class="kw">SELECT</span> website, <span class="fn">SUBSTRING</span>(website, 1, <span class="fn">LOCATE</span>(<span class="str">'.'</span>, website) - 1) <span class="kw">AS</span> website_prefix
-<span class="kw">FROM</span> accounts;
-
-<span class="kw">SELECT</span> primary_poc, <span class="fn">LOCATE</span>(<span class="str">' '</span>, primary_poc) <span class="kw">AS</span> space_position
-<span class="kw">FROM</span> accounts;</div>
-</div>
-<div class="annotations">
-  <div class="annotation"><b>LOCATE is 1-indexed, and 0 means "not found"</b><p>Unlike most programming languages, position 1 is the first character — and if the search string never appears, <code class="inline">LOCATE</code> returns <code class="inline">0</code>, not <code class="inline">-1</code> or <code class="inline">NULL</code>.</p></div>
-  <div class="annotation"><b>Finds the FIRST match only</b><p><code class="inline">website</code> has two dots (<code class="inline">www.walmart.com</code>) — <code class="inline">LOCATE('.', website)</code> stops at the first one, so this extracts <code class="inline">'www'</code>, not the company name. Getting the middle segment would need a second <code class="inline">LOCATE</code> starting after the first match — not needed for today's lesson, but worth knowing the limit.</p></div>
-  <div class="annotation"><b>The -1 in this example</b><p><code class="inline">LOCATE('.', website) - 1</code> is the length of everything <em>before</em> the dot — feeding that as the length argument to <code class="inline">SUBSTRING</code> is how Section 3's email-builder finds a name split too.</p></div>
-</div>
-
-<h2 class="section"><span class="num">3</span>Building and cleaning strings</h2>
-<p><code class="inline">CONCAT</code> glues pieces together; <code class="inline">REPLACE</code>
-swaps every occurrence of one substring for another; <code class="inline">LOWER</code>/
-<code class="inline">UPPER</code> normalize case; <code class="inline">LENGTH</code> counts
-characters.</p>
-<p><strong>Business question:</strong> sales wants a company email address auto-generated for every
-point of contact — <code class="inline">firstname.lastname@accountname.com</code>, all lowercase, no
-spaces.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
-  <div class="code-body"><span class="kw">WITH</span> name_split <span class="kw">AS</span> (
-    <span class="kw">SELECT</span>
-        <span class="fn">REPLACE</span>(name, <span class="str">' '</span>, <span class="str">''</span>) <span class="kw">AS</span> clean_account_name,
-        <span class="fn">LEFT</span>(primary_poc, <span class="fn">LOCATE</span>(<span class="str">' '</span>, primary_poc) - 1) <span class="kw">AS</span> first_name,
-        <span class="fn">RIGHT</span>(primary_poc, <span class="fn">LENGTH</span>(primary_poc) - <span class="fn">LOCATE</span>(<span class="str">' '</span>, primary_poc)) <span class="kw">AS</span> last_name
-    <span class="kw">FROM</span> accounts
-)
-<span class="kw">SELECT</span> first_name, last_name,
-       <span class="fn">CONCAT</span>(<span class="fn">LOWER</span>(first_name), <span class="str">'.'</span>, <span class="fn">LOWER</span>(last_name), <span class="str">'@'</span>, <span class="fn">LOWER</span>(clean_account_name), <span class="str">'.com'</span>) <span class="kw">AS</span> email
-<span class="kw">FROM</span> name_split;</div>
-</div>
-<div class="annotations">
-  <div class="annotation"><b>Don't worry about WITH yet</b><p>This is a CTE (Section 8 covers the syntax) — it's used here only so the first/last-name split doesn't have to be repeated three times inside one long <code class="inline">SELECT</code>.</p></div>
-  <div class="annotation"><b>Each piece is one function, chained</b><p><code class="inline">LEFT</code> + <code class="inline">LOCATE</code> gets the first name, <code class="inline">RIGHT</code> + <code class="inline">LENGTH</code> + <code class="inline">LOCATE</code> gets the last name, <code class="inline">REPLACE</code> strips spaces from the account name — then <code class="inline">CONCAT</code> stitches all of it together.</p></div>
-</div>
-
-<h2 class="section"><span class="num">4</span>COALESCE / IFNULL — filling in the gaps</h2>
-<p>A <code class="inline">CASE</code> that doesn't cover every possibility leaves some rows
-<code class="inline">NULL</code> (Day 03 covered this with <code class="inline">ELSE</code>).
-<code class="inline">IFNULL(expr, fallback)</code> swaps in a fallback value wherever
-<code class="inline">expr</code> is <code class="inline">NULL</code> — a lighter-weight fix than adding
-another <code class="inline">WHEN</code>. <code class="inline">COALESCE</code> does the same thing
-but accepts any number of arguments, returning the first one that isn't <code class="inline">NULL</code>
-— <code class="inline">IFNULL</code> is really just MySQL's two-argument shortcut for it.</p>
-<p><strong>Business question:</strong> bucket every order by item count, but the defined buckets only
-cover 0–100 and 101–200 — anything bigger needs to read "200+" instead of a blank cell on the
-dashboard.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
-  <div class="code-body"><span class="kw">WITH</span> total_range <span class="kw">AS</span> (
-    <span class="kw">SELECT</span>
-        <span class="kw">CASE</span>
-            <span class="kw">WHEN</span> total <span class="kw">BETWEEN</span> 0 <span class="kw">AND</span> 100 <span class="kw">THEN</span> <span class="str">'0-100'</span>
-            <span class="kw">WHEN</span> total <span class="kw">BETWEEN</span> 101 <span class="kw">AND</span> 200 <span class="kw">THEN</span> <span class="str">'101-200'</span>
-        <span class="kw">END</span> <span class="kw">AS</span> total_range
-    <span class="kw">FROM</span> orders
-)
-<span class="kw">SELECT</span> <span class="fn">IFNULL</span>(total_range, <span class="str">'200+'</span>) <span class="kw">AS</span> total_range
-<span class="kw">FROM</span> total_range;</div>
-</div>
-<div class="annotations">
-  <div class="annotation"><b>No ELSE means NULL, on purpose</b><p>Leaving the CASE without an <code class="inline">ELSE</code> is what creates the gap <code class="inline">IFNULL</code> then fills — the two techniques are meant to pair together, not compete.</p></div>
-</div>
-
-<div class="callout recap">
-  <div class="ti">Halfway point</div>
-  <p>Sections 1–4 covered text. From here on, every section is about reusing a query's result —
-  first stuffed inline as a subquery, then named, then saved outright.</p>
-</div>
-
-<h2 class="section"><span class="num">5</span>Scalar subqueries</h2>
+<h2 class="section"><span class="num">1</span>Scalar subqueries</h2>
 <p>A <strong>subquery</strong> is a query nested inside another one. A <strong>scalar</strong>
 subquery is the simplest kind — it returns exactly one row, one column, one value — so it can be used
 anywhere a single literal value could go, like the right-hand side of <code class="inline">=</code>
@@ -305,7 +151,7 @@ or <code class="inline">&gt;</code>.</p>
 <p><strong>Business question:</strong> leadership wants total sales for the single most recent day
 orders were placed, and finance wants every order that sold for more than the company-wide average.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
   <div class="code-body"><span class="com">-- hardcoding the date works once, but breaks the moment new orders arrive</span>
 <span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amt_usd) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders
@@ -322,17 +168,17 @@ orders were placed, and finance wants every order that sold for more than the co
 </div>
 <div class="annotations">
   <div class="annotation"><b>Self-maintaining, not just shorter</b><p>The hardcoded-date version silently goes stale as soon as newer orders arrive — the subquery version always reflects the current data.</p></div>
-  <div class="annotation"><b>Must return exactly one value</b><p>If a subquery used with <code class="inline">=</code> or <code class="inline">&gt;</code> ever returns more than one row, MySQL raises an error at runtime — this is exactly what Section 6's row subquery is for.</p></div>
+  <div class="annotation"><b>Must return exactly one value</b><p>If a subquery used with <code class="inline">=</code> or <code class="inline">&gt;</code> ever returns more than one row, MySQL raises an error at runtime — this is exactly what Section 2's row subquery is for.</p></div>
 </div>
 
-<h2 class="section"><span class="num">6</span>Row subqueries — matching a tuple</h2>
+<h2 class="section"><span class="num">2</span>Row subqueries — matching a tuple</h2>
 <p>When "one value" isn't enough to identify the right row — like needing <em>both</em> an account
 and its latest timestamp together — compare a <strong>tuple</strong> of columns against a subquery
 that returns matching tuples, using <code class="inline">IN</code>.</p>
 <p><strong>Business question:</strong> the web team wants each account's single most recent web
 event.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> account_id, occurred_at, channel
 <span class="kw">FROM</span> web_events
 <span class="kw">WHERE</span> (account_id, occurred_at) <span class="kw">IN</span> (
@@ -344,10 +190,10 @@ event.</p>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Why not just MAX(occurred_at) alone</b><p><code class="inline">MAX(occurred_at)</code> by itself returns one timestamp — the single latest event across the <em>whole</em> table. Pairing it with <code class="inline">account_id</code> in <code class="inline">GROUP BY</code>, then matching both columns as a tuple, is what makes this "latest PER account" instead.</p></div>
-  <div class="annotation"><b>The subquery here returns many rows</b><p>Unlike Section 5, this subquery returns one row per account — that's fine, because <code class="inline">IN</code> (unlike <code class="inline">=</code>) accepts a list of matches, not just one.</p></div>
+  <div class="annotation"><b>The subquery here returns many rows</b><p>Unlike Section 1, this subquery returns one row per account — that's fine, because <code class="inline">IN</code> (unlike <code class="inline">=</code>) accepts a list of matches, not just one.</p></div>
 </div>
 
-<h2 class="section"><span class="num">7</span>Derived tables — a subquery in FROM</h2>
+<h2 class="section"><span class="num">3</span>Derived tables — a subquery in FROM</h2>
 <p>A subquery isn't limited to <code class="inline">WHERE</code> — placed in
 <code class="inline">FROM</code> and given an alias, it stands in for a real table, letting the outer
 query aggregate a result that's <em>already</em> aggregated once.</p>
@@ -355,7 +201,7 @@ query aggregate a result that's <em>already</em> aggregated once.</p>
 channel — that needs two passes of aggregation: events per day per channel first, then the average of
 those daily counts.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
   <div class="code-body"><span class="com">-- pass 1: events per day, per channel</span>
 <span class="kw">SELECT</span> channel, <span class="fn">DATE</span>(occurred_at) <span class="kw">AS</span> day, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> events
 <span class="kw">FROM</span> web_events
@@ -375,7 +221,7 @@ those daily counts.</p>
   <div class="annotation"><b>You can't SELECT AVG(events) directly from the first query</b><p><code class="inline">events</code> is itself the output of an aggregate (<code class="inline">COUNT(*)</code>) — SQL won't let you aggregate an aggregate in the same <code class="inline">SELECT</code>, which is exactly why this needs two nested passes.</p></div>
 </div>
 
-<h2 class="section"><span class="num">8</span>CTEs — WITH ... AS</h2>
+<h2 class="section"><span class="num">4</span>CTEs — WITH ... AS</h2>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">skeleton</span></div>
   <div class="code-body"><span class="kw">WITH</span> &lt;cte_name&gt; <span class="kw">AS</span> (
@@ -384,14 +230,15 @@ those daily counts.</p>
 <span class="kw">SELECT</span> ...
 <span class="kw">FROM</span> &lt;cte_name&gt;;</div>
 </div>
-<p>A <strong>Common Table Expression</strong> is the same idea as Section 7's derived table — a named,
+<p>A <strong>Common Table Expression</strong> is the same idea as Section 3's derived table — a named,
 temporary result set — but declared up front with <code class="inline">WITH</code> instead of buried
 inside <code class="inline">FROM</code>. Once declared, a CTE reads like a real table for the rest of
-the statement.</p>
-<p><strong>Business question:</strong> re-solve Section 7's channel-average question more readably,
+the statement. Day 03 already previewed this syntax briefly for a string-building example — this
+section covers it properly.</p>
+<p><strong>Business question:</strong> re-solve Section 3's channel-average question more readably,
 and separately, find Parch &amp; Posey's single highest lifetime-spend customer.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
   <div class="code-body"><span class="kw">WITH</span> daily_channel_events <span class="kw">AS</span> (
     <span class="kw">SELECT</span> <span class="fn">DATE</span>(occurred_at) <span class="kw">AS</span> day, channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> events
     <span class="kw">FROM</span> web_events
@@ -412,11 +259,11 @@ and separately, find Parch &amp; Posey's single highest lifetime-spend customer.
 <span class="kw">SELECT</span> * <span class="kw">FROM</span> top_customer;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Same result, more readable</b><p>Compare this to Section 7's version — the query structure is identical, but the CTE names the intermediate step <em>before</em> it's used instead of making the reader find it nested inside <code class="inline">FROM</code>.</p></div>
-  <div class="annotation"><b>A CTE only lives for one statement</b><p>Once the final <code class="inline">SELECT</code> finishes, <code class="inline">top_customer</code> is gone — the very next query can't reference it. That limitation is exactly what Sections 10–11 solve.</p></div>
+  <div class="annotation"><b>Same result, more readable</b><p>Compare this to Section 3's version — the query structure is identical, but the CTE names the intermediate step <em>before</em> it's used instead of making the reader find it nested inside <code class="inline">FROM</code>.</p></div>
+  <div class="annotation"><b>A CTE only lives for one statement</b><p>Once the final <code class="inline">SELECT</code> finishes, <code class="inline">top_customer</code> is gone — the very next query can't reference it. That limitation is exactly what Sections 6–7 solve.</p></div>
 </div>
 
-<h2 class="section"><span class="num">9</span>Chained CTEs</h2>
+<h2 class="section"><span class="num">5</span>Chained CTEs</h2>
 <p>One CTE can reference an <em>earlier</em> CTE defined in the same <code class="inline">WITH</code>
 clause — separated by a comma — letting you build a multi-step calculation as a readable sequence
 instead of one deeply nested query.</p>
@@ -424,7 +271,7 @@ instead of one deeply nested query.</p>
 each channel — and separately, is any account's total spend above the company-wide average account
 spend?</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
   <div class="code-body"><span class="kw">WITH</span> top_customer <span class="kw">AS</span> (
     <span class="kw">SELECT</span> a.id, a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
     <span class="kw">FROM</span> orders o
@@ -460,7 +307,7 @@ avg_total <span class="kw">AS</span> (
   <div class="annotation"><b>Order matters in the chain</b><p><code class="inline">avg_total</code> references <code class="inline">account_totals</code>, so <code class="inline">account_totals</code> must be declared first — a CTE can only see CTEs that came before it, not after.</p></div>
 </div>
 
-<h2 class="section"><span class="num">10</span>Temporary tables</h2>
+<h2 class="section"><span class="num">6</span>Temporary tables</h2>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">skeleton</span></div>
   <div class="code-body"><span class="kw">CREATE TEMPORARY TABLE</span> &lt;table_name&gt;
@@ -473,10 +320,10 @@ avg_total <span class="kw">AS</span> (
 by actually materializing the result — it persists for the rest of the session (until you disconnect,
 or run <code class="inline">DROP TEMPORARY TABLE</code>), so multiple separate queries can reuse it
 without recomputing anything.</p>
-<p><strong>Business question:</strong> the same top-customer question as Section 9, but the sales team
+<p><strong>Business question:</strong> the same top-customer question as Section 5, but the sales team
 wants to run several different follow-up queries against it during one working session, not just one.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
   <div class="code-body"><span class="kw">CREATE TEMPORARY TABLE</span> top_customer
 <span class="kw">SELECT</span> a.id, a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders o
@@ -501,7 +348,7 @@ wants to run several different follow-up queries against it during one working s
   <div class="annotation"><b>Session-scoped, not shared</b><p>Only the connection that created it can see it — another user, or a new connection from the same client, gets "table doesn't exist" if they try to query it.</p></div>
 </div>
 
-<h2 class="section"><span class="num">11</span>Views</h2>
+<h2 class="section"><span class="num">7</span>Views</h2>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">skeleton</span></div>
   <div class="code-body"><span class="kw">CREATE VIEW</span> &lt;view_name&gt; <span class="kw">AS</span>
@@ -516,7 +363,7 @@ current data — and unlike a temp table, any session that can see the database 
 <p><strong>Business question:</strong> sales wants a "top 10 customers" leaderboard they can query
 repeatedly, from any session, without anyone re-writing the ranking logic each time.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_string_functions_subqueries_ctes.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
   <div class="code-body"><span class="kw">CREATE VIEW</span> top10_customers <span class="kw">AS</span>
 <span class="kw">SELECT</span> a.id, a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders o
@@ -539,7 +386,7 @@ repeatedly, from any session, without anyone re-writing the ranking logic each t
   <div class="annotation"><b>No physical storage of the data itself</b><p>The tradeoff for always being current: a view does the full underlying computation every time it's queried, unlike a temp table's one-time materialization.</p></div>
 </div>
 
-<h2 class="section"><span class="num">12</span>Choosing between them</h2>
+<h2 class="section"><span class="num">8</span>Choosing between them</h2>
 <p>All four techniques answer the same underlying need — reuse an intermediate result — with
 different tradeoffs on lifetime, visibility, and whether the data is actually stored.</p>
 <table class="api">
@@ -561,11 +408,265 @@ different tradeoffs on lifetime, visibility, and whether the data is actually st
 </div>
 
 <div class="callout recap">
-  <div class="ti">Next: Day 05</div>
-  <p>Window Functions (RANK, running totals, LAG/LEAD), Stored Procedures, and connecting Python to
-  both MySQL and SQLite.</p>
+  <div class="ti">Halfway point</div>
+  <p>Sections 1–8 covered reusing a query's result. The rest of this lesson is about two more tools
+  for reshaping and reusing SQL: window functions (rank and total without collapsing rows) and
+  stored procedures (saved, callable logic).</p>
 </div>
 
-<footer>Day 04 · String Functions, Subqueries, CTEs, Temp Tables &amp; Views · self-paced</footer>
+<h2 class="section"><span class="num">9</span>Window functions — OVER, without collapsing rows</h2>
+<p>Every aggregate so far (<code class="inline">SUM</code>, <code class="inline">COUNT</code>,
+<code class="inline">AVG</code>...) needed <code class="inline">GROUP BY</code>, and
+<code class="inline">GROUP BY</code> always <strong>collapses</strong> many rows into one per group.
+A <strong>window function</strong> computes that same kind of aggregate, but keeps every row — each
+one just gains an extra column computed by looking through a "window" of other rows, defined by
+<code class="inline">OVER (...)</code>.</p>
+<figure>
+<svg viewBox="0 0 700 195" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
+  <rect x="0" y="0" width="700" height="195" fill="#ffffff"/>
+  <rect x="0" y="0" width="700" height="195" fill="url(#erd-grid)"/>
+
+  <text x="105" y="18" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">GROUP BY — 4 rows become 2</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="10" y="30" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="55" y="46">A, 100</text>
+    <rect x="10" y="58" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="55" y="74">A, 150</text>
+    <rect x="10" y="86" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="55" y="102">B, 80</text>
+    <rect x="10" y="114" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="55" y="130">B, 120</text>
+  </g>
+  <text x="127" y="80" text-anchor="middle" font-size="10.5" fill="#666">SUM(amt)</text>
+  <text x="127" y="93" text-anchor="middle" font-size="10.5" fill="#666">GROUP BY acct</text>
+  <line x1="104" y1="84" x2="150" y2="84" stroke="#333" stroke-width="1.4"/>
+  <path d="M144,78 L150,84 L144,90" stroke="#333" stroke-width="1.4" fill="none"/>
+  <g font-size="12" text-anchor="middle">
+    <rect x="156" y="46" width="90" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="201" y="62" fill="#1f4e82">A, 250</text>
+    <rect x="156" y="86" width="90" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="201" y="102" fill="#1f4e82">B, 200</text>
+  </g>
+  <text x="128" y="160" text-anchor="middle" font-size="11.5" fill="#666">4 rows in → 2 rows out —</text>
+  <text x="128" y="174" text-anchor="middle" font-size="11.5" fill="#666">individual rows are gone</text>
+
+  <line x1="345" y1="25" x2="345" y2="145" stroke="#ccc" stroke-width="1.2" stroke-dasharray="4,3"/>
+
+  <text x="533" y="18" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Window function — 4 rows stay 4</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="380" y="30" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="425" y="46">A, 100</text>
+    <rect x="380" y="58" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="425" y="74">A, 150</text>
+    <rect x="380" y="86" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="425" y="102">B, 80</text>
+    <rect x="380" y="114" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="425" y="130">B, 120</text>
+  </g>
+  <text x="498" y="74" text-anchor="middle" font-size="9.5" fill="#666">SUM(amt) OVER</text>
+  <text x="498" y="87" text-anchor="middle" font-size="9.5" fill="#666">(PARTITION BY acct</text>
+  <text x="498" y="100" text-anchor="middle" font-size="9.5" fill="#666">ORDER BY amt)</text>
+  <line x1="474" y1="84" x2="520" y2="84" stroke="#333" stroke-width="1.4"/>
+  <path d="M514,78 L520,84 L514,90" stroke="#333" stroke-width="1.4" fill="none"/>
+  <g font-size="11.5" text-anchor="middle">
+    <rect x="526" y="30" width="164" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="608" y="46" fill="#1f4e82">A, 100, running: 100</text>
+    <rect x="526" y="58" width="164" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="608" y="74" fill="#1f4e82">A, 150, running: 250</text>
+    <rect x="526" y="86" width="164" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="608" y="102" fill="#1f4e82">B, 80, running: 80</text>
+    <rect x="526" y="114" width="164" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="608" y="130" fill="#1f4e82">B, 120, running: 200</text>
+  </g>
+  <text x="498" y="160" text-anchor="middle" font-size="11.5" fill="#666">4 rows in → 4 rows out —</text>
+  <text x="498" y="174" text-anchor="middle" font-size="11.5" fill="#666">every row survives, gains a column</text>
+</svg>
+<figcaption>Same 4 input rows, two different tools: GROUP BY collapses to one row per group; a window function keeps every row and just appends a computed value.</figcaption>
+</figure>
+<p><strong>Business question:</strong> finance wants to see paper-order volume build up over time — a
+running total, not a single company-wide sum.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> occurred_at, standard_qty,
+       <span class="fn">SUM</span>(standard_qty) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> occurred_at) <span class="kw">AS</span> running_total
+<span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> occurred_at
+<span class="kw">LIMIT</span> 10;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>OVER is what makes it a window function</b><p>Drop the <code class="inline">OVER (...)</code> and this is a plain aggregate needing <code class="inline">GROUP BY</code>. Add it, and <code class="inline">SUM</code> instead computes a value per row, looking at the set of rows <code class="inline">ORDER BY</code> defines as "so far."</p></div>
+  <div class="annotation"><b>The window's ORDER BY is independent</b><p><code class="inline">ORDER BY occurred_at</code> inside <code class="inline">OVER(...)</code> controls calculation order (which rows count as "before" this one) — a separate, outer <code class="inline">ORDER BY</code> would control display order, and both are usually the same column here.</p></div>
+</div>
+
+<h2 class="section"><span class="num">10</span>PARTITION BY — resetting the window per group</h2>
+<p><code class="inline">PARTITION BY</code> inside <code class="inline">OVER(...)</code> is to a
+window function what <code class="inline">GROUP BY</code> is to a plain aggregate — it restarts the
+calculation every time the partition column's value changes, without collapsing any rows.</p>
+<p><strong>Business question:</strong> the same running total, but per account — not one company-wide
+number mixing every customer together.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> account_id, occurred_at, total_amt_usd,
+       <span class="fn">SUM</span>(total_amt_usd) <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> account_id <span class="kw">ORDER BY</span> occurred_at) <span class="kw">AS</span> account_running_total
+<span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> account_id, occurred_at;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Order inside OVER matters</b><p><code class="inline">PARTITION BY</code> always comes before <code class="inline">ORDER BY</code> inside the same <code class="inline">OVER(...)</code> — think "which group, then in what order within it."</p></div>
+</div>
+
+<h2 class="section"><span class="num">11</span>RANK, DENSE_RANK, ROW_NUMBER</h2>
+<p>All three number rows 1, 2, 3... in the order <code class="inline">OVER (ORDER BY ...)</code>
+defines — they only disagree once two rows tie on that ordering column.</p>
+<table class="api">
+  <thead><tr><th>Function</th><th>On a tie (e.g. two rows both rank 2nd)</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">ROW_NUMBER()</code></td><td>Always unique — arbitrarily breaks the tie, never repeats a number: 1, 2, 3, 4.</td></tr>
+    <tr><td><code class="inline">RANK()</code></td><td>Tied rows share a number, then <strong>skips</strong> ahead by how many tied: 1, 2, 2, 4.</td></tr>
+    <tr><td><code class="inline">DENSE_RANK()</code></td><td>Tied rows share a number, but <strong>never skips</strong>: 1, 2, 2, 3.</td></tr>
+  </tbody>
+</table>
+<p><strong>Business question:</strong> leadership wants sales reps ranked by total sales — and wants
+to know exactly how ties get handled, since two reps landing on the same revenue isn't rare.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
+  <div class="code-body"><span class="kw">WITH</span> rep_totals <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> s.id, s.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> orders o
+    <span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
+    <span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> a.sales_rep_id = s.id
+    <span class="kw">GROUP BY</span> s.id, s.name
+)
+<span class="kw">SELECT</span> name, total_sales,
+       <span class="fn">RANK</span>()       <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> rank_with_gaps,
+       <span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> dense_rank_no_gaps,
+       <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> row_num
+<span class="kw">FROM</span> rep_totals
+<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>CTE first, ranking second</b><p>All three ranking functions need <code class="inline">rep_totals</code> already computed — the same CTE pattern from Section 4, now feeding a window function instead of a plain <code class="inline">SELECT</code>.</p></div>
+  <div class="annotation"><b>Which one to reach for</b><p><code class="inline">DENSE_RANK</code> for gapless tiers ("top 3 revenue tiers"), <code class="inline">RANK</code> when a skipped number should reflect competition (like a race), <code class="inline">ROW_NUMBER</code> whenever you need exactly one row per rank no matter what — Section 12 depends on that guarantee.</p></div>
+</div>
+
+<h2 class="section"><span class="num">12</span>Ranking within a partition, then filtering to one per group</h2>
+<p>A window function can't be filtered directly in <code class="inline">WHERE</code> — the same rule
+that blocks <code class="inline">WHERE COUNT(*) &gt; 5</code> (Day 03). Compute the rank in a CTE
+first, then filter the CTE's output.</p>
+<p><strong>Business question:</strong> for every account, what was their single largest order? (Same
+shape as Section 1's subquery question — a window function reaches the same answer more directly.)</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
+  <div class="code-body"><span class="kw">WITH</span> ranked_orders <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> account_id, id <span class="kw">AS</span> order_id, total_amt_usd,
+           <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> account_id <span class="kw">ORDER BY</span> total_amt_usd <span class="kw">DESC</span>) <span class="kw">AS</span> order_rank
+    <span class="kw">FROM</span> orders
+)
+<span class="kw">SELECT</span> account_id, order_id, total_amt_usd
+<span class="kw">FROM</span> ranked_orders
+<span class="kw">WHERE</span> order_rank = 1
+<span class="kw">ORDER BY</span> account_id;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>PARTITION BY here means "per account"</b><p>Without it, this would rank every order in the whole table against each other — <code class="inline">PARTITION BY account_id</code> is what makes rank 1 mean "this account's biggest order," restarting for each account.</p></div>
+</div>
+
+<h2 class="section"><span class="num">13</span>LAG / LEAD — comparing a row to a neighbor</h2>
+<p><code class="inline">LAG(col)</code> looks one row <em>back</em> (in whatever order
+<code class="inline">OVER (ORDER BY ...)</code> defines); <code class="inline">LEAD(col)</code>
+looks one row <em>forward</em>. Both default to an offset of 1 — <code class="inline">LAG(col,
+2)</code> would look back two rows instead.</p>
+<p><strong>Business question:</strong> is month-over-month revenue growing or shrinking?</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
+  <div class="code-body"><span class="kw">WITH</span> monthly_sales <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(occurred_at, <span class="str">'%Y-%m'</span>) <span class="kw">AS</span> month, <span class="fn">SUM</span>(total_amt_usd) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> orders
+    <span class="kw">GROUP BY</span> month
+)
+<span class="kw">SELECT</span> month, total_sales,
+       <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> prev_month_sales,
+       total_sales - <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> change_from_prev_month
+<span class="kw">FROM</span> monthly_sales
+<span class="kw">ORDER BY</span> month;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>The first row has nothing to look back to</b><p><code class="inline">LAG</code> returns <code class="inline">NULL</code> for the very first month — expected behavior, not a bug, same as any window function at the edge of its data.</p></div>
+</div>
+
+<h2 class="section"><span class="num">14</span>Stored procedures (IN parameters)</h2>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">skeleton</span></div>
+  <div class="code-body"><span class="kw">DELIMITER</span> $$
+
+<span class="kw">CREATE PROCEDURE</span> &lt;procedure_name&gt;(<span class="kw">IN</span> &lt;param_name&gt; &lt;type&gt;)
+<span class="kw">BEGIN</span>
+    &lt;one or more SQL statements&gt;;
+<span class="kw">END</span>$$
+
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> &lt;procedure_name&gt;(&lt;value&gt;);</div>
+</div>
+<p>A <strong>stored procedure</strong> is a named, reusable block of SQL logic saved inside the
+database itself — call it by name instead of re-pasting the same query every time someone needs it.
+An <code class="inline">IN</code> parameter passes a value into the procedure, the way a function
+argument would in any programming language.</p>
+<div class="callout warn">
+  <div class="ti">Why DELIMITER is required here</div>
+  <p>Running this file as a script (the <code class="inline">mysql</code> CLI, <code class="inline">source</code>,
+  or Workbench's "execute script") splits statements on every plain semicolon. Without switching the
+  delimiter first, it would try to run <code class="inline">BEGIN ... SELECT ...;</code> as a
+  complete statement and choke on the very first semicolon inside the procedure body.
+  <code class="inline">DELIMITER $$</code> temporarily changes the statement terminator to
+  <code class="inline">$$</code>, so the whole <code class="inline">CREATE PROCEDURE ... END</code>
+  block is read as one statement; <code class="inline">DELIMITER ;</code> switches it back
+  afterward. This becomes unnecessary in Day 05, once SQL is sent through a Python driver instead —
+  a Python driver sends the whole block as one request, with no client-side statement-splitting
+  involved at all.</p>
+</div>
+<p><strong>Business question:</strong> sales reps constantly ask for the same report — order count and
+total revenue for one account. Save it once as a procedure everyone can call.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
+  <div class="code-body"><span class="kw">DELIMITER</span> $$
+
+<span class="kw">CREATE PROCEDURE</span> account_sales_report(<span class="kw">IN</span> acct_id <span class="kw">INT</span>)
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> a.name <span class="kw">AS</span> account_name,
+           <span class="fn">COUNT</span>(o.id) <span class="kw">AS</span> num_orders,
+           <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> accounts a
+    <span class="kw">JOIN</span> orders o <span class="kw">ON</span> o.account_id = a.id
+    <span class="kw">WHERE</span> a.id = acct_id
+    <span class="kw">GROUP BY</span> a.name;
+<span class="kw">END</span>$$
+
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> account_sales_report(1001);</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>The parameter, used inside the body</b><p><code class="inline">acct_id</code> works exactly like a variable inside <code class="inline">BEGIN...END</code> — whatever value <code class="inline">CALL</code> passes in gets substituted wherever <code class="inline">acct_id</code> appears.</p></div>
+</div>
+
+<h2 class="section"><span class="num">15</span>Stored procedures (OUT parameters)</h2>
+<p>An <code class="inline">OUT</code> parameter hands a value back through a <strong>user session
+variable</strong> (conventionally written <code class="inline">@name</code>) instead of a result set
+— useful when the caller is another program that needs one number to act on, not a table to read.
+<code class="inline">SELECT ... INTO &lt;out_param&gt;</code> is how the procedure body assigns it.</p>
+<p><strong>Business question:</strong> a nightly batch job needs just the single number — total
+company-wide revenue — captured into a variable it can act on.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_window_functions.sql</span></div>
+  <div class="code-body"><span class="kw">DELIMITER</span> $$
+
+<span class="kw">CREATE PROCEDURE</span> get_total_revenue(<span class="kw">OUT</span> total_revenue <span class="kw">DECIMAL</span>(14,2))
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amt_usd) <span class="kw">INTO</span> total_revenue <span class="kw">FROM</span> orders;
+<span class="kw">END</span>$$
+
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> get_total_revenue(@rev);
+<span class="kw">SELECT</span> @rev <span class="kw">AS</span> total_revenue;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Kept intentionally shallow</b><p>This is enough to read a stored procedure when you meet one in a real codebase — this is a data-analysis course, not a backend/app-dev one, so writing elaborate procedures isn't the goal here.</p></div>
+</div>
+
+<div class="callout recap">
+  <div class="ti">Next: Day 05</div>
+  <p>This closes the core SQL curriculum. Day 05 applies everything from Days 01–04 from Python —
+  connecting to both MySQL and SQLite, ahead of Days 06–09's real SQLite projects.</p>
+</div>
+
+<footer>Day 04 · Subqueries, CTEs, Views, Window Functions &amp; Stored Procedures · self-paced</footer>
 </div>
 </body></html>

@@ -266,3 +266,74 @@ JOIN sales_reps s
     ON s.id = a.sales_rep_id
 GROUP BY a.id, a.sales_rep_id, s.name
 HAVING SUM(o.total_amt_usd) BETWEEN 1 AND 5000;
+
+-- ======================================
+-- SECTION 11 — TRIMMING WHITESPACE
+-- ======================================
+
+-- A CSV export from a legacy CRM padded every point-of-contact name with stray
+-- spaces — clean it up before the data gets loaded anywhere else
+SELECT LTRIM('     Alexander Freberg') AS left_trim;
+SELECT RTRIM('Alexander Freberg          ') AS right_trim;
+SELECT TRIM('     Alexander Freberg          ') AS trim_both;
+
+-- ======================================
+-- SECTION 12 — EXTRACTING PARTS OF A STRING
+-- ======================================
+
+-- Marketing wants a 4-letter account-code abbreviation for a print report,
+-- and a data-quality check that every account's website follows the
+-- expected "www.company.com" pattern (i.e. starts with "www")
+SELECT name, LEFT(name, 4) AS account_code
+FROM accounts
+LIMIT 5;
+
+SELECT website, SUBSTRING(website, 1, LOCATE('.', website) - 1) AS website_prefix
+FROM accounts
+LIMIT 5;
+
+-- LOCATE finds the position of a substring (1-indexed) — here, the first space
+-- inside a point-of-contact's full name, which is what SECTION 13 uses to split
+-- "Sherrie Ballenger" into first/last name
+SELECT primary_poc, LOCATE(' ', primary_poc) AS space_position
+FROM accounts
+LIMIT 5;
+
+-- ======================================
+-- SECTION 13 — BUILDING AND CLEANING STRINGS
+-- ======================================
+
+-- Sales wants a company email address auto-generated for every point of
+-- contact: firstname.lastname@accountname.com, all lowercase, no spaces
+WITH name_split AS (
+    SELECT
+        REPLACE(name, ' ', '') AS clean_account_name,
+        LEFT(primary_poc, LOCATE(' ', primary_poc) - 1) AS first_name,
+        RIGHT(primary_poc, LENGTH(primary_poc) - LOCATE(' ', primary_poc)) AS last_name
+    FROM accounts
+)
+SELECT first_name, last_name,
+       CONCAT(LOWER(first_name), '.', LOWER(last_name), '@', LOWER(clean_account_name), '.com') AS email
+FROM name_split;
+
+-- Quick contrast: LOWER/UPPER/LENGTH applied directly to a column
+SELECT name, LOWER(name) AS lower_name, UPPER(name) AS upper_name, LENGTH(name) AS name_length
+FROM sales_reps
+LIMIT 5;
+
+-- ======================================
+-- SECTION 14 — COALESCE / IFNULL (filling in NULLs)
+-- ======================================
+
+-- Bucket every order by item count, but the buckets only cover 0-100 and
+-- 101-200 — anything larger falls through as NULL and needs a "200+" label
+WITH total_range AS (
+    SELECT
+        CASE
+            WHEN total BETWEEN 0 AND 100 THEN '0-100'
+            WHEN total BETWEEN 101 AND 200 THEN '101-200'
+        END AS total_range
+    FROM orders
+)
+SELECT IFNULL(total_range, '200+') AS total_range
+FROM total_range;

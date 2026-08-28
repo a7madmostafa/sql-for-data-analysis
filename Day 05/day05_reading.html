@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 05 — Python Connectivity: MySQL &amp; SQLite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+  --tip-bg:#EEF6FF; --tip-bd:#2E6FB5; --tip-ti:#1F4E82;
+  --warn-bg:#FDECEA; --warn-bd:#C0392B; --warn-ti:#7B1F14;
+  --recap-bg:#FFF8E1; --recap-bd:#B45309; --recap-ti:#8A4B00;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
+.page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
+.crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
+.subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
+.objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
+.objectives h2{font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);margin:0 0 10px;font-weight:700}
+.objectives ul{margin:0;padding-left:20px}.objectives li{font-size:15px;margin-bottom:6px}
+h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:26px;color:var(--ink);margin:52px 0 8px;padding-bottom:10px;border-bottom:2px solid var(--ink);font-weight:700}
+h2.section .num{color:var(--blue);margin-right:10px}
+.section-intro{font-size:16.5px;color:var(--gray);margin:0 0 20px}
+h3.sub{font-size:17.5px;color:var(--ink);margin:30px 0 10px;font-weight:700}
+p{margin:0 0 15px} p.lead{font-size:18px;color:var(--ink);font-weight:600}
+strong{color:var(--ink);font-weight:700}
+code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
+table.api{width:100%;border-collapse:collapse;margin:14px 0 22px;background:white;font-size:14px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.api th,table.api td{padding:10px 13px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.api thead th{background:var(--panel);color:var(--ink);font-size:11.5px;text-transform:uppercase;letter-spacing:.07em}
+table.api tbody tr:last-child td{border-bottom:none}
+
+.callout{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid}
+.callout .ti{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px}
+.callout p{font-size:15px;margin:0 0 6px}.callout p:last-child{margin-bottom:0}
+.callout.tip{background:var(--tip-bg);border-color:var(--tip-bd)}.callout.tip .ti{color:var(--tip-ti)}
+.callout.insight{background:var(--insight-bg);border-color:var(--insight-bd)}.callout.insight .ti{color:var(--insight-ti)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-bd)}.callout.warn .ti{color:var(--warn-ti)}
+.callout.recap{background:var(--recap-bg);border-color:var(--recap-bd)}.callout.recap .ti{color:var(--recap-ti)}
+
+.code-block{margin:18px 0 8px;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}
+.code-header{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#161616}
+.code-header .dot{width:10px;height:10px;border-radius:50%}
+.code-header .dot.r{background:#FF5F56}.code-header .dot.y{background:#FFBD2E}.code-header .dot.g{background:#27C93F}
+.code-header .fname{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}
+.code-body{background:var(--code-bg);color:var(--code-default);padding:16px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.75;overflow-x:auto;white-space:pre}
+.code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
+.code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
+.code-body .def{color:var(--code-default)}
+.annotations{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:6px 20px 14px;margin-bottom:28px}
+.annotation{padding:11px 0;border-top:1px solid #EEF2F7}
+.annotation:first-child{border-top:0}
+.annotation b{color:var(--blue);font-size:14px}
+.annotation p{margin:3px 0 0;font-size:14.5px;color:var(--ink)}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 26px}
+.compare .col{background:white;border:1px solid var(--border);border-radius:8px;padding:17px 19px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.compare .col h4{margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink)}
+.compare .col p,.compare .col li{font-size:14.5px}
+.compare .col ul{margin:6px 0 0;padding-left:18px}
+.compare .col.bad{border-color:#E8B7B1;background:#FCF2F0}.compare .col.bad h4{color:var(--warn-ti)}
+.compare .col.good{border-color:#B7DEC2;background:#F0F8F2}.compare .col.good h4{color:var(--insight-ti)}
+
+.card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0 26px}
+.card-grid.three{grid-template-columns:repeat(3,1fr)}
+.card{background:white;border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.card h4{margin:0 0 7px;color:var(--ink);font-size:16px;font-weight:700}
+.card p{font-size:14.5px;margin:0 0 6px;color:var(--gray)}
+.card p:last-child{margin-bottom:0}
+.card code.inline{font-size:.82em}
+
+figure{margin:24px 0 8px;text-align:center;background:linear-gradient(180deg,#fff,#FAFBFD);border:1px solid var(--border);border-radius:10px;padding:26px 14px 18px}
+figcaption{font-size:13.5px;color:var(--gray);margin-top:12px;font-style:italic}
+
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
+@media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:30px}.card-grid,.card-grid.three,.compare{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="page">
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
+      <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
+    </pattern>
+  </defs>
+</svg>
+
+<div class="crumb">Day 05 of 9 · Python Connectivity: MySQL &amp; SQLite</div>
+<h1 class="title">Python Connectivity: MySQL &amp; SQLite</h1>
+<p class="subtitle">No new SQL today — everything from Days 01–04, now reached from Python, against both engines every remaining project day will use.</p>
+
+<div class="objectives">
+  <h2>What you'll be able to do after this lesson</h2>
+  <ul>
+    <li>Use the raw cursor pattern (connect, cursor, execute, fetchall) that every higher-level tool is built on.</li>
+    <li>Connect from Python to MySQL with SQLAlchemy, credentials pulled from a local .env file — never hardcoded.</li>
+    <li>Run SQL directly inside a notebook with jupysql's %sql/%%sql magic, and load results into pandas.</li>
+    <li>Pass values into a query safely with bound parameters, instead of an f-string that opens the door to SQL injection.</li>
+    <li>Avoid two real driver gotchas that only show up once you call stored procedures from Python.</li>
+    <li>Migrate a live MySQL database into a local SQLite file with pandas, verify the migration, and connect to the copy two ways — with SQLAlchemy, or with a bare connection string.</li>
+    <li>Turn a query result into a chart with pandas — the payoff SQL alone can't give you.</li>
+    <li>Recognize the handful of SQL differences between MySQL and SQLite that Days 06–09 will lean on.</li>
+  </ul>
+</div>
+
+<div class="callout tip">
+  <div class="ti">Before you start</div>
+  <p><code class="inline">parch_and_posey</code> — run <code class="inline">Databases/Parch &amp; Posey Database.sql</code>
+  first if you haven't already. This is the first day needing a Python environment: copy
+  <code class="inline">.env.example</code> (repo root) to <code class="inline">.env</code> and fill in your local MySQL
+  credentials, then <code class="inline">pip install -r requirements.txt</code>. <code class="inline">.env</code> is
+  git-ignored on purpose — never commit real credentials. See this day's <code class="inline">README.md</code> for the
+  full setup checklist.</p>
+</div>
+
+<h2 class="section"><span class="num">1</span>The cursor — what every database call reduces to</h2>
+<p>Before reaching for any convenience layer, it's worth seeing the raw pattern once: a
+<strong>connection</strong> to the database, a <strong>cursor</strong> to run statements through,
+<code class="inline">execute()</code> to run a query, and <code class="inline">fetchall()</code>/
+<code class="inline">fetchone()</code> to pull the results back. Every tool in this lesson — pandas,
+SQLAlchemy, jupysql's <code class="inline">%%sql</code> — is built on exactly this, for any database
+driver.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
+  <div class="code-body"><span class="kw">import</span> mysql.connector
+
+raw_conn = mysql.connector.connect(
+    host=os.getenv(<span class="str">"DB_HOST"</span>), port=<span class="fn">int</span>(os.getenv(<span class="str">"DB_PORT"</span>, <span class="str">"3306"</span>)),
+    user=os.getenv(<span class="str">"DB_USER"</span>), password=os.getenv(<span class="str">"DB_PASSWORD"</span>),
+    database=os.getenv(<span class="str">"DB_NAME"</span>), use_pure=<span class="kw">True</span>,
+)
+cursor = raw_conn.cursor()
+cursor.execute(<span class="str">"SELECT name FROM region ORDER BY name"</span>)
+
+<span class="kw">for</span> row <span class="kw">in</span> cursor.fetchall():
+    <span class="fn">print</span>(row)
+
+cursor.close()
+raw_conn.close()</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Plain tuples, not a DataFrame</b><p><code class="inline">fetchall()</code> returns a list of plain tuples — no column names, no formatting. That gap is exactly what pandas and jupysql fill next.</p></div>
+  <div class="annotation"><b>Tied to one driver</b><p>This exact code only works with <code class="inline">mysql-connector-python</code>. SQLAlchemy's whole purpose (Section 2) is giving you the same interface regardless of which driver or engine is underneath.</p></div>
+</div>
+
+<h2 class="section"><span class="num">2</span>Connecting Python to MySQL with SQLAlchemy</h2>
+<p><code class="inline">create_engine(...)</code> is the standard way to open a database
+connection from Python — one function, and the connection string's prefix is the only thing that
+changes between database engines.</p>
+<p><strong>Business question:</strong> credentials need to live somewhere real code can read them,
+without ever being typed into a notebook or committed to git.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
+  <div class="code-body"><span class="kw">import</span> os
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+<span class="kw">from</span> sqlalchemy <span class="kw">import</span> create_engine, text
+<span class="kw">from</span> sqlalchemy.engine <span class="kw">import</span> URL
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+load_dotenv()  <span class="com"># reads the local .env file into environment variables</span>
+
+mysql_url = URL.create(
+    <span class="str">"mysql+mysqlconnector"</span>,
+    username=os.getenv(<span class="str">"DB_USER"</span>),
+    password=os.getenv(<span class="str">"DB_PASSWORD"</span>),
+    host=os.getenv(<span class="str">"DB_HOST"</span>),
+    port=<span class="fn">int</span>(os.getenv(<span class="str">"DB_PORT"</span>, <span class="str">"3306"</span>)),
+    database=os.getenv(<span class="str">"DB_NAME"</span>),
+)
+mysql_engine = create_engine(mysql_url, connect_args={<span class="str">"use_pure"</span>: <span class="kw">True</span>})</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>.env is never committed</b><p><code class="inline">.env</code> is listed in <code class="inline">.gitignore</code> — only <code class="inline">.env.example</code> (a template with no real values) is tracked in git. Copy it, fill in your own credentials, keep the real file local.</p></div>
+  <div class="annotation"><b>URL.create(...), not an f-string</b><p>Hand-building the connection string with an f-string breaks the moment a password contains <code class="inline">@</code>, <code class="inline">:</code>, <code class="inline">/</code>, or <code class="inline">%</code> — an <code class="inline">@</code> inside the password gets misread as the separator before the hostname, producing a confusing "unknown host" error that has nothing to do with the actual host. <code class="inline">URL.create()</code> percent-encodes every part correctly, regardless of what characters it contains — a real bug found while testing this lesson.</p></div>
+  <div class="annotation"><b>use_pure — see the callout in Section 5</b><p>Forces the pure-Python driver instead of the C extension, avoiding a "commands out of sync" bug the C extension has with stored procedures that return a result set.</p></div>
+</div>
+
+<h2 class="section"><span class="num">3</span>jupysql — running SQL cells directly in a notebook</h2>
+<p><strong>jupysql</strong> (the actively-maintained successor to the older
+<code class="inline">ipython-sql</code>) adds <code class="inline">%sql</code> (one line) and
+<code class="inline">%%sql</code> (a whole cell) magics — write real SQL directly in a notebook cell
+instead of wrapping every query in <code class="inline">pd.read_sql(text("..."), engine)</code>.</p>
+<p><strong>Business question:</strong> re-run a familiar Day 03 JOIN straight from the notebook, to
+confirm the connection actually works end to end.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
+  <div class="code-body">%load_ext sql
+%sql mysql_engine --alias mysql   <span class="com"># bind jupysql to an existing SQLAlchemy engine</span>
+
+%%sql
+<span class="kw">SELECT</span> a.name <span class="kw">AS</span> account_name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
+<span class="kw">GROUP BY</span> a.name
+<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 5;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Passing an engine variable is the cleanest pattern</b><p><code class="inline">%sql mysql_engine</code> reuses the exact same engine the rest of your Python code (like <code class="inline">pd.read_sql</code>) already uses — no second, separate connection string to keep in sync.</p></div>
+  <div class="annotation"><b>Nothing new syntactically</b><p>Same JOIN technique from Day 03 — the point of this quick check is proving the plumbing works, not teaching new SQL. The full sweep through every technique happens in <code class="inline">day05_python_sqlite.ipynb</code>, below.</p></div>
+</div>
+<div class="callout tip">
+  <div class="ti">day05_python_mysql.ipynb stays short on purpose</div>
+  <p>This notebook is just a quick check that the Python↔MySQL plumbing works — one JOIN, then the
+  stored-procedure calls in Section 5. Every remaining project day (06–09) runs on SQLite, not
+  MySQL, so the real depth lives in <code class="inline">day05_python_sqlite.ipynb</code>: a full
+  sweep through <strong>every</strong> Day 01–04 concept — <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>,
+  <code class="inline">WHERE</code>, every JOIN variant, <code class="inline">CASE</code>, string
+  functions, subqueries, CTEs, temp tables, views, every window function, all re-run via
+  <code class="inline">%%sql</code> against the migrated copy.</p>
+</div>
+
+<h2 class="section"><span class="num">4</span>Passing parameters safely</h2>
+<p>Every query so far has had its filter values hardcoded. Real code usually takes that value from
+somewhere else — a form field, a function argument, another system — and the way you get it into
+the query matters. This is covered hands-on in <code class="inline">day05_python_sqlite.ipynb</code>,
+since SQLite is where the rest of this course's Python work happens.</p>
+<p><strong>Business question:</strong> build a small function, <code class="inline">orders_for_account(account_id)</code>,
+that a dashboard could call with whatever account a user picks.</p>
+<div class="compare">
+  <div class="col bad">
+    <h4>The wrong way — an f-string</h4>
+    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">def orders_for_account_UNSAFE(account_id):
+    query = f"SELECT ... WHERE account_id = {account_id}"
+    return pd.read_sql(text(query), sqlite_engine)</pre>
+  </div>
+  <div class="col good">
+    <h4>The right way — a bound parameter</h4>
+    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">def orders_for_account(account_id):
+    query = text("SELECT ... WHERE account_id = :acct_id")
+    return pd.read_sql(query, sqlite_engine, params={"acct_id": account_id})</pre>
+  </div>
+</div>
+<div class="callout warn">
+  <div class="ti">What actually happens with a malicious input — tested on both engines</div>
+  <p>Call the f-string version with <code class="inline">account_id = "1001 OR 1=1"</code> and it
+  returns <strong>every order in the table</strong>, on either engine — classic SQL injection, since
+  the value was pasted directly into the query text and then parsed as SQL. Call the
+  bound-parameter version with the exact same input and both engines come back safe, but not
+  identically: MySQL coerces the string down to the number it starts with (<code class="inline">1001</code>)
+  and returns the normal 28 rows for that account; SQLite is stricter about comparing text to an
+  integer column and returns <strong>zero rows</strong> instead, since the malicious string simply
+  matches nothing. Different failure mode, equally safe either way — the value never got a chance
+  to be parsed as SQL on either engine, which is the only guarantee that actually matters.</p>
+</div>
+<p><strong>The single most important habit in this notebook:</strong> never build a query string
+with f-strings/<code class="inline">.format()</code>/<code class="inline">%</code>-formatting using
+a value that came from outside your own code. Always use a placeholder
+(<code class="inline">:name</code> with SQLAlchemy, <code class="inline">%s</code> with a raw DBAPI
+cursor) and pass the value separately.</p>
+
+<h2 class="section"><span class="num">5</span>Calling stored procedures from Python</h2>
+<p>Day 04's stored procedures needed <code class="inline">DELIMITER</code> because the
+<code class="inline">mysql</code> CLI splits a script into statements on every semicolon. A Python
+driver sends the whole procedure body as one request — no <code class="inline">DELIMITER</code>
+needed at all from here on.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
+  <div class="code-body">%%sql
+<span class="kw">CALL</span> account_sales_report(1001);
+
+%%sql
+<span class="kw">CALL</span> get_total_revenue(@rev);
+
+%%sql
+<span class="kw">SELECT</span> @rev <span class="kw">AS</span> total_revenue;</div>
+</div>
+<div class="callout warn">
+  <div class="ti">Two real driver bugs, found while testing this lesson</div>
+  <p><code class="inline">mysql-connector-python</code> ships two implementations: a fast C
+  extension (the default) and a pure-Python fallback. The C extension has a known bug calling a
+  stored procedure that returns a result set — it leaves the connection in a broken "commands out
+  of sync" state for whatever query runs next. Section 2's <code class="inline">connect_args={&quot;use_pure&quot;: True}</code>
+  avoids this entirely.</p>
+  <p>Separately, calling a result-returning procedure (<code class="inline">account_sales_report</code>)
+  right before an <code class="inline">OUT</code>-parameter one (<code class="inline">get_total_revenue</code>)
+  can silently leave <code class="inline">@rev</code> empty, even with <code class="inline">use_pure</code>
+  — the driver gets confused switching between the two call styles.
+  <code class="inline">mysql_engine.dispose()</code> (closes every pooled connection so the next
+  query starts fresh) right before calling <code class="inline">get_total_revenue</code> is the fix
+  — see it in <code class="inline">day05_python_mysql.ipynb</code>.</p>
+</div>
+
+<h2 class="section"><span class="num">6</span>Loading results into pandas</h2>
+<p><strong>Business question:</strong> finance wants the daily sales trend as a chart for a deck, not
+a table of numbers to read row by row.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
+  <div class="code-body">daily_sales = pd.read_sql(
+    text(<span class="str">"SELECT DATE(occurred_at) AS day, SUM(total_amt_usd) AS daily_sales FROM orders GROUP BY day"</span>),
+    mysql_engine,
+)
+daily_sales.plot(x=<span class="str">"day"</span>, y=<span class="str">"daily_sales"</span>, figsize=(10, 4), title=<span class="str">"Daily Sales"</span>)</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>text() is the version-safe habit</b><p>Wrapping the query string in <code class="inline">text(...)</code> is required on modern SQLAlchemy (2.x) — a bare string still works on older versions, but <code class="inline">text()</code> is the pattern that won't break later.</p></div>
+  <div class="annotation"><b>A completely normal DataFrame from here</b><p><code class="inline">daily_sales</code> behaves exactly like data loaded any other way — every pandas method (<code class="inline">.plot()</code>, <code class="inline">.describe()</code>, <code class="inline">.to_csv()</code>) works the same.</p></div>
+</div>
+
+<h2 class="section"><span class="num">7</span>Migrating to SQLite with pandas</h2>
+<p>Every project day from Day 06 on runs against a local <code class="inline">.sqlite</code> file
+instead of a MySQL server. Rather than jumping straight into an unfamiliar project dataset,
+<code class="inline">day05_python_sqlite.ipynb</code> first rebuilds the already-familiar
+<code class="inline">parch_and_posey</code> as a local SQLite file — a real, useful skill on its own
+(migrating between engines), and a gentler way to meet the SQLite connection pattern.</p>
+<p><strong>Business question:</strong> a teammate without MySQL installed still needs to work with
+this data — hand them a single portable file instead.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_sqlite.ipynb</span></div>
+  <div class="code-body"><span class="kw">import</span> sqlite3
+
+sqlite_conn = sqlite3.connect(<span class="str">"parch_and_posey.sqlite"</span>)
+
+<span class="kw">for</span> table <span class="kw">in</span> [<span class="str">"region"</span>, <span class="str">"sales_reps"</span>, <span class="str">"accounts"</span>, <span class="str">"orders"</span>, <span class="str">"web_events"</span>]:
+    df = pd.read_sql(text(<span class="fn">f</span><span class="str">"SELECT * FROM {table}"</span>), mysql_engine)
+    df.to_sql(table, sqlite_conn, index=<span class="kw">False</span>, if_exists=<span class="str">"replace"</span>)
+
+sqlite_conn.commit()</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>No SQLAlchemy on the destination side</b><p><code class="inline">sqlite3</code> is a Python stdlib module — nothing to install. <code class="inline">df.to_sql</code> accepts a raw <code class="inline">sqlite3.Connection</code> just as happily as a SQLAlchemy engine; the source side (<code class="inline">mysql_engine</code>) still needs SQLAlchemy, for the reasons in Section 2.</p></div>
+  <div class="annotation"><b>Read from one engine, write to another</b><p><code class="inline">pd.read_sql</code> and <code class="inline">df.to_sql</code> don't care what's on either end — a DataFrame is the universal middle step.</p></div>
+  <div class="annotation"><b>Generated, not committed</b><p>This file is regenerated by running the notebook, not stored in git — same reasoning as never committing <code class="inline">.env</code>: it's derived, disposable local state.</p></div>
+</div>
+
+<h2 class="section"><span class="num">8</span>The cursor, once more, on SQLite</h2>
+<p>Same DB-API pattern from Section 1, different driver underneath — and this time, no new
+connection needed: <code class="inline">sqlite_conn</code> from the migration step above already
+<em>is</em> a connection.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_sqlite.ipynb</span></div>
+  <div class="code-body">cursor = sqlite_conn.cursor()
+cursor.execute(<span class="str">"SELECT name FROM region ORDER BY name"</span>)
+
+<span class="kw">for</span> row <span class="kw">in</span> cursor.fetchall():
+    <span class="fn">print</span>(row)
+
+cursor.close()</div>
+</div>
+
+<h2 class="section"><span class="num">9</span>Two ways to run %%sql against SQLite</h2>
+<p>No host, no username, no password — SQLite is just a single file the Python process opens
+directly. Everything else about querying it is identical to MySQL — including having a choice in
+how to connect.</p>
+<div class="compare">
+  <div class="col">
+    <h4>Option 1 — through SQLAlchemy</h4>
+    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">sqlalchemy_demo_engine = create_engine(
+    "sqlite:///parch_and_posey.sqlite"
+)
+%sql sqlalchemy_demo_engine --alias sqlite_via_sqlalchemy</pre>
+  </div>
+  <div class="col good">
+    <h4>Option 2 — jupysql directly, no SQLAlchemy</h4>
+    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">%sql sqlite:///parch_and_posey.sqlite --alias sqlite_pp</pre>
+  </div>
+</div>
+<p>Both register a connection jupysql can run <code class="inline">%%sql</code> against, and both
+return identical results for the same query. Option 2 is what
+<code class="inline">day05_python_sqlite.ipynb</code> uses from here on — it's also the exact
+pattern the Kaggle-based project notebooks (Days 06–09) already use, so getting comfortable with
+it now pays off directly later.</p>
+<div class="annotations">
+  <div class="annotation"><b>jupysql needs a connection string or an Engine — nothing less</b><p>It can't bind directly to a raw <code class="inline">sqlite3.Connection</code> the way pandas can. That's the one place SQLAlchemy genuinely earns its keep for SQLite — not for connecting in general, just for this specific magic.</p></div>
+</div>
+
+<h2 class="section"><span class="num">10</span>Visualizing results</h2>
+<p>SQL alone gets you a table. Python's real payoff is turning that table into something a
+stakeholder actually looks at.</p>
+<p><strong>Business question:</strong> sales leadership wants the daily revenue trend for their
+weekly review deck, not a table of numbers.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_sqlite.ipynb</span></div>
+  <div class="code-body">daily_sales = pd.read_sql(
+    <span class="str">"SELECT DATE(occurred_at) AS day, SUM(total_amt_usd) AS daily_sales FROM orders GROUP BY day"</span>,
+    sqlite_conn,
+)
+daily_sales.plot(x=<span class="str">"day"</span>, y=<span class="str">"daily_sales"</span>, figsize=(10, 4), title=<span class="str">"Daily Sales"</span>)</div>
+</div>
+<p>The notebook does this two more times — total revenue by region as a bar chart for a quarterly
+review, and web-event channel mix as a pie chart for a marketing review — pulling straight from
+queries already in the sweep. Same idea every time: get a DataFrame, call
+<code class="inline">.plot()</code>, pick the chart shape that fits the question — a line for a
+trend over time, a bar for comparing categories, a pie for a proportional split.</p>
+
+<h2 class="section"><span class="num">11</span>MySQL vs SQLite — what actually differs</h2>
+<p>Most of what you've learned transfers directly. A handful of functions don't exist in SQLite, or
+are spelled differently — worth recognizing before Days 06–09.</p>
+<table class="api">
+  <thead><tr><th>Need</th><th>MySQL</th><th>SQLite</th></tr></thead>
+  <tbody>
+    <tr><td>Format a date</td><td><code class="inline">DATE_FORMAT(col, '%Y-%m')</code></td><td><code class="inline">STRFTIME('%Y-%m', col)</code></td></tr>
+    <tr><td>Difference between two dates</td><td><code class="inline">DATEDIFF(d1, d2)</code></td><td>No <code class="inline">DATEDIFF</code> — subtract <code class="inline">JULIANDAY(d1) - JULIANDAY(d2)</code> instead</td></tr>
+    <tr><td>Concatenate strings</td><td><code class="inline">CONCAT(a, b)</code></td><td><code class="inline">a || b</code> (also works: <code class="inline">CONCAT</code> isn't standard SQLite, though some builds allow it)</td></tr>
+    <tr><td>Auto-incrementing primary key</td><td><code class="inline">AUTO_INCREMENT</code></td><td><code class="inline">AUTOINCREMENT</code></td></tr>
+    <tr><td>Stored procedures</td><td><code class="inline">CREATE PROCEDURE</code></td><td>Not supported at all — SQLite has no procedural logic</td></tr>
+  </tbody>
+</table>
+<div class="callout insight">
+  <div class="ti">Everything else transfers directly</div>
+  <p>JOINs, CASE, subqueries, CTEs, and window functions (including <code class="inline">RANK</code>/<code class="inline">LAG</code>/<code class="inline">LEAD</code>) all work identically in SQLite — Days 06–09 lean on exactly these, just without stored procedures or MySQL's date-function names.</p>
+</div>
+
+<div class="callout recap">
+  <div class="ti">Next: Day 06 — Project: NBA</div>
+  <p>This closes the core curriculum. Days 06–09 apply everything from Days 01–05 — filtering,
+  JOINs, CASE, string functions, subqueries, CTEs, window functions, stored logic patterns — against
+  real SQLite datasets, with far less hand-holding.</p>
+</div>
+
+<footer>Day 05 · Python Connectivity: MySQL &amp; SQLite · self-paced</footer>
+</div>
+</body></html>

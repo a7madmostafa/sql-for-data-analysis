@@ -276,6 +276,74 @@ HAVING SUM(o.total_amt_usd) BETWEEN 1 AND 5000;
 
 
 -- ======================================
+-- SECTION 11 — TRIMMING WHITESPACE
+-- ======================================
+
+-- 11.1
+SELECT id, TRIM(name) AS trimmed_name
+FROM sales_reps;
+
+
+-- ======================================
+-- SECTION 12 — EXTRACTING PARTS OF A STRING
+-- ======================================
+
+-- 12.1
+SELECT name, LEFT(name, 3) AS account_code
+FROM accounts;
+
+-- 12.2
+SELECT website, RIGHT(website, 3) AS domain_suffix
+FROM accounts;
+
+-- 12.3
+SELECT website, LOCATE('.', website) AS dot_position
+FROM accounts;
+
+
+-- ======================================
+-- SECTION 13 — BUILDING AND CLEANING STRINGS
+-- ======================================
+
+-- 13.1
+SELECT name,
+    CONCAT(
+        LOWER(LEFT(name, LOCATE(' ', name) - 1)), '.',
+        LOWER(RIGHT(name, LENGTH(name) - LOCATE(' ', name)))
+    ) AS username
+FROM sales_reps;
+
+-- 13.2
+SELECT name, LENGTH(name) AS name_length, UPPER(name) AS upper_name
+FROM accounts
+ORDER BY name_length DESC;
+
+
+-- ======================================
+-- SECTION 14 — COALESCE / IFNULL
+-- ======================================
+
+-- 14.1
+WITH spend AS (
+    SELECT a.id, a.name, SUM(o.total_amt_usd) AS total_spend
+    FROM orders o
+    JOIN accounts a
+        ON o.account_id = a.id
+    GROUP BY a.id, a.name
+),
+tier AS (
+    SELECT id, name, total_spend,
+        CASE
+            WHEN total_spend BETWEEN 0 AND 50000 THEN 'under $50k'
+            WHEN total_spend BETWEEN 50001 AND 150000 THEN '$50k-150k'
+        END AS spend_tier
+    FROM spend
+)
+SELECT id, name, total_spend, IFNULL(spend_tier, 'unclassified') AS spend_tier
+FROM tier;
+
+
+-- ======================================
 -- CHALLENGE QUESTIONS
 -- ======================================
 
@@ -321,3 +389,16 @@ JOIN orders o
 GROUP BY s.name
 HAVING COUNT(DISTINCT a.id) > 5
 AND COUNT(o.id) > 200;
+
+-- C4
+SELECT a.name,
+    CONCAT(
+        LOWER(LEFT(a.primary_poc, LOCATE(' ', a.primary_poc) - 1)), '.',
+        LOWER(RIGHT(a.primary_poc, LENGTH(a.primary_poc) - LOCATE(' ', a.primary_poc))), '@',
+        LOWER(REPLACE(a.name, ' ', '')), '.com'
+    ) AS email
+FROM orders o
+JOIN accounts a
+    ON o.account_id = a.id
+GROUP BY a.name, a.primary_poc
+HAVING SUM(o.total_amt_usd) > 200000;

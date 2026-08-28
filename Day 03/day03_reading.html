@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Day 03 — JOINs + CASE</title>
+<title>Day 03 — JOINs, CASE &amp; String Functions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -95,9 +95,9 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
   </defs>
 </svg>
 
-<div class="crumb">Day 03 of 9 · JOINs + CASE</div>
-<h1 class="title">JOINs + CASE</h1>
-<p class="subtitle">Bringing every table together, and labeling what you find — INNER · LEFT/RIGHT · anti-joins · UNION · HAVING · CASE.</p>
+<div class="crumb">Day 03 of 9 · JOINs, CASE &amp; String Functions</div>
+<h1 class="title">JOINs, CASE &amp; String Functions</h1>
+<p class="subtitle">Bringing every table together and labeling what you find, then cleaning and reshaping the text inside it — INNER · LEFT/RIGHT · anti-joins · UNION · HAVING · CASE · string functions.</p>
 
 <div class="objectives">
   <h2>What you'll be able to do after this lesson</h2>
@@ -107,6 +107,8 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
     <li>Emulate MySQL's missing FULL JOIN with UNION.</li>
     <li>Aggregate and filter across joined tables with GROUP BY and HAVING.</li>
     <li>Add conditional logic with CASE — labeling rows, and bucketing continuous values into tiers.</li>
+    <li>Trim, slice, and rebuild text with LTRIM/RTRIM/TRIM, LEFT/RIGHT/SUBSTRING/LOCATE, CONCAT, REPLACE, LOWER/UPPER/LENGTH.</li>
+    <li>Fill in gaps left by a CASE expression with COALESCE/IFNULL.</li>
   </ul>
 </div>
 
@@ -205,7 +207,7 @@ every time, especially once you're joining three or four tables.</p>
 it returns only the rows that find a match on <em>both</em> sides.</p>
 <p><strong>Business question:</strong> Finance wants order and account details together in one view — combine every order with the account that placed it.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> orders.id, accounts.name, orders.occurred_at
 <span class="kw">FROM</span> orders
 <span class="kw">JOIN</span> accounts
@@ -227,7 +229,7 @@ it returns only the rows that find a match on <em>both</em> sides.</p>
 four tables together is just repeating the pattern from Section 2.</p>
 <p><strong>Business question:</strong> leadership wants to trace every order back to the sales rep who owns that account, and regional management wants a per-order unit price broken out by region.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="com">-- 3 tables: orders -> accounts -> sales_reps</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> orders o
@@ -253,7 +255,7 @@ four tables together is just repeating the pattern from Section 2.</p>
 <code class="inline">GROUP BY</code> then works on the result exactly as it did in Day 02.</p>
 <p><strong>Business question:</strong> which accounts generate the most total revenue, and how often does each sales rep's accounts use each marketing channel?</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> a.name <span class="kw">AS</span> account_name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders o
 <span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
@@ -276,7 +278,7 @@ four tables together is just repeating the pattern from Section 2.</p>
 filters groups after aggregation — the same rule from Day 02, now applied across joined tables.</p>
 <p><strong>Business question:</strong> which sales reps manage more than 5 accounts — are any of them overloaded?</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="com">-- sales reps who manage more than 5 accounts</span>
 <span class="kw">SELECT</span> s.id, s.name, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_accounts
 <span class="kw">FROM</span> accounts a
@@ -334,7 +336,7 @@ is the mirror image: keep everything on the right, matched or not.</p>
 </figure>
 <p><strong>Business question:</strong> which accounts exist, whether or not they've ever placed an order — and, mirrored, which orders exist even if their account record can no longer be resolved?</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="com">-- every account, whether or not it has orders</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> accounts
@@ -359,7 +361,7 @@ exactly the rows that found <em>no</em> match — this pattern is called an
 <strong>anti-join</strong>.</p>
 <p><strong>Business question:</strong> which accounts have NEVER placed a single order — a churn/onboarding red-flag list for the sales team?</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="com">-- accounts with NO orders at all</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> accounts a
@@ -379,7 +381,7 @@ sides, matched or not). MySQL doesn't — you get the same result by taking the
 <code class="inline">RIGHT JOIN</code>.</p>
 <p><strong>Business question:</strong> compliance wants a single report covering every order-account relationship — matched, order-only, and account-only rows, all at once.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> *
 <span class="kw">FROM</span> orders
 <span class="kw">LEFT JOIN</span> accounts
@@ -412,7 +414,7 @@ without it, rows that hit no <code class="inline">WHEN</code> come back <code cl
 instead of a fallback value.</p>
 <p><strong>Business question:</strong> flag every order "Large" or "Small" for a dashboard, and compute a safe per-unit price that won't crash on zero-quantity orders.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> id, account_id, total_amt_usd,
     <span class="kw">CASE</span>
         <span class="kw">WHEN</span> total_amt_usd &gt; 2000 <span class="kw">THEN</span> <span class="str">'Large'</span>
@@ -438,7 +440,7 @@ continuous values (order totals, account lifetime spend) into discrete tiers for
 separate lookup table required.</p>
 <p><strong>Business question:</strong> bucket every order into a size category for reporting, and rank every account into top/middle/low lifetime-value tiers based on total spend.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="com">-- bucket every order into a size category, then count each bucket</span>
 <span class="kw">SELECT</span>
     <span class="kw">CASE</span>
@@ -474,7 +476,7 @@ other aggregate result — you can filter on the same expression a <code class="
 uses to decide its label.</p>
 <p><strong>Business question:</strong> which sales reps fall specifically in the "under $5k total sales" category — reps who might need extra support?</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_and_case.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> s.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales,
     <span class="kw">CASE</span>
         <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">BETWEEN</span> 1 <span class="kw">AND</span> 5000 <span class="kw">THEN</span> <span class="str">'Under 5k'</span>
@@ -492,10 +494,167 @@ uses to decide its label.</p>
 </div>
 
 <div class="callout recap">
-  <div class="ti">Next: Day 04</div>
-  <p>String Functions, Subqueries, CTEs, Temp Tables, and Views — a query inside a query, and cleaner ways to reuse one.</p>
+  <div class="ti">Halfway point</div>
+  <p>Sections 1–10 covered combining and labeling rows across tables. The rest of this lesson is
+  about cleaning and reshaping the text inside those rows.</p>
 </div>
 
-<footer>Day 03 · JOINs + CASE · self-paced</footer>
+<h2 class="section"><span class="num">11</span>Trimming whitespace</h2>
+<p class="section-intro">Real data is rarely clean — exports and manual entry leave stray spaces around text.</p>
+<table class="api">
+  <thead><tr><th>Function</th><th>Removes</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">LTRIM(str)</code></td><td>Leading (left-side) spaces only.</td></tr>
+    <tr><td><code class="inline">RTRIM(str)</code></td><td>Trailing (right-side) spaces only.</td></tr>
+    <tr><td><code class="inline">TRIM(str)</code></td><td>Both sides at once.</td></tr>
+  </tbody>
+</table>
+<p><strong>Business question:</strong> a CSV export from a legacy CRM padded every point-of-contact
+name with stray spaces — clean it up before the data gets loaded anywhere else.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> <span class="fn">LTRIM</span>(<span class="str">'     Alexander Freberg'</span>) <span class="kw">AS</span> left_trim;
+<span class="kw">SELECT</span> <span class="fn">RTRIM</span>(<span class="str">'Alexander Freberg          '</span>) <span class="kw">AS</span> right_trim;
+<span class="kw">SELECT</span> <span class="fn">TRIM</span>(<span class="str">'     Alexander Freberg          '</span>) <span class="kw">AS</span> trim_both;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Only whitespace, by default</b><p>Plain <code class="inline">TRIM(str)</code> strips spaces. MySQL's fuller form, <code class="inline">TRIM(BOTH '.' FROM str)</code>, trims a specific character instead — rarely needed, but good to know it exists.</p></div>
+</div>
+
+<h2 class="section"><span class="num">12</span>Extracting parts of a string</h2>
+<p><code class="inline">LEFT</code>/<code class="inline">RIGHT</code> grab a fixed number of
+characters from either end; <code class="inline">SUBSTRING</code> grabs a slice from any starting
+position; <code class="inline">LOCATE</code> finds <em>where</em> a character sits so the other three
+don't have to hardcode a position.</p>
+<figure>
+<svg viewBox="0 0 560 190" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
+  <rect x="0" y="0" width="560" height="190" fill="#ffffff"/>
+  <rect x="0" y="0" width="560" height="190" fill="url(#erd-grid)"/>
+
+  <!-- 13 character cells for "zero-grad.com" -->
+  <g font-size="16" font-weight="bold" text-anchor="middle">
+    <rect x="30" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="48" y="74">z</text>
+    <rect x="66" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="84" y="74">e</text>
+    <rect x="102" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="120" y="74">r</text>
+    <rect x="138" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="156" y="74">o</text>
+    <rect x="174" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="192" y="74">-</text>
+    <rect x="210" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="228" y="74">g</text>
+    <rect x="246" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="264" y="74">r</text>
+    <rect x="282" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="300" y="74">a</text>
+    <rect x="318" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="336" y="74">d</text>
+    <rect x="354" y="50" width="36" height="36" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="372" y="74" fill="#1f4e82">.</text>
+    <rect x="390" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="408" y="74">c</text>
+    <rect x="426" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="444" y="74">o</text>
+    <rect x="462" y="50" width="36" height="36" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="480" y="74">m</text>
+  </g>
+
+  <!-- 1-indexed position numbers -->
+  <g font-size="11" fill="#666" text-anchor="middle">
+    <text x="48" y="100">1</text><text x="84" y="100">2</text><text x="120" y="100">3</text>
+    <text x="156" y="100">4</text><text x="192" y="100">5</text><text x="228" y="100">6</text>
+    <text x="264" y="100">7</text><text x="300" y="100">8</text><text x="336" y="100">9</text>
+    <text x="372" y="100">10</text><text x="408" y="100">11</text><text x="444" y="100">12</text>
+    <text x="480" y="100">13</text>
+  </g>
+
+  <!-- LEFT(str, 4) bracket -->
+  <path d="M30,38 L30,32 L174,32 L174,38" fill="none" stroke="#333" stroke-width="1.4"/>
+  <text x="102" y="20" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#333">LEFT(str, 4) = 'zero'</text>
+
+  <!-- RIGHT(str, 3) bracket -->
+  <path d="M390,38 L390,32 L498,32 L498,38" fill="none" stroke="#333" stroke-width="1.4"/>
+  <text x="444" y="20" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#333">RIGHT(str, 3) = 'com'</text>
+
+  <!-- LOCATE arrow pointing at the "." cell -->
+  <path d="M372,118 L372,102" stroke="#2e6fb5" stroke-width="1.6" fill="none"/>
+  <path d="M366,110 L372,102 L378,110" stroke="#2e6fb5" stroke-width="1.6" fill="none"/>
+  <text x="372" y="135" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f4e82">LOCATE('.', str) = 10</text>
+  <text x="372" y="152" text-anchor="middle" font-size="11.5" fill="#666">SUBSTRING(str, 1, 9) reaches the same 'zero-grad'</text>
+</svg>
+<figcaption>str = 'zero-grad.com' — LEFT/RIGHT count from either end; LOCATE returns a 1-indexed position that SUBSTRING can then slice from.</figcaption>
+</figure>
+<p><strong>Business question:</strong> marketing wants a 4-letter account-code abbreviation for a
+print report, and a data-quality check that every account's <code class="inline">website</code>
+follows the expected <code class="inline">www.company.com</code> pattern.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> name, <span class="fn">LEFT</span>(name, 4) <span class="kw">AS</span> account_code
+<span class="kw">FROM</span> accounts;
+
+<span class="com">-- SUBSTRING(str, start, length) — 1-indexed, same indexing LOCATE returns</span>
+<span class="com">-- every website looks like 'www.walmart.com' — this pulls out everything before the FIRST dot</span>
+<span class="kw">SELECT</span> website, <span class="fn">SUBSTRING</span>(website, 1, <span class="fn">LOCATE</span>(<span class="str">'.'</span>, website) - 1) <span class="kw">AS</span> website_prefix
+<span class="kw">FROM</span> accounts;
+
+<span class="kw">SELECT</span> primary_poc, <span class="fn">LOCATE</span>(<span class="str">' '</span>, primary_poc) <span class="kw">AS</span> space_position
+<span class="kw">FROM</span> accounts;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>LOCATE is 1-indexed, and 0 means "not found"</b><p>Unlike most programming languages, position 1 is the first character — and if the search string never appears, <code class="inline">LOCATE</code> returns <code class="inline">0</code>, not <code class="inline">-1</code> or <code class="inline">NULL</code>.</p></div>
+  <div class="annotation"><b>Finds the FIRST match only</b><p><code class="inline">website</code> has two dots (<code class="inline">www.walmart.com</code>) — <code class="inline">LOCATE('.', website)</code> stops at the first one, so this extracts <code class="inline">'www'</code>, not the company name. Getting the middle segment would need a second <code class="inline">LOCATE</code> starting after the first match — not needed for today's lesson, but worth knowing the limit.</p></div>
+  <div class="annotation"><b>The -1 in this example</b><p><code class="inline">LOCATE('.', website) - 1</code> is the length of everything <em>before</em> the dot — feeding that as the length argument to <code class="inline">SUBSTRING</code> is how Section 13's email-builder finds a name split too.</p></div>
+</div>
+
+<h2 class="section"><span class="num">13</span>Building and cleaning strings</h2>
+<p><code class="inline">CONCAT</code> glues pieces together; <code class="inline">REPLACE</code>
+swaps every occurrence of one substring for another; <code class="inline">LOWER</code>/
+<code class="inline">UPPER</code> normalize case; <code class="inline">LENGTH</code> counts
+characters.</p>
+<p><strong>Business question:</strong> sales wants a company email address auto-generated for every
+point of contact — <code class="inline">firstname.lastname@accountname.com</code>, all lowercase, no
+spaces.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
+  <div class="code-body"><span class="kw">WITH</span> name_split <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="fn">REPLACE</span>(name, <span class="str">' '</span>, <span class="str">''</span>) <span class="kw">AS</span> clean_account_name,
+        <span class="fn">LEFT</span>(primary_poc, <span class="fn">LOCATE</span>(<span class="str">' '</span>, primary_poc) - 1) <span class="kw">AS</span> first_name,
+        <span class="fn">RIGHT</span>(primary_poc, <span class="fn">LENGTH</span>(primary_poc) - <span class="fn">LOCATE</span>(<span class="str">' '</span>, primary_poc)) <span class="kw">AS</span> last_name
+    <span class="kw">FROM</span> accounts
+)
+<span class="kw">SELECT</span> first_name, last_name,
+       <span class="fn">CONCAT</span>(<span class="fn">LOWER</span>(first_name), <span class="str">'.'</span>, <span class="fn">LOWER</span>(last_name), <span class="str">'@'</span>, <span class="fn">LOWER</span>(clean_account_name), <span class="str">'.com'</span>) <span class="kw">AS</span> email
+<span class="kw">FROM</span> name_split;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Don't worry about WITH yet</b><p>This is a CTE (Day 04 covers the syntax properly) — it's used here only so the first/last-name split doesn't have to be repeated three times inside one long <code class="inline">SELECT</code>.</p></div>
+  <div class="annotation"><b>Each piece is one function, chained</b><p><code class="inline">LEFT</code> + <code class="inline">LOCATE</code> gets the first name, <code class="inline">RIGHT</code> + <code class="inline">LENGTH</code> + <code class="inline">LOCATE</code> gets the last name, <code class="inline">REPLACE</code> strips spaces from the account name — then <code class="inline">CONCAT</code> stitches all of it together.</p></div>
+</div>
+
+<h2 class="section"><span class="num">14</span>COALESCE / IFNULL — filling in the gaps</h2>
+<p>A <code class="inline">CASE</code> that doesn't cover every possibility leaves some rows
+<code class="inline">NULL</code> (Section 8 covered this with <code class="inline">ELSE</code>).
+<code class="inline">IFNULL(expr, fallback)</code> swaps in a fallback value wherever
+<code class="inline">expr</code> is <code class="inline">NULL</code> — a lighter-weight fix than adding
+another <code class="inline">WHEN</code>. <code class="inline">COALESCE</code> does the same thing
+but accepts any number of arguments, returning the first one that isn't <code class="inline">NULL</code>
+— <code class="inline">IFNULL</code> is really just MySQL's two-argument shortcut for it.</p>
+<p><strong>Business question:</strong> bucket every order by item count, but the defined buckets only
+cover 0–100 and 101–200 — anything bigger needs to read "200+" instead of a blank cell on the
+dashboard.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
+  <div class="code-body"><span class="kw">WITH</span> total_range <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="kw">CASE</span>
+            <span class="kw">WHEN</span> total <span class="kw">BETWEEN</span> 0 <span class="kw">AND</span> 100 <span class="kw">THEN</span> <span class="str">'0-100'</span>
+            <span class="kw">WHEN</span> total <span class="kw">BETWEEN</span> 101 <span class="kw">AND</span> 200 <span class="kw">THEN</span> <span class="str">'101-200'</span>
+        <span class="kw">END</span> <span class="kw">AS</span> total_range
+    <span class="kw">FROM</span> orders
+)
+<span class="kw">SELECT</span> <span class="fn">IFNULL</span>(total_range, <span class="str">'200+'</span>) <span class="kw">AS</span> total_range
+<span class="kw">FROM</span> total_range;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>No ELSE means NULL, on purpose</b><p>Leaving the CASE without an <code class="inline">ELSE</code> is what creates the gap <code class="inline">IFNULL</code> then fills — the two techniques are meant to pair together, not compete.</p></div>
+</div>
+
+<div class="callout recap">
+  <div class="ti">Next: Day 04</div>
+  <p>Subqueries, CTEs, Temp Tables, Views, Window Functions, and Stored Procedures — a query inside
+  a query, cleaner ways to reuse one, and running totals/rankings without collapsing rows.</p>
+</div>
+
+<footer>Day 03 · JOINs, CASE &amp; String Functions · self-paced</footer>
 </div>
 </body></html>

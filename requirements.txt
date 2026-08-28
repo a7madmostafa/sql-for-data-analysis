@@ -1,0 +1,10 @@
+# Python packages used from Day 05 onward (Python <-> MySQL/SQLite connectivity).
+# Install with: pip install -r requirements.txt
+
+mysql-connector-python
+SQLAlchemy
+pandas
+python-dotenv
+jupyter
+jupysql
+matplotlib

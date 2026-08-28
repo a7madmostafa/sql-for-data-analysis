@@ -17,8 +17,10 @@
 --   WITHOUT looking at the walkthrough first — use it afterwards only if
 --   you get stuck. See day03_exercises_solutions.sql to check your answers.
 --
---   No subqueries or CTEs yet (that's Day 04) — everything here is
---   solvable with JOIN, GROUP BY, HAVING, and CASE alone.
+--   No real subqueries or CTE syntax yet (that's Day 04) — Section 14 uses a
+--   WITH block, but only as a light preview, the same way the walkthrough
+--   does. Everything else is solvable with JOIN, GROUP BY, HAVING, CASE, and
+--   string functions alone.
 -- ============================================================
 
 USE parch_and_posey;
@@ -165,6 +167,55 @@ USE parch_and_posey;
 
 
 -- ======================================
+-- SECTION 11 — TRIMMING WHITESPACE
+-- ======================================
+
+-- 11.1 A spreadsheet import left extra spaces around some sales rep names.
+--      Show every rep's id alongside their name run through TRIM.
+
+
+
+-- ======================================
+-- SECTION 12 — EXTRACTING PARTS OF A STRING
+-- ======================================
+
+-- 12.1 Ops wants a 3-letter account code for a print report — the first 3
+--      characters of each account's name.
+
+-- 12.2 Show every account's website alongside just its domain suffix (the
+--      last 3 characters, e.g. 'com').
+
+-- 12.3 For every account, show the website and the character position of
+--      the first '.' in it.
+
+
+
+-- ======================================
+-- SECTION 13 — BUILDING AND CLEANING STRINGS
+-- ======================================
+
+-- 13.1 IT wants an auto-generated username for every sales rep:
+--      firstname.lastname, all lowercase, no spaces (e.g. 'Cara Clarke' ->
+--      'cara.clarke'). Assume every name is exactly "First Last".
+
+-- 13.2 For a data-quality audit, show every account's name, its length in
+--      characters, and its uppercase version — longest names first.
+
+
+
+-- ======================================
+-- SECTION 14 — COALESCE / IFNULL
+-- ======================================
+
+-- 14.1 A dashboard buckets each account's lifetime spend as 'under $50k'
+--      (0 to 50,000) or '$50k-150k' (50,001 to 150,000). Anything spending
+--      more than that should show as 'unclassified' instead of blank/NULL.
+--      (Hint: CASE only covers the two named buckets, then IFNULL fills
+--      the gap — same pattern as the walkthrough's order-total buckets.)
+
+
+
+-- ======================================
 -- CHALLENGE QUESTIONS (combine multiple concepts)
 -- ======================================
 
@@ -182,3 +233,9 @@ USE parch_and_posey;
 --     sales_reps to both accounts and orders in one query multiplies
 --     rows — COUNT(DISTINCT ...) on the account id avoids overcounting
 --     accounts because of that fan-out.)
+
+-- C4. Generate a company email address (firstname.lastname@accountname.com,
+--     all lowercase, no spaces) for every account's point of contact, but
+--     ONLY for 'top' tier accounts — total spend over $200,000, same
+--     threshold as 9.2's tiering. (Combine Section 13's string-building
+--     with a JOIN + HAVING filter on total spend.)
