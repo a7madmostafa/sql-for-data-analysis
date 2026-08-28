@@ -30,7 +30,7 @@ Each project day (06–09) contains:
 | [04](Day%2004) | Subqueries, CTEs, Views, Window Functions & Stored Procedures | `parch_and_posey` (MySQL) | done |
 | [05](Day%2005) | Python Connectivity — MySQL & SQLite | `parch_and_posey` (MySQL) + SQLite | done |
 | [06](Day%2006) | Project: NBA — draft/game/player analysis | NBA dataset (SQLite) | done |
-| 07 | Project: European Soccer — JOIN/VIEW-heavy walkthrough | Soccer dataset (SQLite) | planned |
+| [07](Day%2007) | Project: European Soccer — JOIN/VIEW-heavy walkthrough | Soccer dataset (SQLite) | done |
 | 08 | Project: FitBit / Bellabeat — CTE-heavy, date/string mechanics | FitBit dataset (SQLite) | planned |
 | 09 | Project: World Development Indicators — capstone, window functions | WDI dataset (SQLite) | planned |
 

@@ -248,11 +248,29 @@ footer a{color:var(--gray-muted)}
     </div>
   </div>
 
-  <div class="day-card planned">
+  <div class="day-card">
     <div class="day-num">DAY 07</div>
     <div class="day-body">
       <div class="day-head"><span class="day-title">Project: European Soccer</span><span class="db-tag">Soccer dataset (SQLite)</span></div>
-      <p class="day-topics">JOIN/VIEW-heavy walkthrough. Not built yet.</p>
+      <p class="day-topics">20 questions on players, teams, and leagues — JOIN- and view-heavy, real 7-table dataset. No new SQL, no MySQL/.env needed.</p>
+      <details class="day-details">
+        <summary><span class="caret">▸</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Build a <code class="inline">CREATE VIEW</code> around a window function so "current rating per player" is defined once and reused across a dozen questions — Day 04's Views and window functions, working together.</li>
+            <li>Recognize a SQLite-only convenience (the bare-column <code class="inline">MAX()</code> guarantee) and choose the portable pattern instead, since it's what actually works on MySQL too.</li>
+            <li>Chain a 3-4 table JOIN through two views without rewriting the join logic each time.</li>
+            <li>Combine a team's home and away results into one column with <code class="inline">UNION ALL</code> before aggregating.</li>
+            <li>Turn a correlation into an actual business caveat, not just a chart.</li>
+            <li>Spot a data-coverage gap with an anti-join before it becomes an unanswerable question from a stakeholder.</li>
+          </ul>
+          <p class="before-start"><strong>Before you start:</strong> the reading has the download link — grab <code class="inline">soccer.sqlite</code> from Kaggle (~299 MB, not committed to this repo) and place it at <code class="inline">Day 07/soccer.sqlite</code>. No MySQL server or <code class="inline">.env</code> needed — this day runs entirely on SQLite.</p>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="Day%2007/day07_reading.html">Reading</a>
+        <a href="Day%2007/project_07.ipynb" download><svg class="dl-icon"><use href="#icon-download"/></svg>Notebook</a>
+      </div>
     </div>
   </div>
 

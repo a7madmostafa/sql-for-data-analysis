@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 07 — Project: European Soccer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+  --tip-bg:#EEF6FF; --tip-bd:#2E6FB5; --tip-ti:#1F4E82;
+  --warn-bg:#FDECEA; --warn-bd:#C0392B; --warn-ti:#7B1F14;
+  --recap-bg:#FFF8E1; --recap-bd:#B45309; --recap-ti:#8A4B00;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
+.page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
+.crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
+.subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
+.objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
+.objectives h2{font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);margin:0 0 10px;font-weight:700}
+.objectives ul{margin:0;padding-left:20px}.objectives li{font-size:15px;margin-bottom:6px}
+h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:26px;color:var(--ink);margin:52px 0 8px;padding-bottom:10px;border-bottom:2px solid var(--ink);font-weight:700}
+h2.section .num{color:var(--blue);margin-right:10px}
+.section-intro{font-size:16.5px;color:var(--gray);margin:0 0 20px}
+h3.sub{font-size:17.5px;color:var(--ink);margin:30px 0 10px;font-weight:700}
+p{margin:0 0 15px} p.lead{font-size:18px;color:var(--ink);font-weight:600}
+p.beat{font-size:15.5px;color:var(--gray);font-style:italic;margin:26px 0 10px}
+strong{color:var(--ink);font-weight:700}
+code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
+table.api{width:100%;border-collapse:collapse;margin:14px 0 22px;background:white;font-size:14px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.api th,table.api td{padding:10px 13px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.api thead th{background:var(--panel);color:var(--ink);font-size:11.5px;text-transform:uppercase;letter-spacing:.07em}
+table.api tbody tr:last-child td{border-bottom:none}
+
+.callout{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid}
+.callout .ti{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px}
+.callout p{font-size:15px;margin:0 0 6px}.callout p:last-child{margin-bottom:0}
+.callout.tip{background:var(--tip-bg);border-color:var(--tip-bd)}.callout.tip .ti{color:var(--tip-ti)}
+.callout.insight{background:var(--insight-bg);border-color:var(--insight-bd)}.callout.insight .ti{color:var(--insight-ti)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-bd)}.callout.warn .ti{color:var(--warn-ti)}
+.callout.recap{background:var(--recap-bg);border-color:var(--recap-bd)}.callout.recap .ti{color:var(--recap-ti)}
+
+.code-block{margin:18px 0 8px;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}
+.code-header{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#161616}
+.code-header .dot{width:10px;height:10px;border-radius:50%}
+.code-header .dot.r{background:#FF5F56}.code-header .dot.y{background:#FFBD2E}.code-header .dot.g{background:#27C93F}
+.code-header .fname{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}
+.code-body{background:var(--code-bg);color:var(--code-default);padding:16px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.75;overflow-x:auto;white-space:pre}
+.code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
+.code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
+.code-body .def{color:var(--code-default)}
+.annotations{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:6px 20px 14px;margin-bottom:28px}
+.annotation{padding:11px 0;border-top:1px solid #EEF2F7}
+.annotation:first-child{border-top:0}
+.annotation b{color:var(--blue);font-size:14px}
+.annotation p{margin:3px 0 0;font-size:14.5px;color:var(--ink)}
+
+.card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0 26px}
+.card-grid.three{grid-template-columns:repeat(3,1fr)}
+.card{background:white;border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.card h4{margin:0 0 7px;color:var(--ink);font-size:16px;font-weight:700}
+.card p{font-size:14.5px;margin:0 0 6px;color:var(--gray)}
+.card p:last-child{margin-bottom:0}
+.card code.inline{font-size:.82em}
+
+figure{margin:24px 0 8px;text-align:center;background:linear-gradient(180deg,#fff,#FAFBFD);border:1px solid var(--border);border-radius:10px;padding:26px 14px 18px}
+figcaption{font-size:13.5px;color:var(--gray);margin-top:12px;font-style:italic}
+
+.qlist{list-style:none;margin:6px 0 4px;padding:0}
+.qlist li{display:flex;gap:12px;padding:9px 0;border-top:1px solid #EEF2F7;font-size:15px}
+.qlist li:first-child{border-top:0}
+.qlist .qn{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--blue);background:var(--panel);border-radius:4px;padding:2px 7px;height:fit-content;white-space:nowrap}
+
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
+@media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:30px}.card-grid,.card-grid.three,.compare{grid-template-columns:1fr}.qlist li{flex-direction:column;gap:4px}}
+</style>
+</head>
+<body><div class="page">
+
+<div class="crumb">Day 07 of 9 · Project: European Soccer</div>
+<h1 class="title">Project: European Soccer</h1>
+<p class="subtitle">Twenty questions, JOIN- and view-heavy — the same real 7-table dataset a recruitment analyst would actually be handed.</p>
+
+<div class="objectives">
+  <h2>What you'll be able to do after this lesson</h2>
+  <ul>
+    <li>Build a <code class="inline">CREATE VIEW</code> around a window function so "current rating per player" is defined once and reused across a dozen questions — Day 04's Views and window-function sections, working together for real.</li>
+    <li>Recognize a SQLite-only convenience (the bare-column <code class="inline">MAX()</code> guarantee) and choose the portable pattern instead, because it's what will actually work on MySQL too.</li>
+    <li>Chain a 3-4 table JOIN through two views without rewriting the join logic each time.</li>
+    <li>Combine a team's home and away results into one column with <code class="inline">UNION ALL</code> before aggregating — the same shape Day 06 used, applied to a new problem.</li>
+    <li>Turn a correlation into an actual business caveat: a style stat that doesn't predict the outcome you care about isn't worth recommending, no matter how good it looks in isolation.</li>
+    <li>Spot a data-coverage gap with an anti-join before it becomes an unanswerable question from a stakeholder.</li>
+  </ul>
+</div>
+
+<p class="lead">Marcus does recruitment analytics for a Championship club. Six weeks before the
+January transfer window, his technical director wants two things on his desk: a shortlist of
+attacking targets worth a scouting trip, and a read on how the leagues they might buy from actually
+play.</p>
+
+<p>The club's data team also feeds a small betting newsletter on the side, so there's a third ask
+tacked on at the end — is "favorite" actually worth anything? There's no new SQL syntax in this
+project: it's Days 01-04 (filtering, aggregation, JOINs, views, window functions, the anti-join
+pattern) applied to a real dataset of European football matches, players, and teams that wasn't
+built with any of these exact questions in mind.</p>
+
+<h2 class="section"><span class="num">•</span>The dataset</h2>
+<p>Source: <a href="https://www.kaggle.com/datasets/hugomathien/soccer" target="_blank" rel="noopener">European
+Soccer Database by hugomathien</a> on Kaggle — 25,979 matches, 11,060 players, and 299 teams across
+11 European countries, 2008-2016, plus FIFA-style player and team attribute ratings and Bet365
+betting odds for most matches. 7 real tables (an 8th, <code class="inline">sqlite_sequence</code>, is
+SQLite's own internal bookkeeping, not data) — <code class="inline">project_07.ipynb</code>'s setup
+section previews every one before Marcus's questions start.</p>
+<div class="callout warn">
+  <div class="ti">Download it before you start — not committed to this repo</div>
+  <p><code class="inline">soccer.sqlite</code> is <strong>~299 MB</strong> — over GitHub's 100 MB
+  limit, so like Day 06's NBA dataset, it isn't checked into this repo.</p>
+  <p><strong>1.</strong> Go to the <a href="https://www.kaggle.com/datasets/hugomathien/soccer" target="_blank" rel="noopener">dataset page</a>
+  and click <strong>Download</strong> (a free Kaggle account is required), or with the Kaggle CLI:
+  <code class="inline">kaggle datasets download -d hugomathien/soccer</code>.</p>
+  <p><strong>2.</strong> Unzip it — the file inside is named <code class="inline">database.sqlite</code>;
+  rename it to <code class="inline">soccer.sqlite</code>.</p>
+  <p><strong>3.</strong> Place it directly in this folder: <code class="inline">Day 07/soccer.sqlite</code>.
+  <code class="inline">project_07.ipynb</code> connects with a relative path
+  (<code class="inline">sqlite:///soccer.sqlite</code>), so it has to sit next to the notebook.</p>
+  <p><code class="inline">Day 07/*.sqlite</code> is git-ignored — once it's downloaded, there's
+  nothing to commit, just re-download if you ever lose the file.</p>
+</div>
+
+<h2 class="section"><span class="num">•</span>Marcus's list</h2>
+
+<p class="beat">He opens with the players — who's actually worth a scouting trip.</p>
+<ol class="qlist">
+  <li><span class="qn">Q1</span>Who are the 10 highest-rated players right now?</li>
+  <li><span class="qn">Q2</span>Does preferred foot make a measurable difference?</li>
+  <li><span class="qn">Q3</span>Which players have improved the most since their first rating on record?</li>
+  <li><span class="qn">Q4</span>Who are the top 10 finishers?</li>
+  <li><span class="qn">Q5</span>Who are the 10 fastest players?</li>
+  <li><span class="qn">Q6</span>Which players combine elite finishing and elite pace?</li>
+</ol>
+
+<p class="beat">With a shortlist in hand, he turns to team-level scouting — style worth copying, and clubs actually worth studying.</p>
+<ol class="qlist">
+  <li><span class="qn">Q7</span>Which teams play with the fastest build-up speed?</li>
+  <li><span class="qn">Q8</span>Which teams win the highest share of their matches?</li>
+  <li><span class="qn">Q9</span>What are the biggest win margins on record?</li>
+  <li><span class="qn">Q10</span>Which teams score the most goals per match?</li>
+  <li><span class="qn">Q11</span>Which teams concede the fewest goals per match?</li>
+  <li><span class="qn">Q12</span>Does a faster build-up style actually mean more goals scored?</li>
+</ol>
+
+<p class="beat">Before recommending a league to scout in, he wants to understand the leagues themselves.</p>
+<ol class="qlist">
+  <li><span class="qn">Q13</span>How much does home advantage matter, by league?</li>
+  <li><span class="qn">Q14</span>Which league sees the most goals per match?</li>
+  <li><span class="qn">Q15</span>Has scoring changed across the eight seasons in the dataset?</li>
+  <li><span class="qn">Q16</span>How does average playing style compare across leagues?</li>
+</ol>
+
+<p class="beat">The newsletter question, last.</p>
+<ol class="qlist">
+  <li><span class="qn">Q17</span>Overall, how often do matches end in a home win, draw, or away win?</li>
+  <li><span class="qn">Q18</span>How often does the betting favorite actually win?</li>
+  <li><span class="qn">Q19</span>What are the biggest upsets on record?</li>
+</ol>
+
+<p class="beat">One more thing, before Marcus signs off — a data-coverage caveat worth flagging.</p>
+<ol class="qlist">
+  <li><span class="qn">Q20</span>How many teams in this dataset have no playing-style profile at all?</li>
+</ol>
+
+<h2 class="section"><span class="num">•</span>Two views, reused everywhere</h2>
+<p><code class="inline">Player_Attributes</code> and <code class="inline">Team_Attributes</code>
+both carry one row per player/team <em>per rating date</em>, not one row per entity — so almost every
+question above needs a "current" view defined once, up front, the same <code class="inline">CREATE
+VIEW</code> pattern from Day 04:</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">project_07.ipynb</span></div>
+  <div class="code-body"><span class="kw">%%</span>sql
+<span class="kw">DROP VIEW IF EXISTS</span> current_player_ratings;
+<span class="kw">CREATE VIEW</span> current_player_ratings <span class="kw">AS</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> (
+    <span class="kw">SELECT</span> p.player_name, a.overall_rating, a.finishing, a.sprint_speed,
+           <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> a.player_api_id <span class="kw">ORDER BY</span> a.date <span class="kw">DESC</span>) <span class="kw">AS</span> rn
+    <span class="kw">FROM</span> Player p
+    <span class="kw">JOIN</span> Player_Attributes a <span class="kw">ON</span> p.player_api_id = a.player_api_id
+)
+<span class="kw">WHERE</span> rn = 1;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Why a window function, not GROUP BY + MAX(date)</b><p>SQLite has a documented special case: when a query has exactly one <code class="inline">MIN()</code>/<code class="inline">MAX()</code> aggregate, every other selected column is guaranteed to come from that same row — so a plain <code class="inline">GROUP BY</code> would actually work here too. But that guarantee is SQLite-specific, not standard SQL, and it silently breaks the moment a second aggregate gets added. <code class="inline">ROW_NUMBER() OVER (...) = 1</code> is the Day 04 pattern that works the same way on MySQL, so that's what this notebook uses throughout.</p></div>
+  <div class="annotation"><b>Views compound</b><p>Q16 joins this pattern's teams-side view through two more tables (<code class="inline">team_league_lookup</code> → <code class="inline">League</code>) without repeating any of the window-function logic — that's the entire point of defining it once.</p></div>
+</div>
+
+<div class="callout recap">
+  <div class="ti">Next: Day 08 — Project: FitBit / Bellabeat</div>
+  <p>CTE-heavy, with SQLite-specific date/string mechanics (<code class="inline">STRFTIME</code>,
+  <code class="inline">JULIANDAY()</code> for date differences) — more reinforcement of Day 04's
+  CTEs, on a very different kind of dataset.</p>
+</div>
+
+<footer>Day 07 · Project: European Soccer · self-paced</footer>
+</div>
+</body></html>

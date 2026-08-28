@@ -30,5 +30,9 @@ Day 05/*.sqlite
 
 # Day 06's NBA dataset is 2.3 GB — far over GitHub's 100 MB limit, so it's the
 # one project-day dataset that can't be committed directly. Download it per
-# Day 06/Data_06.md instead.
+# Day 06/day06_reading.html's dataset section instead.
 Day 06/*.sqlite
+
+# Day 07's European Soccer dataset is ~299 MB — also over GitHub's 100 MB limit.
+# Download it per Day 07/day07_reading.html's dataset section instead.
+Day 07/*.sqlite
