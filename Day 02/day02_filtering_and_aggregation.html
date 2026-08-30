@@ -19,7 +19,7 @@
 body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
 .page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
 .crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
-.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:#F3F4F6;border-right:1px solid #E5E7EB;padding:22px 0;overflow-y:auto;z-index:100}
+.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:#F3F4F6;border-right:1px solid #E5E7EB;padding:22px 0;overflow-y:auto;z-index:1000}
 .site-sidebar .brand{font-family:'Bricolage Grotesque',Georgia,serif;font-weight:800;font-size:14.5px;color:#141414;padding:0 20px 16px;border-bottom:1px solid #E5E7EB;margin-bottom:8px;line-height:1.3}
 .site-sidebar a{display:block;padding:9px 20px;font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;font-size:14px;color:#5B6472;text-decoration:none;border-left:3px solid transparent}
 .site-sidebar a:hover{background:#fff;color:#2F63E8}
@@ -27,11 +27,13 @@ body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-s
 .site-sidebar .daynum{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9CA3AF;display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
 .site-sidebar a.active .daynum{color:#2F63E8}
 body{margin-left:220px}
+.sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:1200;width:40px;height:40px;border-radius:8px;border:1px solid #E5E7EB;background:#fff;font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(20,20,30,.08);align-items:center;justify-content:center}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(20,20,20,.35);z-index:900}
 @media(max-width:900px){
-.site-sidebar{position:static;width:auto;height:auto;border-right:none;border-bottom:1px solid #E5E7EB;display:flex;overflow-x:auto;padding:8px 0;white-space:nowrap}
-.site-sidebar .brand{display:none}
-.site-sidebar a{display:inline-block;padding:8px 14px;border-left:none;border-bottom:3px solid transparent}
-.site-sidebar a.active{border-left-color:transparent;border-bottom-color:#2F63E8}
+.site-sidebar{width:250px;transform:translateX(-100%);transition:transform .25s ease;box-shadow:2px 0 16px rgba(0,0,0,.18)}
+.site-sidebar.open{transform:translateX(0)}
+.sidebar-toggle{display:flex}
+.sidebar-backdrop.open{display:block}
 body{margin-left:0}
 }
 h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:38px;line-height:1.15;color:var(--ink);margin:0 0 12px;font-weight:800}
@@ -69,6 +71,8 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color
 </style>
 </head>
 <body>
+<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+<div class="sidebar-backdrop"></div>
 <nav class="site-sidebar">
 <div class="brand">SQL for Data Analysis</div>
 <a href="../index.html">Home</a>
@@ -601,8 +605,22 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color
 <div class="result-wrap"><table class="api result-table"><thead><tr><th>CURDATE()</th></tr></thead><tbody><tr><td>2026-08-30</td></tr></tbody></table><p class="row-note">1 row</p></div>
 <p class="explain">Quick reference: current date and time, for timestamping something happening right now</p>
 <div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">NOW</span>();</div></div>
-<div class="result-wrap"><table class="api result-table"><thead><tr><th>NOW()</th></tr></thead><tbody><tr><td>2026-08-30 18:42:39</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>NOW()</th></tr></thead><tbody><tr><td>2026-08-30 18:55:57</td></tr></tbody></table><p class="row-note">1 row</p></div>
 
 <footer>Day 02 &middot; Filtering &amp; Aggregation &middot; walkthrough &middot; self-paced</footer>
 </div>
+<script>
+(function(){
+  var sidebar = document.querySelector('.site-sidebar');
+  var toggle = document.querySelector('.sidebar-toggle');
+  var backdrop = document.querySelector('.sidebar-backdrop');
+  if(!sidebar || !toggle || !backdrop) return;
+  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
+  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+  toggle.addEventListener('click', function(){
+    if (sidebar.classList.contains('open')) close(); else openMenu();
+  });
+  backdrop.addEventListener('click', close);
+})();
+</script>
 </body></html>

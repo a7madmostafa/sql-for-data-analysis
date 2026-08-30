@@ -13091,16 +13091,20 @@ div#notebook {
 .site-sidebar .daynum{font-family:monospace;font-size:10.5px;color:#9CA3AF;display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
 .site-sidebar a.active .daynum{color:#2F63E8}
 body{margin-left:220px}
+.sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:1200;width:40px;height:40px;border-radius:8px;border:1px solid #E5E7EB;background:#fff;font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(20,20,30,.08);align-items:center;justify-content:center}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(20,20,20,.35);z-index:900}
 @media(max-width:900px){
-.site-sidebar{position:static;width:auto;height:auto;border-right:none;border-bottom:1px solid #E5E7EB;display:flex;overflow-x:auto;padding:8px 0;white-space:nowrap}
-.site-sidebar .brand{display:none}
-.site-sidebar a{display:inline-block;padding:8px 14px;border-left:none;border-bottom:3px solid transparent}
-.site-sidebar a.active{border-left-color:transparent;border-bottom-color:#2F63E8}
+.site-sidebar{width:250px;transform:translateX(-100%);transition:transform .25s ease;box-shadow:2px 0 16px rgba(0,0,0,.18)}
+.site-sidebar.open{transform:translateX(0)}
+.sidebar-toggle{display:flex}
+.sidebar-backdrop.open{display:block}
 body{margin-left:0}
 }
 </style>
 </head>
 <body>
+<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+<div class="sidebar-backdrop"></div>
 <nav class="site-sidebar">
 <div class="brand">SQL for Data Analysis</div>
 <a href="../index.html">Home</a>
@@ -15511,5 +15515,19 @@ body{margin-left:0}
 </div>
 </div>
 </main>
+<script>
+(function(){
+  var sidebar = document.querySelector('.site-sidebar');
+  var toggle = document.querySelector('.sidebar-toggle');
+  var backdrop = document.querySelector('.sidebar-backdrop');
+  if(!sidebar || !toggle || !backdrop) return;
+  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
+  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+  toggle.addEventListener('click', function(){
+    if (sidebar.classList.contains('open')) close(); else openMenu();
+  });
+  backdrop.addEventListener('click', close);
+})();
+</script>
 </body>
 </html>

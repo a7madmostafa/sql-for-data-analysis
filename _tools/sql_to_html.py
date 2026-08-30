@@ -219,7 +219,7 @@ DAYS = [
     ("06", "day06_reading.html", "Python Connectivity"),
 ]
 
-SIDEBAR_CSS = """.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:#F3F4F6;border-right:1px solid #E5E7EB;padding:22px 0;overflow-y:auto;z-index:100}
+SIDEBAR_CSS = """.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:#F3F4F6;border-right:1px solid #E5E7EB;padding:22px 0;overflow-y:auto;z-index:1000}
 .site-sidebar .brand{font-family:'Bricolage Grotesque',Georgia,serif;font-weight:800;font-size:14.5px;color:#141414;padding:0 20px 16px;border-bottom:1px solid #E5E7EB;margin-bottom:8px;line-height:1.3}
 .site-sidebar a{display:block;padding:9px 20px;font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;font-size:14px;color:#5B6472;text-decoration:none;border-left:3px solid transparent}
 .site-sidebar a:hover{background:#fff;color:#2F63E8}
@@ -227,17 +227,36 @@ SIDEBAR_CSS = """.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;
 .site-sidebar .daynum{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9CA3AF;display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
 .site-sidebar a.active .daynum{color:#2F63E8}
 body{margin-left:220px}
+.sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:1200;width:40px;height:40px;border-radius:8px;border:1px solid #E5E7EB;background:#fff;font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(20,20,30,.08);align-items:center;justify-content:center}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(20,20,20,.35);z-index:900}
 @media(max-width:900px){
-.site-sidebar{position:static;width:auto;height:auto;border-right:none;border-bottom:1px solid #E5E7EB;display:flex;overflow-x:auto;padding:8px 0;white-space:nowrap}
-.site-sidebar .brand{display:none}
-.site-sidebar a{display:inline-block;padding:8px 14px;border-left:none;border-bottom:3px solid transparent}
-.site-sidebar a.active{border-left-color:transparent;border-bottom-color:#2F63E8}
+.site-sidebar{width:250px;transform:translateX(-100%);transition:transform .25s ease;box-shadow:2px 0 16px rgba(0,0,0,.18)}
+.site-sidebar.open{transform:translateX(0)}
+.sidebar-toggle{display:flex}
+.sidebar-backdrop.open{display:block}
 body{margin-left:0}
 }"""
+
+TOGGLE_JS = """<script>
+(function(){
+  var sidebar = document.querySelector('.site-sidebar');
+  var toggle = document.querySelector('.sidebar-toggle');
+  var backdrop = document.querySelector('.sidebar-backdrop');
+  if(!sidebar || !toggle || !backdrop) return;
+  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
+  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+  toggle.addEventListener('click', function(){
+    if (sidebar.classList.contains('open')) close(); else openMenu();
+  });
+  backdrop.addEventListener('click', close);
+})();
+</script>"""
 
 
 def render_sidebar(active_day):
     parts = [
+        '<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>',
+        '<div class="sidebar-backdrop"></div>',
         '<nav class="site-sidebar">',
         '<div class="brand">SQL for Data Analysis</div>',
         '<a href="../index.html">Home</a>',
@@ -324,6 +343,7 @@ footer{{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);colo
 
 <footer>Day {day:02d} &middot; {title} &middot; walkthrough &middot; self-paced</footer>
 </div>
+{toggle_js}
 </body></html>
 """
 
@@ -348,6 +368,7 @@ def render_page(day, title, database, sql_filename, events):
         day=day, title=html.escape(title), database=html.escape(database),
         sql_filename=html.escape(sql_filename), body="\n".join(body_parts),
         sidebar_css=SIDEBAR_CSS, sidebar=render_sidebar(f"{day:02d}"),
+        toggle_js=TOGGLE_JS,
     )
 
 
