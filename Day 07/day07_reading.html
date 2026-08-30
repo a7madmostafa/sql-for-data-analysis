@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 07 — Project: Wasel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+  --tip-bg:#EEF6FF; --tip-bd:#2E6FB5; --tip-ti:#1F4E82;
+  --warn-bg:#FDECEA; --warn-bd:#C0392B; --warn-ti:#7B1F14;
+  --recap-bg:#FFF8E1; --recap-bd:#B45309; --recap-ti:#8A4B00;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
+.page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
+.crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
+.subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
+.objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
+.objectives h2{font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);margin:0 0 10px;font-weight:700}
+.objectives ul{margin:0;padding-left:20px}.objectives li{font-size:15px;margin-bottom:6px}
+h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:26px;color:var(--ink);margin:52px 0 8px;padding-bottom:10px;border-bottom:2px solid var(--ink);font-weight:700}
+h2.section .num{color:var(--blue);margin-right:10px}
+.section-intro{font-size:16.5px;color:var(--gray);margin:0 0 20px}
+h3.sub{font-size:17.5px;color:var(--ink);margin:30px 0 10px;font-weight:700}
+p{margin:0 0 15px} p.lead{font-size:18px;color:var(--ink);font-weight:600}
+p.beat{font-size:15.5px;color:var(--gray);font-style:italic;margin:26px 0 10px}
+strong{color:var(--ink);font-weight:700}
+code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
+table.api{width:100%;border-collapse:collapse;margin:14px 0 22px;background:white;font-size:14px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.api th,table.api td{padding:10px 13px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.api thead th{background:var(--panel);color:var(--ink);font-size:11.5px;text-transform:uppercase;letter-spacing:.07em}
+table.api tbody tr:last-child td{border-bottom:none}
+
+.callout{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid}
+.callout .ti{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px}
+.callout p{font-size:15px;margin:0 0 6px}.callout p:last-child{margin-bottom:0}
+.callout.tip{background:var(--tip-bg);border-color:var(--tip-bd)}.callout.tip .ti{color:var(--tip-ti)}
+.callout.insight{background:var(--insight-bg);border-color:var(--insight-bd)}.callout.insight .ti{color:var(--insight-ti)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-bd)}.callout.warn .ti{color:var(--warn-ti)}
+.callout.recap{background:var(--recap-bg);border-color:var(--recap-bd)}.callout.recap .ti{color:var(--recap-ti)}
+
+.code-block{margin:18px 0 8px;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}
+.code-header{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#161616}
+.code-header .dot{width:10px;height:10px;border-radius:50%}
+.code-header .dot.r{background:#FF5F56}.code-header .dot.y{background:#FFBD2E}.code-header .dot.g{background:#27C93F}
+.code-header .fname{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}
+.code-body{background:var(--code-bg);color:var(--code-default);padding:16px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.75;overflow-x:auto;white-space:pre}
+.code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
+.code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
+.code-body .def{color:var(--code-default)}
+.annotations{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:6px 20px 14px;margin-bottom:28px}
+.annotation{padding:11px 0;border-top:1px solid #EEF2F7}
+.annotation:first-child{border-top:0}
+.annotation b{color:var(--blue);font-size:14px}
+.annotation p{margin:3px 0 0;font-size:14.5px;color:var(--ink)}
+
+.card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0 26px}
+.card-grid.three{grid-template-columns:repeat(3,1fr)}
+.card{background:white;border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.card h4{margin:0 0 7px;color:var(--ink);font-size:16px;font-weight:700}
+.card p{font-size:14.5px;margin:0 0 6px;color:var(--gray)}
+.card p:last-child{margin-bottom:0}
+.card code.inline{font-size:.82em}
+
+figure{margin:24px 0 8px;text-align:center;background:linear-gradient(180deg,#fff,#FAFBFD);border:1px solid var(--border);border-radius:10px;padding:26px 14px 18px}
+figcaption{font-size:13.5px;color:var(--gray);margin-top:12px;font-style:italic}
+
+.qlist{list-style:none;margin:6px 0 4px;padding:0}
+.qlist li{display:flex;gap:12px;padding:9px 0;border-top:1px solid #EEF2F7;font-size:15px}
+.qlist li:first-child{border-top:0}
+.qlist .qn{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--blue);background:var(--panel);border-radius:4px;padding:2px 7px;height:fit-content;white-space:nowrap}
+
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
+@media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:30px}.card-grid,.card-grid.three,.compare{grid-template-columns:1fr}.qlist li{flex-direction:column;gap:4px}}
+.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:#F3F4F6;border-right:1px solid #E5E7EB;padding:22px 0;overflow-y:auto;z-index:1000}
+.site-sidebar .brand{font-family:'Bricolage Grotesque',Georgia,serif;font-weight:800;font-size:14.5px;color:#141414;padding:0 20px 16px;border-bottom:1px solid #E5E7EB;margin-bottom:8px;line-height:1.3}
+.site-sidebar a{display:block;padding:9px 20px;font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;font-size:14px;color:#5B6472;text-decoration:none;border-left:3px solid transparent}
+.site-sidebar a:hover{background:#fff;color:#2F63E8}
+.site-sidebar a.active{background:#fff;color:#2F63E8;font-weight:700;border-left-color:#2F63E8}
+.site-sidebar .daynum{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9CA3AF;display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+.site-sidebar a.active .daynum{color:#2F63E8}
+body{margin-left:220px}
+.sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:1200;width:40px;height:40px;border-radius:8px;border:1px solid #E5E7EB;background:#fff;font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(20,20,30,.08);align-items:center;justify-content:center}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(20,20,20,.35);z-index:900}
+@media(max-width:900px){
+.site-sidebar{width:250px;transform:translateX(-100%);transition:transform .25s ease;box-shadow:2px 0 16px rgba(0,0,0,.18)}
+.site-sidebar.open{transform:translateX(0)}
+.sidebar-toggle{display:flex}
+.sidebar-backdrop.open{display:block}
+body{margin-left:0}
+}
+figure pre.mermaid{background:transparent;font-family:inherit;overflow-x:auto}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+<div class="sidebar-backdrop"></div>
+<nav class="site-sidebar">
+<div class="brand">SQL for Data Analysis</div>
+<a href="../index.html">Home</a>
+<a href="../Day%2001/day01_reading.html"><span class="daynum">Day 01</span>SQL Foundations</a>
+<a href="../Day%2002/day02_reading.html"><span class="daynum">Day 02</span>Filtering &amp; Aggregation</a>
+<a href="../Day%2003/day03_reading.html"><span class="daynum">Day 03</span>JOINs, CASE &amp; Strings</a>
+<a href="../Day%2004/day04_reading.html"><span class="daynum">Day 04</span>Subqueries, CTEs &amp; Views</a>
+<a href="../Day%2005/day05_reading.html"><span class="daynum">Day 05</span>Window Functions &amp; Procedures</a>
+<a href="../Day%2006/day06_reading.html"><span class="daynum">Day 06</span>Python Connectivity</a>
+<a href="../Day%2007/day07_reading.html" class="active"><span class="daynum">Day 07</span>Project: Wasel</a>
+</nav>
+<div class="page">
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
+      <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
+    </pattern>
+  </defs>
+</svg>
+
+<div class="crumb">Day 07 of 10 &middot; Project: Wasel</div>
+<h1 class="title">Project: Wasel</h1>
+<p class="subtitle">Twenty questions against a fictional Egyptian ride-hailing app — every Day 01-05 technique, on a schema built for a completely different business than Rawaj.</p>
+
+<div class="objectives">
+  <h2>What you'll be able to do after this lesson</h2>
+  <ul>
+    <li>Apply every Day 01-05 technique to a fresh schema (cities, drivers, riders, vehicles, trips, ratings) that wasn't built with these exact questions in mind.</li>
+    <li>Spot a driver-supply gap with an anti-join, then confirm with a second query whether it's a real demand problem or a data problem.</li>
+    <li>Save a "top drivers by earnings" view and reuse it across later questions instead of repeating the JOIN chain.</li>
+    <li>Materialize a temp table once, then pull two different breakdowns from it without re-running the same filter twice.</li>
+    <li>Rank drivers within their own city with <code class="inline">RANK()</code>, and see exactly how it handles a real 3-way tie.</li>
+  </ul>
+</div>
+
+<p class="lead">Randa runs operations analytics at Wasel, the ride-hailing app expanding across Egypt.
+Leadership has a fixed budget for driver incentives next quarter, and wants her recommendation on
+which cities actually need it.</p>
+
+<p>Marketing also wants to know whether the promo codes they keep pushing are paying for
+themselves, and someone flagged a coverage gap in the last leadership meeting that needs a real
+answer, not a guess. There's no new SQL syntax in this project: it's Days 01-05 (filtering,
+aggregation, JOINs, CASE, anti-joins, subqueries, CTEs, views, temp tables, window functions)
+applied to a dataset that wasn't built with any of these exact questions in mind.</p>
+
+<h2 class="section"><span class="num">&bull;</span>The dataset</h2>
+<p>Wasel (واصل — "arrived") is a fictional Egyptian ride-hailing app. Riders and drivers meet at
+<code class="inline">trips</code>, the transactional core (6,000 rows, with separate pickup and
+dropoff cities since cross-city rides are common in Greater Cairo) — everything else exists to
+describe one side of that trip or the other:</p>
+<figure>
+<pre class="mermaid">
+erDiagram
+    CITIES {
+        int city_id PK
+        varchar city_name
+    }
+    DRIVERS {
+        int driver_id PK
+        varchar driver_name
+        int home_city_id FK
+        date signup_date
+        varchar status
+    }
+    RIDERS {
+        int rider_id PK
+        varchar rider_name
+        int city_id FK
+        date signup_date
+    }
+    DRIVER_CITY_COVERAGE {
+        int driver_id FK
+        int city_id FK
+    }
+    VEHICLE_TYPES {
+        int type_id PK
+        varchar type_name
+        decimal base_fare
+        decimal per_km_rate
+    }
+    VEHICLES {
+        int vehicle_id PK
+        int driver_id FK
+        int type_id FK
+        varchar make
+        varchar model
+        int year
+        varchar plate_number
+    }
+    PROMOTIONS {
+        int promo_id PK
+        varchar code
+        varchar discount_type
+        decimal discount_value
+        date valid_from
+        date valid_to
+    }
+    TRIPS {
+        int trip_id PK
+        int rider_id FK
+        int driver_id FK
+        int vehicle_id FK
+        int pickup_city_id FK
+        int dropoff_city_id FK
+        int promo_id FK
+        datetime pickup_time
+        datetime dropoff_time
+        decimal distance_km
+        decimal fare_amount
+        decimal surge_multiplier
+        varchar payment_method
+        varchar status
+    }
+    RATINGS {
+        int rating_id PK
+        int trip_id FK
+        varchar rated_by
+        int rating
+        text comment
+    }
+
+    CITIES ||--o{ DRIVERS : "home city"
+    CITIES ||--o{ RIDERS : "home city"
+    DRIVERS ||--o{ DRIVER_CITY_COVERAGE : covers
+    CITIES ||--o{ DRIVER_CITY_COVERAGE : covered_by
+    VEHICLE_TYPES ||--o{ VEHICLES : classifies
+    DRIVERS ||--o{ VEHICLES : owns
+    DRIVERS ||--o{ TRIPS : drives
+    RIDERS ||--o{ TRIPS : rides
+    VEHICLES ||--o{ TRIPS : used_in
+    PROMOTIONS ||--o{ TRIPS : "applied to"
+    CITIES ||--o{ TRIPS : "pickup city"
+    CITIES ||--o{ TRIPS : "dropoff city"
+    TRIPS ||--o{ RATINGS : rated_by
+</pre>
+<figcaption>The full Wasel schema — 9 tables. Trips is the transactional core; everything else
+describes one side of that trip or the other.</figcaption>
+</figure>
+<p><code class="inline">driver_city_coverage</code> is the one genuine many-to-many in this
+schema — every driver covers their own home city, and about a third of drivers based in Cairo,
+Giza, or Qalyubia (practically one metro area) also cover a neighboring one. <code class="inline">
+ratings</code> are deliberately incomplete: some completed trips have a rider-side rating, some
+have a driver-side rating, some have both, and some have neither (Q19 asks exactly how many).</p>
+<div class="callout tip">
+  <div class="ti">Before you start — generated, not downloaded</div>
+  <p>Run <code class="inline">python _tools/generate_wasel_db.py</code> once from the repo root —
+  it writes <code class="inline">Databases/wasel.sqlite</code> directly (a fixed random seed means
+  re-running it produces the exact same data). No MySQL server or <code class="inline">.env</code>
+  needed — <code class="inline">project_07.ipynb</code> connects with a relative path
+  (<code class="inline">sqlite:///../Databases/wasel.sqlite</code>), same as every project day.</p>
+</div>
+
+<h2 class="section"><span class="num">&bull;</span>Randa's list</h2>
+
+<p class="beat">She opens with the headline numbers — how big is the business, and where does it actually happen.</p>
+<ol class="qlist">
+  <li><span class="qn">Q1</span>How many trips has Wasel completed since launch, and how many were cancelled or a no-show?</li>
+  <li><span class="qn">Q2</span>Which 5 cities have generated the most completed trips?</li>
+  <li><span class="qn">Q3</span>What's the average completed-trip fare, company-wide?</li>
+</ol>
+
+<p class="beat">Two things marketing keeps asking about — worth checking before they become a bigger conversation.</p>
+<ol class="qlist">
+  <li><span class="qn">Q4</span>Which promo codes have actually been redeemed, and how many times each?</li>
+  <li><span class="qn">Q5</span>Are surge-priced trips a big share of the business, or a rare event?</li>
+</ol>
+
+<p class="beat">With the shape of the business established, she turns to the drivers — who's carrying it, and who isn't showing up at all.</p>
+<ol class="qlist">
+  <li><span class="qn">Q6</span>Combine every completed trip with the driver who drove it, their vehicle, and the vehicle type.</li>
+  <li><span class="qn">Q7</span>Which drivers have never completed a single trip?</li>
+  <li><span class="qn">Q8</span>Bucket every driver into a 'top earner' (over 4,000 EGP total fares) or 'standard' tier.</li>
+  <li><span class="qn">Q9</span>Which cities see the highest share of cross-city trips?</li>
+</ol>
+
+<p class="beat">Two precise questions that need reusable definitions, not one-off filters.</p>
+<ol class="qlist">
+  <li><span class="qn">Q10</span>Which drivers earn above the company-wide average total fare?</li>
+  <li><span class="qn">Q11</span>Save a 'top 20 drivers by earnings' view for the leadership deck.</li>
+  <li><span class="qn">Q12</span>Which cities average a longer completed-trip distance than the network as a whole?</li>
+  <li><span class="qn">Q13</span>Materialize this quarter's completed trips into a temp table, then pull two different breakdowns from it.</li>
+</ol>
+
+<p class="beat">Drivers again — but ranked and tracked over time, not just totaled.</p>
+<ol class="qlist">
+  <li><span class="qn">Q14</span>Rank drivers by completed-trip count within their own home city.</li>
+  <li><span class="qn">Q15</span>Running total of completed trips, company-wide, month over month.</li>
+  <li><span class="qn">Q16</span>Is month-over-month trip growth accelerating or slowing?</li>
+  <li><span class="qn">Q17</span>Each top-earning driver's single best day.</li>
+</ol>
+
+<p class="beat">Last, before she signs off: is the rating data itself trustworthy enough to lean on?</p>
+<ol class="qlist">
+  <li><span class="qn">Q18</span>What's the average rating riders give drivers, versus drivers give riders?</li>
+  <li><span class="qn">Q19</span>How many completed trips have no rating at all, from either side?</li>
+  <li><span class="qn">Q20</span>How many cities have driver coverage but zero completed trips there — the coverage gap, checked properly.</li>
+</ol>
+
+<h2 class="section"><span class="num">&bull;</span>Reused patterns, worth knowing before you start</h2>
+<p>Two questions in the middle of the list lean on techniques you've already seen, applied slightly
+differently:</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">project_07.ipynb</span></div>
+  <div class="code-body"><span class="kw">DROP VIEW IF EXISTS</span> top20_drivers;
+<span class="kw">CREATE VIEW</span> top20_drivers <span class="kw">AS</span>
+<span class="kw">SELECT</span> d.driver_id, d.driver_name, <span class="fn">SUM</span>(t.fare_amount) <span class="kw">AS</span> total_earnings
+<span class="kw">FROM</span> trips t
+<span class="kw">JOIN</span> drivers d <span class="kw">ON</span> t.driver_id = d.driver_id
+<span class="kw">WHERE</span> t.status = <span class="str">'completed'</span>
+<span class="kw">GROUP BY</span> d.driver_id, d.driver_name
+<span class="kw">ORDER BY</span> total_earnings <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 20;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>A view, not a repeated query</b><p>Q17 (each top-earner's best day) filters against <code class="inline">top20_drivers</code> directly instead of recomputing "who's a top earner" from scratch — exactly the Day 04 payoff of naming a query once.</p></div>
+  <div class="annotation"><b>RANK() on a real tie</b><p>Q14 ranks drivers by trip count within their own city — Alexandria has a genuine 3-way tie at 39 trips each, and <code class="inline">RANK()</code> gives all three rank 4 and skips straight to rank 7 for the next driver, exactly the tie-handling behavior Day 05 covers.</p></div>
+</div>
+
+<div class="callout recap">
+  <div class="ti">Randa's answer</div>
+  <p>The incentive budget goes to Giza and Alexandria — Q9 and Q12 show their drivers doing more
+  cross-city, longer-distance work for the same fare structure. The promo codes barely anyone
+  redeems (Q4) get retired. And the "coverage gap" flagged in the meeting (Q20) turns out to be a
+  one-driver staffing problem in Suez, not a demand problem — a very different fix than the one
+  leadership was about to approve.</p>
+</div>
+
+<footer>Day 07 &middot; Project: Wasel &middot; self-paced</footer>
+</div>
+<script>
+(function(){
+  var sidebar = document.querySelector('.site-sidebar');
+  var toggle = document.querySelector('.sidebar-toggle');
+  var backdrop = document.querySelector('.sidebar-backdrop');
+  if(!sidebar || !toggle || !backdrop) return;
+  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
+  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+  toggle.addEventListener('click', function(){
+    if (sidebar.classList.contains('open')) close(); else openMenu();
+  });
+  backdrop.addEventListener('click', close);
+})();
+</script>
+<script>
+mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+</script>
+</body></html>

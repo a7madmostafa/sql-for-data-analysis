@@ -22,6 +22,7 @@ DAYS = [
     ("04", "day04_reading.html", "Subqueries, CTEs &amp; Views"),
     ("05", "day05_reading.html", "Window Functions &amp; Procedures"),
     ("06", "day06_reading.html", "Python Connectivity"),
+    ("07", "day07_reading.html", "Project: Wasel"),
 ]
 
 SIDEBAR_CSS = """<style>
@@ -62,7 +63,7 @@ TOGGLE_JS = """<script>
 """
 
 
-def render_sidebar(active_day="06"):
+def render_sidebar(active_day):
     parts = [
         '<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>',
         '<div class="sidebar-backdrop"></div>',
@@ -77,16 +78,24 @@ def render_sidebar(active_day="06"):
     return "\n".join(parts)
 
 
+def infer_active_day(path):
+    m = re.search(r"Day[ %]?0?(\d+)", path)
+    if not m:
+        raise ValueError(f"can't infer day number from path: {path}")
+    return f"{int(m.group(1)):02d}"
+
+
 def inject(path):
     text = open(path, encoding="utf-8").read()
     if "site-sidebar" in text:
         print(f"{path}: sidebar already present, skipping (re-run nbconvert first to get a clean export)")
         return
+    active_day = infer_active_day(path)
     text = text.replace("</head>", SIDEBAR_CSS + "</head>", 1)
-    text = re.sub(r"(<body[^>]*>)", r"\1\n" + render_sidebar(), text, count=1)
+    text = re.sub(r"(<body[^>]*>)", r"\1\n" + render_sidebar(active_day), text, count=1)
     text = text.replace("</body>", TOGGLE_JS + "</body>", 1)
     open(path, "w", encoding="utf-8").write(text)
-    print(f"{path}: sidebar added")
+    print(f"{path}: sidebar added (active day {active_day})")
 
 
 if __name__ == "__main__":

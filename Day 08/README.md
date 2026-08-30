@@ -31,8 +31,8 @@ SQLite file.
 ## Before you start
 
 1. **Dataset:** `day07_reading.html` has the download link and instructions for `soccer.sqlite`
-   (~299 MB, from Kaggle) — place it at `Day 07/soccer.sqlite`. It's git-ignored — there's nothing
-   to commit, just download it once.
+   (~299 MB, from Kaggle) — place it at `Databases/soccer.sqlite`, alongside every other database
+   this course uses. It's git-ignored — there's nothing to commit, just download it once.
 2. **Python packages:** from the repo root, `pip install -r requirements.txt` if you haven't
    already — this day runs every query through jupysql's `%sql`/`%%sql` magic, plus `pandas` and
    `matplotlib` for the charts. No MySQL server or `.env` needed.

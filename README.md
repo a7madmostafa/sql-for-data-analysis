@@ -34,9 +34,10 @@ Each project day (07–10) contains:
 | [04](Day%2004) | Subqueries, CTEs, Temp Tables & Views | `rawaj` (MySQL) | done |
 | [05](Day%2005) | Window Functions & Stored Procedures | `rawaj` (MySQL) | done |
 | [06](Day%2006) | Python Connectivity — MySQL & SQLite | `rawaj` (MySQL) + SQLite | done |
-| [07](Day%2007) | Project: European Soccer — JOIN/VIEW-heavy walkthrough | Soccer dataset (SQLite) | done |
-| 08 | Project: FitBit / Bellabeat — CTE-heavy, date/string mechanics | FitBit dataset (SQLite) | planned |
-| 09 | Project: World Development Indicators — capstone, window functions | WDI dataset (SQLite) | planned |
+| [07](Day%2007) | Project: Wasel — full Days 01-05 sweep, anti-joins, views, temp tables, window functions | Wasel dataset (SQLite) | done |
+| [08](Day%2008) | Project: European Soccer — JOIN/VIEW-heavy walkthrough | Soccer dataset (SQLite) | done |
+| 09 | Project: FitBit / Bellabeat — CTE-heavy, date/string mechanics | FitBit dataset (SQLite) | planned |
+| 10 | Project: World Development Indicators — capstone, window functions | WDI dataset (SQLite) | planned |
 
 ## Setup
 

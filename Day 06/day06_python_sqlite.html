@@ -13114,6 +13114,7 @@ body{margin-left:0}
 <a href="../Day%2004/day04_reading.html"><span class="daynum">Day 04</span>Subqueries, CTEs &amp; Views</a>
 <a href="../Day%2005/day05_reading.html"><span class="daynum">Day 05</span>Window Functions &amp; Procedures</a>
 <a href="../Day%2006/day06_reading.html" class="active"><span class="daynum">Day 06</span>Python Connectivity</a>
+<a href="../Day%2007/day07_reading.html"><span class="daynum">Day 07</span>Project: Wasel</a>
 </nav>
 <main>
 <div class="border-box-sizing" id="notebook" tabindex="-1">
@@ -13182,7 +13183,7 @@ body{margin-left:0}
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
 
-<span class="n">sqlite_conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">"rawaj.sqlite"</span><span class="p">)</span>
+<span class="n">sqlite_conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">"../Databases/rawaj.sqlite"</span><span class="p">)</span>
 
 <span class="n">TABLES</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"governorates"</span><span class="p">,</span> <span class="s2">"account_managers"</span><span class="p">,</span> <span class="s2">"sellers"</span><span class="p">,</span> <span class="s2">"customers"</span><span class="p">,</span> <span class="s2">"orders"</span><span class="p">,</span> <span class="s2">"web_events"</span><span class="p">,</span> <span class="s2">"reviews"</span><span class="p">]</span>
 <span class="n">mysql_counts</span><span class="p">,</span> <span class="n">sqlite_counts</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
@@ -13201,7 +13202,7 @@ body{margin-left:0}
 <div class="cell border-box-sizing text_cell rendered" id="cell-id=5b47ebfa"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>rawaj.sqlite</code> is generated here, not committed to git — regenerate it any time by re-running this cell, same reasoning as never committing <code>.env</code>.</p>
+<p><code>../Databases/rawaj.sqlite</code> is generated here, not committed to git — regenerate it any time by re-running this cell, same reasoning as never committing <code>.env</code>.</p>
 </div>
 </div>
 </div>
@@ -13368,7 +13369,7 @@ body{margin-left:0}
 <div class="prompt input_prompt">In [6]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">sqlalchemy_demo_engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s2">"sqlite:///rawaj.sqlite"</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sqlalchemy_demo_engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s2">"sqlite:///../Databases/rawaj.sqlite"</span><span class="p">)</span>
 <span class="o">%</span><span class="k">sql</span> sqlalchemy_demo_engine --alias sqlite_via_sqlalchemy
 </pre></div>
 </div>
@@ -13422,7 +13423,7 @@ body{margin-left:0}
 <div class="prompt input_prompt">In [8]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">sql</span> sqlite:///rawaj.sqlite --alias sqlite_rawaj
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">sql</span> sqlite:///../Databases/rawaj.sqlite --alias sqlite_rawaj
 </pre></div>
 </div>
 </div>

@@ -91,6 +91,7 @@ body{margin-left:0}
 <a href="Day%2004/day04_reading.html"><span class="daynum">Day 04</span>Subqueries, CTEs &amp; Views</a>
 <a href="Day%2005/day05_reading.html"><span class="daynum">Day 05</span>Window Functions &amp; Procedures</a>
 <a href="Day%2006/day06_reading.html"><span class="daynum">Day 06</span>Python Connectivity</a>
+<a href="Day%2007/day07_reading.html"><span class="daynum">Day 07</span>Project: Wasel</a>
 </nav>
 <div class="page">
 
@@ -274,6 +275,32 @@ body{margin-left:0}
   <div class="day-card">
     <div class="day-num">DAY 07</div>
     <div class="day-body">
+      <div class="day-head"><span class="day-title">Project: Wasel</span></div>
+      <p class="day-topics">20 questions on a fictional Egyptian ride-hailing app — filtering, JOINs, CASE, anti-joins, subqueries, CTEs, views, temp tables, and every window function. No new SQL, no MySQL/.env needed.</p>
+      <details class="day-details">
+        <summary><span class="caret">▸</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Apply every Day 01–05 technique to a fresh schema (cities, drivers, riders, vehicles, trips, ratings) that wasn't built with these exact questions in mind.</li>
+            <li>Spot a driver-supply gap with an anti-join, then confirm with a second query whether it's a real demand problem or a data problem.</li>
+            <li>Save a "top drivers by earnings" view and reuse it across later questions instead of repeating the JOIN chain.</li>
+            <li>Materialize a temp table once, then pull two different breakdowns from it without re-running the same filter twice.</li>
+            <li>Rank drivers within their own city with <code class="inline">RANK()</code>, and see exactly how it handles a real 3-way tie.</li>
+          </ul>
+          <p class="before-start"><strong>Before you start:</strong> run <code class="inline">python _tools/generate_wasel_db.py</code> once — generates <code class="inline">Databases/wasel.sqlite</code> directly, no download needed. No MySQL server or <code class="inline">.env</code> needed — this day runs entirely on SQLite.</p>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="Day%2007/day07_reading.html">Reading</a>
+        <a href="Day%2007/project_07.html">Notebook</a>
+        <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2007" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>Notebook Source</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-num">DAY 08</div>
+    <div class="day-body">
       <div class="day-head"><span class="day-title">Project: European Soccer</span></div>
       <p class="day-topics">20 questions on players, teams, and leagues — JOIN- and view-heavy, real 7-table dataset. No new SQL, no MySQL/.env needed.</p>
       <details class="day-details">
@@ -287,18 +314,18 @@ body{margin-left:0}
             <li>Turn a correlation into an actual business caveat, not just a chart.</li>
             <li>Spot a data-coverage gap with an anti-join before it becomes an unanswerable question from a stakeholder.</li>
           </ul>
-          <p class="before-start"><strong>Before you start:</strong> the reading has the download link — grab <code class="inline">soccer.sqlite</code> from Kaggle (~299 MB, not committed to this repo) and place it at <code class="inline">Day 07/soccer.sqlite</code>. No MySQL server or <code class="inline">.env</code> needed — this day runs entirely on SQLite.</p>
+          <p class="before-start"><strong>Before you start:</strong> the reading has the download link — grab <code class="inline">soccer.sqlite</code> from Kaggle (~299 MB, not committed to this repo) and place it at <code class="inline">Databases/soccer.sqlite</code>, alongside every other database this course uses. No MySQL server or <code class="inline">.env</code> needed — this day runs entirely on SQLite.</p>
         </div>
       </details>
       <div class="day-links">
-        <a class="primary" href="Day%2007/day07_reading.html">Reading</a>
-        <a href="Day%2007/project_07.ipynb" download><svg class="dl-icon"><use href="#icon-download"/></svg>Notebook</a>
+        <a class="primary" href="Day%2008/day08_reading.html">Reading</a>
+        <a href="Day%2008/project_08.ipynb" download><svg class="dl-icon"><use href="#icon-download"/></svg>Notebook</a>
       </div>
     </div>
   </div>
 
   <div class="day-card planned">
-    <div class="day-num">DAY 08</div>
+    <div class="day-num">DAY 09</div>
     <div class="day-body">
       <div class="day-head"><span class="day-title">Project: FitBit / Bellabeat</span></div>
       <p class="day-topics">CTE-heavy, date/string mechanics. Not built yet.</p>
@@ -306,7 +333,7 @@ body{margin-left:0}
   </div>
 
   <div class="day-card planned">
-    <div class="day-num">DAY 09</div>
+    <div class="day-num">DAY 10</div>
     <div class="day-body">
       <div class="day-head"><span class="day-title">Project: World Development Indicators</span></div>
       <p class="day-topics">Capstone, window functions. Not built yet.</p>

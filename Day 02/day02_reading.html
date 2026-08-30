@@ -103,7 +103,9 @@ body{margin-left:220px}
 .sidebar-backdrop.open{display:block}
 body{margin-left:0}
 }
+figure pre.mermaid{background:transparent;font-family:inherit;overflow-x:auto}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 </head>
 <body>
 <button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
@@ -117,6 +119,7 @@ body{margin-left:0}
 <a href="../Day%2004/day04_reading.html"><span class="daynum">Day 04</span>Subqueries, CTEs &amp; Views</a>
 <a href="../Day%2005/day05_reading.html"><span class="daynum">Day 05</span>Window Functions &amp; Procedures</a>
 <a href="../Day%2006/day06_reading.html"><span class="daynum">Day 06</span>Python Connectivity</a>
+<a href="../Day%2007/day07_reading.html"><span class="daynum">Day 07</span>Project: Wasel</a>
 </nav>
 <div class="page">
 
@@ -157,238 +160,127 @@ selling, what, to which region) and a <strong>demand side</strong> (who's buying
 searched, what they ordered) — meeting in the middle at <code class="inline">product_listings</code>
 and <code class="inline">order_items</code>:</p>
 <figure>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 820" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
-  <rect x="0" y="0" width="920" height="820" fill="#ffffff"/>
-  <rect x="0" y="0" width="920" height="820" fill="url(#erd-grid)"/>
+<pre class="mermaid">
+erDiagram
+    ACCOUNT_MANAGERS {
+        int manager_id PK
+        varchar manager_name
+        date hire_date
+    }
+    GOVERNORATES {
+        int governorate_id PK
+        varchar governorate_name
+        int manager_id FK
+    }
+    SELLERS {
+        int seller_id PK
+        varchar seller_name
+        int governorate_id FK
+        boolean is_official_store
+        date signup_date
+    }
+    BRANDS {
+        int brand_id PK
+        varchar brand_name
+    }
+    CUSTOMERS {
+        int customer_id PK
+        varchar first_name
+        varchar last_name
+        varchar email
+        int governorate_id FK
+        date signup_date
+    }
+    CATEGORIES {
+        int category_id PK
+        varchar category_name
+    }
+    PRODUCTS {
+        int product_id PK
+        varchar product_name
+        int category_id FK
+        int brand_id FK
+        varchar sku
+    }
+    PRODUCT_LISTINGS {
+        int listing_id PK
+        int product_id FK
+        int seller_id FK
+        decimal price
+        decimal unit_cost
+        int stock_quantity
+        date listed_at
+        varchar status
+    }
+    ORDERS {
+        int order_id PK
+        int customer_id FK
+        datetime order_date
+        varchar status
+        varchar payment_method
+        varchar payment_status
+        decimal subtotal
+        decimal shipping_fee
+        decimal discount_amount
+        decimal total_amount
+    }
+    ORDER_ITEMS {
+        int order_item_id PK
+        int order_id FK
+        int listing_id FK
+        int quantity
+        decimal unit_price_at_purchase
+    }
+    WEB_EVENTS {
+        int event_id PK
+        int customer_id FK
+        datetime occurred_at
+        varchar channel
+    }
+    REVIEWS {
+        int review_id PK
+        int order_item_id FK
+        int customer_id FK
+        tinyint rating
+        text review_text
+        date review_date
+    }
+    DELIVERY_PARTNERS {
+        int partner_id PK
+        varchar partner_name
+    }
+    SHIPMENTS {
+        int shipment_id PK
+        int order_id FK
+        int seller_id FK
+        int delivery_partner_id FK
+        varchar tracking_number
+        datetime shipped_at
+        datetime delivered_at
+        decimal shipping_cost
+        varchar status
+    }
 
-  <!-- ===================== relationship lines ===================== -->
-  <g stroke="#333" stroke-width="1.4" fill="none">
-    <!-- account_managers -> governorates -->
-    <line x1="105" y1="76" x2="105" y2="100"/>
-    <!-- governorates -> sellers -->
-    <line x1="105" y1="182" x2="105" y2="210"/>
-    <!-- sellers -> customers -->
-    <line x1="105" y1="292" x2="105" y2="320"/>
-    <!-- customers -> web_events -->
-    <line x1="105" y1="402" x2="105" y2="430"/>
-    <!-- governorates -> customers (routed right, around sellers) -->
-    <polyline points="190,141 210,141 210,361 190,361"/>
-    <!-- brands -> products -->
-    <line x1="300" y1="76" x2="300" y2="180"/>
-    <!-- categories -> products -->
-    <line x1="380" y1="156" x2="380" y2="180"/>
-    <!-- products -> product_listings -->
-    <line x1="345" y1="288" x2="345" y2="310"/>
-    <!-- sellers -> product_listings (routed right) -->
-    <polyline points="190,251 225,251 225,364 250,364"/>
-    <!-- customers -> orders (routed right) -->
-    <polyline points="190,361 235,361 235,481 250,481"/>
-    <!-- orders -> order_items -->
-    <line x1="345" y1="522" x2="345" y2="550"/>
-    <!-- product_listings -> order_items (routed right within col2) -->
-    <polyline points="440,364 470,364 470,604 440,604"/>
-    <!-- order_items -> reviews -->
-    <line x1="345" y1="658" x2="345" y2="680"/>
-    <!-- reviews -> customers (long route left) -->
-    <polyline points="250,734 230,734 230,371 190,371"/>
-    <!-- delivery_partners -> shipments -->
-    <line x1="595" y1="76" x2="595" y2="310"/>
-    <!-- orders -> shipments (routed right) -->
-    <polyline points="440,481 470,481 470,350 500,350"/>
-    <!-- sellers -> shipments (routed far right, through the col2 gap) -->
-    <polyline points="190,262 215,262 215,299 460,299 460,400 500,400"/>
-  </g>
-
-  <!-- crow's-foot / tick markers (one=tick, many=chevron) -->
-  <g stroke="#333" stroke-width="1.4" fill="none">
-    <path d="M99,82 L111,82"/><path d="M99,94 L105,100 L111,94"/>
-    <path d="M99,188 L111,188"/><path d="M99,200 L105,206 L111,200"/>
-    <path d="M99,298 L111,298"/><path d="M99,310 L105,316 L111,310"/>
-    <path d="M99,408 L111,408"/><path d="M99,420 L105,426 L111,420"/>
-    <path d="M184,135 L184,147"/><path d="M184,355 L190,361 L184,367"/>
-    <path d="M294,70 L306,70"/><path d="M294,174 L300,180 L306,174"/>
-    <path d="M374,150 L386,150"/><path d="M374,174 L380,180 L386,174"/>
-    <path d="M339,282 L351,282"/><path d="M339,304 L345,310 L351,304"/>
-    <path d="M184,245 L184,257"/><path d="M244,358 L250,364 L244,370"/>
-    <path d="M184,355 L184,367"/><path d="M244,475 L250,481 L244,487"/>
-    <path d="M339,516 L351,516"/><path d="M339,544 L345,550 L351,544"/>
-    <path d="M434,358 L434,370"/><path d="M434,598 L440,604 L434,610"/>
-    <path d="M339,652 L351,652"/><path d="M339,674 L345,680 L351,674"/>
-    <path d="M256,728 L256,740"/><path d="M184,365 L190,371 L184,377"/>
-    <path d="M589,70 L601,70"/><path d="M589,304 L595,310 L601,304"/>
-    <path d="M434,475 L434,487"/><path d="M494,344 L500,350 L494,356"/>
-    <path d="M184,256 L184,268"/><path d="M494,394 L500,400 L494,406"/>
-  </g>
-
-  <!-- ===================== Column 1 ===================== -->
-  <!-- account_managers -->
-  <rect x="20" y="20" width="170" height="56" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="20" y="20" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="105" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">account_managers</text>
-  <line x1="54" y1="50" x2="54" y2="76" stroke="#333" stroke-width="1"/>
-  <text x="37" y="67" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="64" y="67" font-size="12">manager_id</text>
-
-  <!-- governorates -->
-  <rect x="20" y="100" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="20" y="100" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="105" y="120" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">governorates</text>
-  <line x1="54" y1="130" x2="54" y2="182" stroke="#333" stroke-width="1"/>
-  <line x1="20" y1="156" x2="190" y2="156" stroke="#333" stroke-width="1"/>
-  <text x="37" y="147" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="64" y="147" font-size="12">governorate_id</text>
-  <text x="37" y="173" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="64" y="173" font-size="12">manager_id</text>
-
-  <!-- sellers -->
-  <rect x="20" y="210" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="20" y="210" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="105" y="230" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">sellers</text>
-  <line x1="54" y1="240" x2="54" y2="292" stroke="#333" stroke-width="1"/>
-  <line x1="20" y1="266" x2="190" y2="266" stroke="#333" stroke-width="1"/>
-  <text x="37" y="257" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="64" y="257" font-size="12">seller_id</text>
-  <text x="37" y="283" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="64" y="283" font-size="12">governorate_id</text>
-
-  <!-- customers -->
-  <rect x="20" y="320" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="20" y="320" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="105" y="340" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">customers</text>
-  <line x1="54" y1="350" x2="54" y2="402" stroke="#333" stroke-width="1"/>
-  <line x1="20" y1="376" x2="190" y2="376" stroke="#333" stroke-width="1"/>
-  <text x="37" y="367" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="64" y="367" font-size="12">customer_id</text>
-  <text x="37" y="393" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="64" y="393" font-size="12">governorate_id</text>
-
-  <!-- web_events -->
-  <rect x="20" y="430" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="20" y="430" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="105" y="450" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">web_events</text>
-  <line x1="54" y1="460" x2="54" y2="512" stroke="#333" stroke-width="1"/>
-  <line x1="20" y1="486" x2="190" y2="486" stroke="#333" stroke-width="1"/>
-  <text x="37" y="477" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="64" y="477" font-size="12">event_id</text>
-  <text x="37" y="503" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="64" y="503" font-size="12">customer_id</text>
-
-  <!-- ===================== Column 2 ===================== -->
-  <!-- brands -->
-  <rect x="250" y="20" width="190" height="56" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="250" y="20" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="345" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">brands</text>
-  <line x1="284" y1="50" x2="284" y2="76" stroke="#333" stroke-width="1"/>
-  <text x="267" y="67" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="294" y="67" font-size="12">brand_id</text>
-
-  <!-- categories -->
-  <rect x="250" y="100" width="190" height="56" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="250" y="100" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="345" y="120" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">categories</text>
-  <line x1="284" y1="130" x2="284" y2="156" stroke="#333" stroke-width="1"/>
-  <text x="267" y="147" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="294" y="147" font-size="12">category_id</text>
-
-  <!-- products -->
-  <rect x="250" y="180" width="190" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="250" y="180" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="345" y="200" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">products</text>
-  <line x1="284" y1="210" x2="284" y2="288" stroke="#333" stroke-width="1"/>
-  <line x1="250" y1="236" x2="440" y2="236" stroke="#333" stroke-width="1"/>
-  <line x1="250" y1="262" x2="440" y2="262" stroke="#333" stroke-width="1"/>
-  <text x="267" y="227" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="294" y="227" font-size="12">product_id</text>
-  <text x="267" y="253" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="294" y="253" font-size="12">category_id</text>
-  <text x="267" y="279" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="294" y="279" font-size="12">brand_id</text>
-
-  <!-- product_listings -->
-  <rect x="250" y="310" width="190" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="250" y="310" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="345" y="330" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">product_listings</text>
-  <line x1="284" y1="340" x2="284" y2="418" stroke="#333" stroke-width="1"/>
-  <line x1="250" y1="366" x2="440" y2="366" stroke="#333" stroke-width="1"/>
-  <line x1="250" y1="392" x2="440" y2="392" stroke="#333" stroke-width="1"/>
-  <text x="267" y="357" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="294" y="357" font-size="12">listing_id</text>
-  <text x="267" y="383" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="294" y="383" font-size="12">product_id</text>
-  <text x="267" y="409" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="294" y="409" font-size="12">seller_id</text>
-
-  <!-- orders -->
-  <rect x="250" y="440" width="190" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="250" y="440" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="345" y="460" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">orders</text>
-  <line x1="284" y1="470" x2="284" y2="522" stroke="#333" stroke-width="1"/>
-  <line x1="250" y1="496" x2="440" y2="496" stroke="#333" stroke-width="1"/>
-  <text x="267" y="487" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="294" y="487" font-size="12">order_id</text>
-  <text x="267" y="513" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="294" y="513" font-size="12">customer_id</text>
-
-  <!-- order_items -->
-  <rect x="250" y="550" width="190" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="250" y="550" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="345" y="570" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">order_items</text>
-  <line x1="284" y1="580" x2="284" y2="658" stroke="#333" stroke-width="1"/>
-  <line x1="250" y1="606" x2="440" y2="606" stroke="#333" stroke-width="1"/>
-  <line x1="250" y1="632" x2="440" y2="632" stroke="#333" stroke-width="1"/>
-  <text x="267" y="597" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="294" y="597" font-size="12">order_item_id</text>
-  <text x="267" y="623" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="294" y="623" font-size="12">order_id</text>
-  <text x="267" y="649" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="294" y="649" font-size="12">listing_id</text>
-
-  <!-- reviews -->
-  <rect x="250" y="680" width="190" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="250" y="680" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="345" y="700" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">reviews</text>
-  <line x1="284" y1="710" x2="284" y2="788" stroke="#333" stroke-width="1"/>
-  <line x1="250" y1="736" x2="440" y2="736" stroke="#333" stroke-width="1"/>
-  <line x1="250" y1="762" x2="440" y2="762" stroke="#333" stroke-width="1"/>
-  <text x="267" y="727" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="294" y="727" font-size="12">review_id</text>
-  <text x="267" y="753" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="294" y="753" font-size="12">order_item_id</text>
-  <text x="267" y="779" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="294" y="779" font-size="12">customer_id</text>
-
-  <!-- ===================== Column 3 ===================== -->
-  <!-- delivery_partners -->
-  <rect x="500" y="20" width="190" height="56" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="500" y="20" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="595" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">delivery_partners</text>
-  <line x1="534" y1="50" x2="534" y2="76" stroke="#333" stroke-width="1"/>
-  <text x="517" y="67" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="544" y="67" font-size="12">partner_id</text>
-
-  <!-- shipments -->
-  <rect x="500" y="310" width="190" height="134" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="500" y="310" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="595" y="330" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">shipments</text>
-  <line x1="534" y1="340" x2="534" y2="444" stroke="#333" stroke-width="1"/>
-  <line x1="500" y1="366" x2="690" y2="366" stroke="#333" stroke-width="1"/>
-  <line x1="500" y1="392" x2="690" y2="392" stroke="#333" stroke-width="1"/>
-  <line x1="500" y1="418" x2="690" y2="418" stroke="#333" stroke-width="1"/>
-  <text x="517" y="357" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
-  <text x="544" y="357" font-size="12">shipment_id</text>
-  <text x="517" y="383" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="544" y="383" font-size="12">order_id</text>
-  <text x="517" y="409" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="544" y="409" font-size="12">seller_id</text>
-  <text x="517" y="435" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
-  <text x="544" y="435" font-size="12">delivery_partner_id</text>
-
-  <text x="105" y="806" text-anchor="middle" font-size="11" fill="#666">Supply side</text>
-  <text x="345" y="806" text-anchor="middle" font-size="11" fill="#666">Catalog &amp; transactions</text>
-  <text x="595" y="806" text-anchor="middle" font-size="11" fill="#666">Fulfillment</text>
-</svg>
-<figcaption>The full rawaj schema — 14 tables, every column shown is a key. Left: who's selling, and
-where. Middle: the catalog and every transaction. Right: how orders get delivered.</figcaption>
+    ACCOUNT_MANAGERS |o--o{ GOVERNORATES : "manages"
+    GOVERNORATES ||--o{ SELLERS : "based_in"
+    GOVERNORATES ||--o{ CUSTOMERS : "based_in"
+    SELLERS ||--o{ PRODUCT_LISTINGS : "lists"
+    PRODUCTS ||--o{ PRODUCT_LISTINGS : "listed_as"
+    CATEGORIES ||--o{ PRODUCTS : "classifies"
+    BRANDS ||--o{ PRODUCTS : "produces"
+    CUSTOMERS ||--o{ ORDERS : "places"
+    ORDERS ||--|{ ORDER_ITEMS : "contains"
+    PRODUCT_LISTINGS ||--o{ ORDER_ITEMS : "ordered_as"
+    CUSTOMERS ||--o{ WEB_EVENTS : "generates"
+    CUSTOMERS ||--o{ REVIEWS : "writes"
+    ORDER_ITEMS ||--o| REVIEWS : "reviewed_by"
+    ORDERS ||--o{ SHIPMENTS : "ships_as"
+    SELLERS ||--o{ SHIPMENTS : "fulfills"
+    DELIVERY_PARTNERS ||--o{ SHIPMENTS : "delivers"
+</pre>
+<figcaption>The full rawaj schema — 14 tables, every column. Left: account managers, governorates,
+customers, and their web events. Middle: sellers, the catalog, and every transaction. Right: how
+orders get delivered.</figcaption>
 </figure>
 <p>You won't need JOINs to query any single table in this lesson (that's Day 03) — today stays
 inside <code class="inline">customers</code>, <code class="inline">orders</code>, and
@@ -693,5 +585,8 @@ inside one format string, e.g. <code class="inline">'%W, %M %e %Y'</code> → <c
   });
   backdrop.addEventListener('click', close);
 })();
+</script>
+<script>
+mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
 </script>
 </body></html>

@@ -217,6 +217,7 @@ DAYS = [
     ("04", "day04_reading.html", "Subqueries, CTEs &amp; Views"),
     ("05", "day05_reading.html", "Window Functions &amp; Procedures"),
     ("06", "day06_reading.html", "Python Connectivity"),
+    ("07", "day07_reading.html", "Project: Wasel"),
 ]
 
 SIDEBAR_CSS = """.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:#F3F4F6;border-right:1px solid #E5E7EB;padding:22px 0;overflow-y:auto;z-index:1000}

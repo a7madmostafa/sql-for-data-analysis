@@ -114,6 +114,7 @@ body{margin-left:0}
 <a href="../Day%2004/day04_reading.html"><span class="daynum">Day 04</span>Subqueries, CTEs &amp; Views</a>
 <a href="../Day%2005/day05_reading.html"><span class="daynum">Day 05</span>Window Functions &amp; Procedures</a>
 <a href="../Day%2006/day06_reading.html" class="active"><span class="daynum">Day 06</span>Python Connectivity</a>
+<a href="../Day%2007/day07_reading.html"><span class="daynum">Day 07</span>Project: Wasel</a>
 </nav>
 <div class="page">
 
@@ -351,7 +352,7 @@ this data — hand them a single portable file instead.</p>
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day06_python_sqlite.ipynb</span></div>
   <div class="code-body"><span class="kw">import</span> sqlite3
 
-sqlite_conn = sqlite3.connect(<span class="str">"rawaj.sqlite"</span>)
+sqlite_conn = sqlite3.connect(<span class="str">"../Databases/rawaj.sqlite"</span>)
 
 <span class="kw">for</span> table <span class="kw">in</span> [<span class="str">"governorates"</span>, <span class="str">"account_managers"</span>, <span class="str">"sellers"</span>, <span class="str">"customers"</span>, <span class="str">"orders"</span>, <span class="str">"web_events"</span>, <span class="str">"reviews"</span>]:
     df = pd.read_sql(text(<span class="fn">f</span><span class="str">"SELECT * FROM {table}"</span>), mysql_engine)
@@ -388,13 +389,13 @@ how to connect.</p>
   <div class="col">
     <h4>Option 1 — through SQLAlchemy</h4>
     <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">sqlalchemy_demo_engine = create_engine(
-    "sqlite:///rawaj.sqlite"
+    "sqlite:///../Databases/rawaj.sqlite"
 )
 %sql sqlalchemy_demo_engine --alias sqlite_via_sqlalchemy</pre>
   </div>
   <div class="col good">
     <h4>Option 2 — jupysql directly, no SQLAlchemy</h4>
-    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">%sql sqlite:///rawaj.sqlite --alias sqlite_rawaj</pre>
+    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">%sql sqlite:///../Databases/rawaj.sqlite --alias sqlite_rawaj</pre>
   </div>
 </div>
 <p>Both register a connection jupysql can run <code class="inline">%%sql</code> against, and both

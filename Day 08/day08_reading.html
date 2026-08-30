@@ -128,11 +128,12 @@ section previews every one before Marcus's questions start.</p>
   <code class="inline">kaggle datasets download -d hugomathien/soccer</code>.</p>
   <p><strong>2.</strong> Unzip it — the file inside is named <code class="inline">database.sqlite</code>;
   rename it to <code class="inline">soccer.sqlite</code>.</p>
-  <p><strong>3.</strong> Place it directly in this folder: <code class="inline">Day 07/soccer.sqlite</code>.
-  <code class="inline">project_07.ipynb</code> connects with a relative path
-  (<code class="inline">sqlite:///soccer.sqlite</code>), so it has to sit next to the notebook.</p>
-  <p><code class="inline">Day 07/*.sqlite</code> is git-ignored — once it's downloaded, there's
-  nothing to commit, just re-download if you ever lose the file.</p>
+  <p><strong>3.</strong> Place it in the shared <code class="inline">Databases/</code> folder at the
+  repo root: <code class="inline">Databases/soccer.sqlite</code> — every database this course uses,
+  MySQL or SQLite, lives there. <code class="inline">project_07.ipynb</code> connects with a relative
+  path (<code class="inline">sqlite:///../Databases/soccer.sqlite</code>).</p>
+  <p><code class="inline">Databases/*.sqlite</code> is git-ignored for files this large — once it's
+  downloaded, there's nothing to commit, just re-download if you ever lose the file.</p>
 </div>
 
 <h2 class="section"><span class="num">•</span>Marcus's list</h2>
