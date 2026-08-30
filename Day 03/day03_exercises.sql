@@ -30,15 +30,14 @@ USE parch_and_posey;
 -- SECTION 1 — INNER JOIN BASICS
 -- ======================================
 
--- 1.1 An analyst wants a raw combined view: every order alongside the
---     account that placed it, every column from both tables.
+-- 1.1 Marketing wants a raw combined view: every web event alongside the
+--     account it came from, every column from both tables.
 
--- 1.2 For a cleaner report, pull just the order id, account name, and
---     order date.
+-- 1.2 For a cleaner report, pull just the event id, channel, and the
+--     account's name.
 
--- 1.3 Using table aliases, pull each account's website and point of
---     contact, plus how many units of standard/gloss/poster paper they
---     ordered, for every order.
+-- 1.3 Using table aliases, show each event's channel and occurred_at,
+--     plus the account's website and primary point of contact.
 
 
 
@@ -46,17 +45,16 @@ USE parch_and_posey;
 -- SECTION 2 — MULTI-TABLE JOINS
 -- ======================================
 
--- 2.1 Sales leadership wants a full picture: for every order, show the
---     order id, the account name, and the name of the sales rep who
---     manages that account.
+-- 2.1 Trace every web event back to the sales rep who owns that
+--     account — show the event id, channel, account name, and rep name.
 
--- 2.2 Finance wants unit prices: for every order, show the region name,
---     account name, and unit price (total_amt_usd / total — add 0.01 to
---     the denominator to dodge a divide-by-zero on a few zero-total
---     orders).
+-- 2.2 Regional management wants a per-order gloss-paper unit price,
+--     broken out by region — chain all four tables (add 0.01 to the
+--     denominator, same divide-by-zero guard as the walkthrough).
 
--- 2.3 Which account placed the very first order in company history? Show
---     the account name and the order date.
+-- 2.3 Which account placed the most recent order Parch & Posey has on
+--     record? Show the account name and the order date (opposite of the
+--     walkthrough's "first order ever").
 
 
 
@@ -64,13 +62,14 @@ USE parch_and_posey;
 -- SECTION 3 — JOIN + GROUP BY
 -- ======================================
 
--- 3.1 Rank every account by total lifetime spend, biggest spender first.
+-- 3.1 Rank sales reps by total lifetime revenue across every account
+--     they manage, biggest earner first.
 
--- 3.2 For each sales rep, break down how many web events came through
---     each channel.
+-- 3.2 For each region, break down web event counts by channel — which
+--     region/channel combinations see the most traffic?
 
--- 3.3 For each account, what was their smallest order ever (by
---     total_amt_usd)? List smallest first.
+-- 3.3 What's the LARGEST order each account has ever placed (by
+--     total_amt_usd)? List biggest first.
 
 
 
@@ -78,14 +77,15 @@ USE parch_and_posey;
 -- SECTION 4 — JOIN + HAVING
 -- ======================================
 
--- 4.1 Which sales reps are overloaded — managing more than 5 accounts?
+-- 4.1 Which sales reps manage 8 or more accounts — are any of them
+--     overloaded?
 
--- 4.2 Flag any account with more than 20 orders — these are your power
---     users.
+-- 4.2 Which accounts have generated more than $50,000 in gloss-paper
+--     revenue alone (SUM of gloss_amt_usd)?
 
--- 4.3 Which accounts have spent less than $1,000 total across all their
---     orders? Marketing wants to target these for a re-engagement
---     campaign.
+-- 4.3 Which sales reps' TOTAL managed revenue — summed across every
+--     account they own — comes in under $50,000? These reps may need
+--     extra support.
 
 
 
@@ -93,9 +93,12 @@ USE parch_and_posey;
 -- SECTION 5 — LEFT / RIGHT JOIN
 -- ======================================
 
--- 5.1 Show every account, whether or not they've ever placed an order.
+-- 5.1 Show every account's id and name, plus the id of each order it's
+--     placed (NULL where it's never ordered) — every account should
+--     appear, whether or not it has orders.
 
--- 5.2 Show every order, even ones whose account can't be resolved (same
+-- 5.2 Same idea, mirrored: for every order, show its id and
+--     total_amt_usd, plus the name of the account it belongs to (same
 --     idea as 5.1, opposite JOIN direction).
 
 
@@ -104,8 +107,8 @@ USE parch_and_posey;
 -- SECTION 6 — ANTI-JOINS
 -- ======================================
 
--- 6.1 Which accounts have NEVER placed a single order? These might be
---     stale leads worth following up on.
+-- 6.1 Which accounts have NEVER placed a single order? Show just their
+--     id and name — a churn/onboarding red-flag list for the sales team.
 
 
 
@@ -114,9 +117,9 @@ USE parch_and_posey;
 -- ======================================
 
 -- 7.1 MySQL has no FULL JOIN keyword. Using UNION of a LEFT JOIN and a
---     RIGHT JOIN, show every order/account pairing — matches, orders
---     without a resolvable account, and accounts without orders, all in
---     one result.
+--     RIGHT JOIN, build one report pairing every account name with an
+--     order id — matches, order-only, and account-only rows, all in one
+--     result.
 
 
 
@@ -128,8 +131,8 @@ USE parch_and_posey;
 --     (under 3000) — Finance wants to see the split. Show the account id,
 --     the total, and the tag.
 
--- 8.2 Compute a safe unit price for standard paper on every order — 0
---     instead of an error whenever standard_qty is 0 or missing.
+-- 8.2 Compute a safe unit price for POSTER paper on every order — 0
+--     instead of an error whenever poster_qty is 0 or missing.
 
 
 
@@ -138,19 +141,19 @@ USE parch_and_posey;
 -- ======================================
 
 -- 9.1 Bucket every order into one of three size categories — 'At Least
---     2000', 'Between 1000 and 2000', or 'Less than 1000' (by the `total`
+--     3000', 'Between 1500 and 3000', or 'Less than 1500' (by the `total`
 --     item count) — and count how many orders fall into each.
 
--- 9.2 Classify every account into a lifetime-value tier: 'top' (over
---     $200,000 total spend), 'middle' (over $100,000), or 'low'. Show
+-- 9.2 Classify every account into a lifetime-value tier: 'gold' (over
+--     $150,000 total spend), 'silver' (over $75,000), or 'bronze'. Show
 --     account name, total spend, and tier, richest first.
 
 -- 9.3 Repeat 9.2, but counting only spend from 2016 onward. Has anyone's
 --     tier changed?
 
--- 9.4 Flag sales reps as 'top' performers if they've closed more than 200
---     orders, 'not' otherwise. Show rep name, order count, and the flag,
---     busiest reps first.
+-- 9.4 Flag sales reps as 'high-volume' if they've closed more than 150
+--     orders, 'standard' otherwise. Show rep name, order count, and the
+--     flag, busiest reps first.
 
 
 
@@ -158,9 +161,9 @@ USE parch_and_posey;
 -- SECTION 10 — CASE + HAVING
 -- ======================================
 
--- 10.1 Which sales reps fall specifically into the 'Under 5k' total-sales
---      bracket (bracket boundaries: ZERO / Under 5k [1-5000] / 5-10k
---      [5001-10000] / 10-20k [10001-20000] / +20k)? HAVING can filter on
+-- 10.1 Which accounts fall specifically into the 'Under 3k' total-sales
+--      bracket (bracket boundaries: ZERO / Under 3k [1-3000] / 3-8k
+--      [3001-8000] / 8-15k [8001-15000] / +15k)? HAVING can filter on
 --      the CASE-derived column directly, same as any other aggregate
 --      expression.
 
@@ -221,14 +224,14 @@ USE parch_and_posey;
 
 -- C1. For an exec presentation, list the top 5 accounts by total revenue,
 --     showing account name, total revenue, their CASE-based tier
---     (top/middle/low, per 9.2's thresholds), the sales rep who manages
---     them, and their region — all in one query.
+--     (gold/silver/bronze, per 9.2's thresholds), the sales rep who
+--     manages them, and their region — all in one query.
 
 -- C2. Which single region has generated the most total revenue overall?
 --     Show the region name and total revenue.
 
--- C3. Find sales reps who are BOTH a 'top' performer (more than 200
---     orders, per 9.4) AND managing more than 5 accounts (per 4.1) —
+-- C3. Find sales reps who are BOTH a 'high-volume' performer (more than
+--     150 orders, per 9.4) AND managing 8 or more accounts (per 4.1) —
 --     show rep name, account count, and order count. (Hint: joining
 --     sales_reps to both accounts and orders in one query multiplies
 --     rows — COUNT(DISTINCT ...) on the account id avoids overcounting
@@ -236,6 +239,6 @@ USE parch_and_posey;
 
 -- C4. Generate a company email address (firstname.lastname@accountname.com,
 --     all lowercase, no spaces) for every account's point of contact, but
---     ONLY for 'top' tier accounts — total spend over $200,000, same
+--     ONLY for 'gold' tier accounts — total spend over $150,000, same
 --     threshold as 9.2's tiering. (Combine Section 13's string-building
 --     with a JOIN + HAVING filter on total spend.)

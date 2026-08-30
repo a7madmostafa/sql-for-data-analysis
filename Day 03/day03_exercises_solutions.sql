@@ -15,22 +15,21 @@ USE parch_and_posey;
 
 -- 1.1
 SELECT *
-FROM orders
+FROM web_events
 JOIN accounts
-    ON orders.account_id = accounts.id;
+    ON web_events.account_id = accounts.id;
 
 -- 1.2
-SELECT orders.id, accounts.name, orders.occurred_at
-FROM orders
+SELECT web_events.id, web_events.channel, accounts.name
+FROM web_events
 JOIN accounts
-    ON orders.account_id = accounts.id;
+    ON web_events.account_id = accounts.id;
 
 -- 1.3
-SELECT a.website, a.primary_poc,
-       o.standard_qty, o.gloss_qty, o.poster_qty
-FROM orders o
+SELECT w.channel, w.occurred_at, a.website, a.primary_poc
+FROM web_events w
 JOIN accounts a
-    ON o.account_id = a.id;
+    ON w.account_id = a.id;
 
 
 -- ======================================
@@ -38,16 +37,16 @@ JOIN accounts a
 -- ======================================
 
 -- 2.1
-SELECT o.id, a.name AS account_name, s.name AS sales_rep_name
-FROM orders o
+SELECT w.id, w.channel, a.name AS account_name, s.name AS rep_name
+FROM web_events w
 JOIN accounts a
-    ON o.account_id = a.id
+    ON w.account_id = a.id
 JOIN sales_reps s
     ON a.sales_rep_id = s.id;
 
 -- 2.2
 SELECT r.name AS region, a.name AS account,
-       o.total_amt_usd / (o.total + 0.01) AS unit_price
+       o.gloss_amt_usd / (o.gloss_qty + 0.01) AS gloss_unit_price
 FROM orders o
 JOIN accounts a
     ON o.account_id = a.id
@@ -61,7 +60,7 @@ SELECT a.name AS account_name, o.occurred_at AS order_date
 FROM orders o
 JOIN accounts a
     ON o.account_id = a.id
-ORDER BY order_date
+ORDER BY order_date DESC
 LIMIT 1;
 
 
@@ -70,30 +69,34 @@ LIMIT 1;
 -- ======================================
 
 -- 3.1
-SELECT a.name AS account_name, SUM(o.total_amt_usd) AS total_sales
+SELECT s.name, SUM(o.total_amt_usd) AS total_sales
 FROM orders o
 JOIN accounts a
     ON o.account_id = a.id
-GROUP BY a.name
+JOIN sales_reps s
+    ON a.sales_rep_id = s.id
+GROUP BY s.name
 ORDER BY total_sales DESC;
 
 -- 3.2
-SELECT s.name, w.channel, COUNT(*) AS occurrences
+SELECT r.name AS region, w.channel, COUNT(*) AS occurrences
 FROM web_events w
 JOIN accounts a
     ON w.account_id = a.id
 JOIN sales_reps s
-    ON s.id = a.sales_rep_id
-GROUP BY s.name, w.channel
+    ON a.sales_rep_id = s.id
+JOIN region r
+    ON s.region_id = r.id
+GROUP BY r.name, w.channel
 ORDER BY occurrences DESC;
 
 -- 3.3
-SELECT a.name, MIN(o.total_amt_usd) AS smallest_order
+SELECT a.name, MAX(o.total_amt_usd) AS largest_order
 FROM accounts a
 JOIN orders o
     ON a.id = o.account_id
 GROUP BY a.name
-ORDER BY smallest_order;
+ORDER BY largest_order DESC;
 
 
 -- ======================================
@@ -106,26 +109,28 @@ FROM accounts a
 JOIN sales_reps s
     ON s.id = a.sales_rep_id
 GROUP BY s.id, s.name
-HAVING COUNT(*) > 5
+HAVING COUNT(*) >= 8
 ORDER BY num_accounts;
 
 -- 4.2
-SELECT a.id, a.name, COUNT(*) AS num_orders
+SELECT a.id, a.name, SUM(o.gloss_amt_usd) AS gloss_revenue
 FROM accounts a
 JOIN orders o
     ON a.id = o.account_id
 GROUP BY a.id, a.name
-HAVING COUNT(*) > 20
-ORDER BY num_orders;
+HAVING SUM(o.gloss_amt_usd) > 50000
+ORDER BY gloss_revenue DESC;
 
 -- 4.3
-SELECT a.id, a.name, SUM(o.total_amt_usd) AS total_spent
-FROM accounts a
-JOIN orders o
-    ON a.id = o.account_id
-GROUP BY a.id, a.name
-HAVING SUM(o.total_amt_usd) < 1000
-ORDER BY total_spent;
+SELECT s.id, s.name, SUM(o.total_amt_usd) AS total_managed_revenue
+FROM orders o
+JOIN accounts a
+    ON o.account_id = a.id
+JOIN sales_reps s
+    ON a.sales_rep_id = s.id
+GROUP BY s.id, s.name
+HAVING SUM(o.total_amt_usd) < 50000
+ORDER BY total_managed_revenue;
 
 
 -- ======================================
@@ -133,16 +138,16 @@ ORDER BY total_spent;
 -- ======================================
 
 -- 5.1
-SELECT *
-FROM accounts
-LEFT JOIN orders
-    ON orders.account_id = accounts.id;
+SELECT a.id, a.name, o.id AS order_id
+FROM accounts a
+LEFT JOIN orders o
+    ON a.id = o.account_id;
 
 -- 5.2
-SELECT *
-FROM orders
-RIGHT JOIN accounts
-    ON orders.account_id = accounts.id;
+SELECT o.id AS order_id, o.total_amt_usd, a.name
+FROM orders o
+RIGHT JOIN accounts a
+    ON o.account_id = a.id;
 
 
 -- ======================================
@@ -150,7 +155,7 @@ RIGHT JOIN accounts
 -- ======================================
 
 -- 6.1
-SELECT *
+SELECT a.id, a.name
 FROM accounts a
 LEFT JOIN orders o
     ON a.id = o.account_id
@@ -162,17 +167,17 @@ WHERE o.id IS NULL;
 -- ======================================
 
 -- 7.1
-SELECT *
-FROM orders
-LEFT JOIN accounts
-    ON orders.account_id = accounts.id
+SELECT a.name, o.id AS order_id
+FROM accounts a
+LEFT JOIN orders o
+    ON a.id = o.account_id
 
 UNION
 
-SELECT *
-FROM orders
-RIGHT JOIN accounts
-    ON orders.account_id = accounts.id;
+SELECT a.name, o.id AS order_id
+FROM accounts a
+RIGHT JOIN orders o
+    ON a.id = o.account_id;
 
 
 -- ======================================
@@ -190,8 +195,8 @@ FROM orders;
 -- 8.2
 SELECT account_id,
     CASE
-        WHEN standard_qty = 0 OR standard_qty IS NULL THEN 0
-        ELSE standard_amt_usd / standard_qty
+        WHEN poster_qty = 0 OR poster_qty IS NULL THEN 0
+        ELSE poster_amt_usd / poster_qty
     END AS unit_price
 FROM orders;
 
@@ -203,9 +208,9 @@ FROM orders;
 -- 9.1
 SELECT
     CASE
-        WHEN total >= 2000 THEN 'At Least 2000'
-        WHEN total BETWEEN 1000 AND 2000 THEN 'Between 1000 and 2000'
-        ELSE 'Less than 1000'
+        WHEN total >= 3000 THEN 'At Least 3000'
+        WHEN total BETWEEN 1500 AND 3000 THEN 'Between 1500 and 3000'
+        ELSE 'Less than 1500'
     END AS order_category,
     COUNT(*) AS order_count
 FROM orders
@@ -214,10 +219,10 @@ GROUP BY 1;
 -- 9.2
 SELECT a.name, SUM(o.total_amt_usd) AS total_spent,
     CASE
-        WHEN SUM(o.total_amt_usd) > 200000 THEN 'top'
-        WHEN SUM(o.total_amt_usd) > 100000 THEN 'middle'
-        ELSE 'low'
-    END AS customer_level
+        WHEN SUM(o.total_amt_usd) > 150000 THEN 'gold'
+        WHEN SUM(o.total_amt_usd) > 75000 THEN 'silver'
+        ELSE 'bronze'
+    END AS customer_tier
 FROM orders o
 JOIN accounts a
     ON o.account_id = a.id
@@ -227,10 +232,10 @@ ORDER BY total_spent DESC;
 -- 9.3
 SELECT a.name, SUM(o.total_amt_usd) AS total_spent,
     CASE
-        WHEN SUM(o.total_amt_usd) > 200000 THEN 'top'
-        WHEN SUM(o.total_amt_usd) > 100000 THEN 'middle'
-        ELSE 'low'
-    END AS customer_level
+        WHEN SUM(o.total_amt_usd) > 150000 THEN 'gold'
+        WHEN SUM(o.total_amt_usd) > 75000 THEN 'silver'
+        ELSE 'bronze'
+    END AS customer_tier
 FROM orders o
 JOIN accounts a
     ON o.account_id = a.id
@@ -241,8 +246,8 @@ ORDER BY total_spent DESC;
 -- 9.4
 SELECT s.name, COUNT(*) AS num_orders,
     CASE
-        WHEN COUNT(*) > 200 THEN 'top'
-        ELSE 'not'
+        WHEN COUNT(*) > 150 THEN 'high-volume'
+        ELSE 'standard'
     END AS sales_rep_level
 FROM orders o
 JOIN accounts a
@@ -258,13 +263,13 @@ ORDER BY num_orders DESC;
 -- ======================================
 
 -- 10.1
-SELECT s.name, SUM(o.total_amt_usd) AS total_sales,
+SELECT a.name, SUM(o.total_amt_usd) AS total_sales,
     CASE
         WHEN SUM(o.total_amt_usd) = 0 THEN 'ZERO'
-        WHEN SUM(o.total_amt_usd) BETWEEN 1 AND 5000 THEN 'Under 5k'
-        WHEN SUM(o.total_amt_usd) BETWEEN 5001 AND 10000 THEN '5-10k'
-        WHEN SUM(o.total_amt_usd) BETWEEN 10001 AND 20000 THEN '10-20k'
-        ELSE '+20k'
+        WHEN SUM(o.total_amt_usd) BETWEEN 1 AND 3000 THEN 'Under 3k'
+        WHEN SUM(o.total_amt_usd) BETWEEN 3001 AND 8000 THEN '3-8k'
+        WHEN SUM(o.total_amt_usd) BETWEEN 8001 AND 15000 THEN '8-15k'
+        ELSE '+15k'
     END AS sales_category
 FROM accounts a
 JOIN orders o
@@ -272,7 +277,7 @@ JOIN orders o
 JOIN sales_reps s
     ON s.id = a.sales_rep_id
 GROUP BY a.id, a.sales_rep_id, s.name
-HAVING SUM(o.total_amt_usd) BETWEEN 1 AND 5000;
+HAVING SUM(o.total_amt_usd) BETWEEN 1 AND 3000;
 
 
 -- ======================================
@@ -350,9 +355,9 @@ FROM tier;
 -- C1
 SELECT a.name AS account, SUM(o.total_amt_usd) AS total_revenue,
     CASE
-        WHEN SUM(o.total_amt_usd) > 200000 THEN 'top'
-        WHEN SUM(o.total_amt_usd) > 100000 THEN 'middle'
-        ELSE 'low'
+        WHEN SUM(o.total_amt_usd) > 150000 THEN 'gold'
+        WHEN SUM(o.total_amt_usd) > 75000 THEN 'silver'
+        ELSE 'bronze'
     END AS tier,
     s.name AS sales_rep, r.name AS region
 FROM orders o
@@ -387,8 +392,8 @@ JOIN accounts a
 JOIN orders o
     ON a.id = o.account_id
 GROUP BY s.name
-HAVING COUNT(DISTINCT a.id) > 5
-AND COUNT(o.id) > 200;
+HAVING COUNT(DISTINCT a.id) >= 8
+AND COUNT(o.id) > 150;
 
 -- C4
 SELECT a.name,
@@ -401,4 +406,4 @@ FROM orders o
 JOIN accounts a
     ON o.account_id = a.id
 GROUP BY a.name, a.primary_poc
-HAVING SUM(o.total_amt_usd) > 200000;
+HAVING SUM(o.total_amt_usd) > 150000;

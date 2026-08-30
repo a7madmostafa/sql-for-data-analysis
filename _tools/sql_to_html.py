@@ -1,0 +1,355 @@
+"""
+Executes a lesson-day SQL walkthrough file statement-by-statement against a live
+MySQL database and renders SQL + real results as a themed, self-contained HTML
+page -- the same "open directly in a browser, no setup" idea as day0N_reading.html,
+for lesson days (01-04) that have a .sql walkthrough instead of a notebook.
+
+Usage:
+    python _tools/sql_to_html.py "Day 01/day01_sql_foundations.sql" \
+        --day 1 --title "SQL Foundations" --database world \
+        --out "Day 01/day01_sql_foundations.html"
+
+Requires a local MySQL server with the day's database already loaded
+(see Databases/README.md), and .env at the repo root (see .env.example).
+
+Parsing model
+-------------
+The walkthrough files share one convention throughout: a divider/title/divider
+banner ("-- ====", "-- SECTION N -- TITLE", "-- ====") starts each section, and
+inside a section, one or more comment lines (the business-question framing)
+immediately precede one or more SQL statements. Statements normally end at ';',
+but a DELIMITER directive (used around stored procedures) switches the active
+terminator until the next DELIMITER. Blank lines separate one comment+statement
+group from the next, except inside a still-open multi-line statement (e.g. a
+UNION query with a blank line for readability around the UNION keyword), where
+a blank line is not a boundary.
+"""
+
+import argparse
+import html
+import os
+import re
+import sys
+
+import mysql.connector
+from dotenv import load_dotenv
+
+SECTION_RE = re.compile(r"^--\s*SECTION\s+(\d+)\s*[—\-]\s*(.+?)\s*$", re.IGNORECASE)
+DIVIDER_RE = re.compile(r"^--\s*=+\s*$")
+DELIMITER_RE = re.compile(r"^DELIMITER\s+(\S+)\s*$", re.IGNORECASE)
+MAX_DISPLAY_ROWS = 15
+
+KEYWORDS = [
+    "SELECT", "FROM", "WHERE", "JOIN", "INNER", "LEFT", "RIGHT", "FULL", "OUTER", "ON",
+    "GROUP BY", "ORDER BY", "HAVING", "LIMIT", "OFFSET", "AS", "DISTINCT", "CASE", "WHEN",
+    "THEN", "ELSE", "END", "WITH", "UNION", "ALL", "IN", "NOT", "NULL", "IS", "AND", "OR",
+    "LIKE", "BETWEEN", "CREATE", "VIEW", "PROCEDURE", "DROP", "IF", "EXISTS", "DELIMITER",
+    "CALL", "BEGIN", "RETURN", "INTO", "OVER", "PARTITION BY", "DESC", "ASC", "TEMPORARY",
+    "TABLE", "INSERT", "UPDATE", "DELETE", "USE", "SHOW", "DESCRIBE", "DATABASES", "SCHEMAS",
+    "TABLES", "IN", "OUT", "VALUES", "SET",
+]
+FUNCTIONS = [
+    "COUNT", "SUM", "AVG", "MIN", "MAX", "ROUND", "CONCAT", "COALESCE", "IFNULL",
+    "DATE", "DATE_ADD", "DATE_FORMAT", "DATEDIFF", "CURDATE", "NOW", "STRFTIME",
+    "RANK", "DENSE_RANK", "ROW_NUMBER", "LAG", "LEAD", "LEFT", "RIGHT", "SUBSTRING",
+    "TRIM", "LTRIM", "RTRIM", "REPLACE", "LOCATE", "LENGTH", "UPPER", "LOWER",
+]
+
+
+class SectionHeader:
+    def __init__(self, number, title):
+        self.number = number
+        self.title = title
+
+
+class StatementGroup:
+    def __init__(self, explanation, statements):
+        self.explanation = explanation
+        self.statements = statements
+
+
+def strip_trailing_comment(line):
+    idx = line.find("--")
+    if idx == -1:
+        return line, None
+    return line[:idx].rstrip(), line[idx:].strip()
+
+
+def parse_sql_file(text):
+    """Returns a flat list of SectionHeader / StatementGroup objects, in order."""
+    lines = text.split("\n")
+    events = []
+
+    delimiter = ";"
+    comment_buffer = []
+    code_buffer = []
+    trailing_notes = []
+    in_statement = False
+    statements = []
+
+    def flush_group():
+        nonlocal comment_buffer, code_buffer, statements, trailing_notes
+        if statements:
+            events.append(StatementGroup(" ".join(comment_buffer).strip(), statements))
+        comment_buffer = []
+        code_buffer = []
+        statements = []
+        trailing_notes = []
+
+    for raw_line in lines:
+        line = raw_line.rstrip()
+        stripped = line.strip()
+
+        if DIVIDER_RE.match(stripped):
+            continue
+
+        m = SECTION_RE.match(stripped)
+        if m:
+            flush_group()
+            events.append(SectionHeader(int(m.group(1)), m.group(2)))
+            continue
+
+        m = DELIMITER_RE.match(stripped)
+        if m and not in_statement:
+            flush_group()
+            delimiter = m.group(1)
+            continue
+
+        if stripped == "":
+            if not in_statement:
+                flush_group()
+            continue
+
+        if stripped.startswith("--"):
+            if not in_statement:
+                comment_buffer.append(stripped.lstrip("-").strip())
+                continue
+            # a comment line in the middle of an open statement: keep as-is in the code
+            code_buffer.append(line)
+            continue
+
+        code_part, trailing_comment = strip_trailing_comment(line)
+        code_buffer.append(code_part if trailing_comment else line)
+        if trailing_comment:
+            trailing_notes.append(trailing_comment)
+
+        check_text = (code_part if trailing_comment else line).rstrip()
+        if check_text.endswith(delimiter):
+            stmt_text = "\n".join(code_buffer).strip()
+            stmt_text = stmt_text[: -len(delimiter)].rstrip()
+            statements.append(stmt_text)
+            code_buffer = []
+            in_statement = False
+        else:
+            in_statement = True
+
+    flush_group()
+    return events
+
+
+def highlight_sql(sql_text):
+    escaped = html.escape(sql_text)
+
+    def repl_string(m):
+        return f'<span class="str">{m.group(0)}</span>'
+
+    escaped = re.sub(r"&#x27;[^&]*?&#x27;", repl_string, escaped)
+
+    def repl_comment(m):
+        return f'<span class="com">{m.group(0)}</span>'
+
+    escaped = re.sub(r"--[^\n]*", repl_comment, escaped)
+
+    for kw in sorted(KEYWORDS, key=len, reverse=True):
+        pattern = r"(?<![\w])" + re.escape(kw) + r"(?![\w])"
+        escaped = re.sub(pattern, lambda m: f'<span class="kw">{m.group(0)}</span>', escaped, flags=re.IGNORECASE)
+
+    for fn in sorted(FUNCTIONS, key=len, reverse=True):
+        pattern = r"(?<![\w])(" + re.escape(fn) + r")(?=\s*\()"
+        escaped = re.sub(pattern, lambda m: f'<span class="fn">{m.group(0)}</span>', escaped, flags=re.IGNORECASE)
+
+    return escaped
+
+
+def run_statement(cursor, stmt):
+    cursor.execute(stmt)
+    if cursor.description is not None:
+        cols = [d[0] for d in cursor.description]
+        rows = cursor.fetchall()
+        return {"type": "rows", "columns": cols, "rows": rows}
+    rowcount = cursor.rowcount
+    return {"type": "status", "rowcount": rowcount}
+
+
+def render_result_html(result):
+    if result["type"] == "rows":
+        cols, rows = result["columns"], result["rows"]
+        total = len(rows)
+        shown = rows[:MAX_DISPLAY_ROWS]
+        out = ['<div class="result-wrap">', '<table class="api result-table">', "<thead><tr>"]
+        for c in cols:
+            out.append(f"<th>{html.escape(str(c))}</th>")
+        out.append("</tr></thead><tbody>")
+        for row in shown:
+            out.append("<tr>")
+            for val in row:
+                out.append(f"<td>{html.escape('' if val is None else str(val))}</td>")
+            out.append("</tr>")
+        out.append("</tbody></table>")
+        if total > MAX_DISPLAY_ROWS:
+            out.append(f'<p class="row-note">showing {MAX_DISPLAY_ROWS} of {total} rows</p>')
+        else:
+            out.append(f'<p class="row-note">{total} row{"s" if total != 1 else ""}</p>')
+        out.append("</div>")
+        return "".join(out)
+    rc = result["rowcount"]
+    if rc is None or rc <= 0:
+        note = "executed"
+    else:
+        note = f"{rc} row{'s' if rc != 1 else ''} affected"
+    return f'<div class="result-wrap"><p class="row-note status">&#10003; {note}</p></div>'
+
+
+PAGE_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day {day:02d} Walkthrough &mdash; {title}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+}}
+*{{box-sizing:border-box}} html,body{{margin:0;padding:0}}
+body{{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}}
+.page{{max-width:920px;margin:0 auto;padding:56px 48px 90px}}
+.crumb{{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}}
+h1.title{{font-family:'Bricolage Grotesque',Georgia,serif;font-size:38px;line-height:1.15;color:var(--ink);margin:0 0 12px;font-weight:800}}
+.subtitle{{font-size:17px;color:var(--gray);margin:0 0 30px}}
+h2.section{{font-family:'Bricolage Grotesque',Georgia,serif;font-size:24px;color:var(--ink);margin:48px 0 8px;padding-bottom:9px;border-bottom:2px solid var(--ink);font-weight:700}}
+h2.section .num{{color:var(--blue);margin-right:10px}}
+p{{margin:0 0 12px}}
+p.explain{{font-size:15.5px;color:var(--gray);margin:22px 0 8px}}
+strong{{color:var(--ink);font-weight:700}}
+code.inline{{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}}
+
+.code-block{{margin:8px 0 0;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}}
+.code-header{{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#161616}}
+.code-header .dot{{width:10px;height:10px;border-radius:50%}}
+.code-header .dot.r{{background:#FF5F56}}.code-header .dot.y{{background:#FFBD2E}}.code-header .dot.g{{background:#27C93F}}
+.code-header .fname{{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}}
+.code-body{{background:var(--code-bg);color:var(--code-default);padding:14px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.7;overflow-x:auto;white-space:pre}}
+.code-body .kw{{color:var(--code-kw)}}.code-body .fn{{color:var(--code-fn)}}
+.code-body .str{{color:var(--code-str)}}.code-body .com{{color:var(--code-com);font-style:italic}}
+
+.result-wrap{{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:14px 18px 10px;margin-bottom:26px;overflow-x:auto}}
+table.result-table{{width:auto;min-width:100%;border-collapse:collapse;margin:0;background:white;font-size:13.5px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}}
+table.result-table th,table.result-table td{{padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;white-space:nowrap}}
+table.result-table thead th{{background:var(--panel);color:var(--ink);font-size:11px;text-transform:uppercase;letter-spacing:.06em}}
+table.result-table tbody tr:last-child td{{border-bottom:none}}
+.row-note{{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray-muted);margin:8px 0 0}}
+.row-note.status{{color:var(--insight-ti)}}
+
+.callout{{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid var(--blue);background:var(--panel)}}
+.callout .ti{{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px;color:var(--blue-dark)}}
+.callout p{{font-size:14.5px;margin:0}}
+
+footer{{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}}
+@media(max-width:760px){{.page{{padding:32px 22px}}h1.title{{font-size:28px}}}}
+</style>
+</head>
+<body><div class="page">
+
+<div class="crumb">Day {day:02d} of 9 &middot; Walkthrough</div>
+<h1 class="title">{title}</h1>
+<p class="subtitle">Every statement from <code class="inline">{sql_filename}</code>, executed live against <code class="inline">{database}</code> &mdash; SQL and real output, side by side.</p>
+
+<div class="callout">
+  <div class="ti">Generated page</div>
+  <p>This page is generated from <code class="inline">{sql_filename}</code> by running it statement-by-statement
+  against a local MySQL server and capturing the real output &mdash; it is not hand-written. If the walkthrough
+  file changes, regenerate this page rather than editing it directly.</p>
+</div>
+
+{body}
+
+<footer>Day {day:02d} &middot; {title} &middot; walkthrough &middot; self-paced</footer>
+</div>
+</body></html>
+"""
+
+
+def render_page(day, title, database, sql_filename, events):
+    body_parts = []
+    for ev in events:
+        if isinstance(ev, SectionHeader):
+            body_parts.append(f'<h2 class="section"><span class="num">{ev.number}</span>{html.escape(ev.title)}</h2>')
+        else:
+            body_parts.append(f'<p class="explain">{html.escape(ev.explanation)}</p>')
+            code_text = "\n\n".join(s + ";" for s in ev.statements)
+            body_parts.append(
+                '<div class="code-block"><div class="code-header">'
+                '<span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>'
+                f'<span class="fname">{html.escape(sql_filename)}</span></div>'
+                f'<div class="code-body">{highlight_sql(code_text)}</div></div>'
+            )
+            for result in ev.rendered_results:
+                body_parts.append(render_result_html(result))
+    return PAGE_TEMPLATE.format(
+        day=day, title=html.escape(title), database=html.escape(database),
+        sql_filename=html.escape(sql_filename), body="\n".join(body_parts),
+    )
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("sql_file")
+    parser.add_argument("--day", type=int, required=True)
+    parser.add_argument("--title", required=True)
+    parser.add_argument("--database", required=True)
+    parser.add_argument("--out", required=True)
+    args = parser.parse_args()
+
+    load_dotenv()
+    text = open(args.sql_file, encoding="utf-8").read()
+    events = parse_sql_file(text)
+
+    conn = mysql.connector.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "3306")),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD"),
+        database=args.database,
+        use_pure=True,
+    )
+    cursor = conn.cursor()
+
+    for ev in events:
+        if isinstance(ev, StatementGroup):
+            ev.rendered_results = []
+            for stmt in ev.statements:
+                try:
+                    result = run_statement(cursor, stmt)
+                except mysql.connector.Error as e:
+                    result = {"type": "status", "rowcount": None}
+                    print(f"WARNING: statement failed: {stmt[:80]!r} -> {e}", file=sys.stderr)
+                ev.rendered_results.append(result)
+
+    cursor.close()
+    conn.close()
+
+    html_out = render_page(args.day, args.title, args.database, os.path.basename(args.sql_file), events)
+    with open(args.out, "w", encoding="utf-8") as f:
+        f.write(html_out)
+    print(f"wrote {args.out}")
+
+
+if __name__ == "__main__":
+    main()

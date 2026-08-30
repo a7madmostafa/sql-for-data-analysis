@@ -89,8 +89,8 @@ ORDER BY smallest_order;
 -- SECTION 4 — JOIN + HAVING
 -- ======================================
 
--- HAVING filters on the GROUPED result — WHERE can't do this, since COUNT/SUM don't
--- exist yet at the point WHERE is evaluated.
+-- HAVING was introduced in Day 02 (filtering aggregates on a single table) —
+-- nothing new here syntactically, just applied to a result that now spans a JOIN.
 
 -- Which sales reps manage more than 5 accounts — are any of them overloaded?
 SELECT s.id, s.name, COUNT(*) AS num_accounts

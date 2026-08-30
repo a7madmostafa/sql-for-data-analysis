@@ -274,8 +274,9 @@ four tables together is just repeating the pattern from Section 2.</p>
 </div>
 
 <h2 class="section"><span class="num">6</span>JOIN + HAVING</h2>
-<p><code class="inline">WHERE</code> filters rows before grouping; <code class="inline">HAVING</code>
-filters groups after aggregation — the same rule from Day 02, now applied across joined tables.</p>
+<p><code class="inline">HAVING</code> was introduced back in Day 02 for filtering aggregates on a
+single table. Nothing about it changes here — the JOIN just means the group being filtered can now
+span multiple tables.</p>
 <p><strong>Business question:</strong> which sales reps manage more than 5 accounts — are any of them overloaded?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>

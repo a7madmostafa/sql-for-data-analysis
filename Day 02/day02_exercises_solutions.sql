@@ -361,34 +361,68 @@ GROUP BY account_id, channel;
 
 
 -- ======================================
--- SECTION 13 — DATE Functions
+-- SECTION 13 — HAVING
 -- ======================================
 
 -- 13.1
+SELECT sales_rep_id, COUNT(*) AS num_accounts
+FROM accounts
+GROUP BY sales_rep_id
+HAVING COUNT(*) >= 10
+ORDER BY num_accounts DESC;
+
+-- 13.2
+SELECT account_id, COUNT(*) AS num_orders
+FROM orders
+GROUP BY account_id
+HAVING COUNT(*) > 60
+ORDER BY num_orders DESC;
+
+-- 13.3
+SELECT account_id, SUM(total_amt_usd) AS total_spent
+FROM orders
+GROUP BY account_id
+HAVING SUM(total_amt_usd) > 100000
+ORDER BY total_spent DESC;
+
+-- 13.4
+SELECT account_id, SUM(total_amt_usd) AS total_spent_2015
+FROM orders
+WHERE occurred_at LIKE '2015%'
+GROUP BY account_id
+HAVING SUM(total_amt_usd) > 20000
+ORDER BY total_spent_2015 DESC;
+
+
+-- ======================================
+-- SECTION 14 — DATE Functions
+-- ======================================
+
+-- 14.1
 SELECT DATE(occurred_at) AS order_date, COUNT(*) AS num_orders
 FROM orders
 GROUP BY order_date
 ORDER BY num_orders DESC
 LIMIT 5;
 
--- 13.2
+-- 14.2
 SELECT MIN(YEAR(occurred_at)) AS earliest_year,
        MAX(YEAR(occurred_at)) AS latest_year
 FROM orders;
 
--- 13.3
+-- 14.3
 SELECT YEAR(occurred_at) AS ord_year, SUM(total_amt_usd) AS total_revenue
 FROM orders
 GROUP BY ord_year
 ORDER BY ord_year ASC;
 
--- 13.4
+-- 14.4
 SELECT MONTH(occurred_at) AS ord_month, SUM(total_amt_usd) AS total_revenue
 FROM orders
 GROUP BY ord_month
 ORDER BY total_revenue DESC;
 
--- 13.5
+-- 14.5
 SELECT DATE_FORMAT(o.occurred_at, '%Y-%m') AS ord_month,
        SUM(o.standard_amt_usd) AS standard_spend
 FROM orders o
@@ -399,7 +433,7 @@ GROUP BY ord_month
 ORDER BY standard_spend DESC
 LIMIT 1;
 
--- 13.6
+-- 14.6
 SELECT id,
        DATE(occurred_at) AS order_date,
        DATE_ADD(DATE(occurred_at), INTERVAL 7 DAY) AS expected_delivery

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 01 Walkthrough &mdash; SQL Foundations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
+.page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
+.crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:38px;line-height:1.15;color:var(--ink);margin:0 0 12px;font-weight:800}
+.subtitle{font-size:17px;color:var(--gray);margin:0 0 30px}
+h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:24px;color:var(--ink);margin:48px 0 8px;padding-bottom:9px;border-bottom:2px solid var(--ink);font-weight:700}
+h2.section .num{color:var(--blue);margin-right:10px}
+p{margin:0 0 12px}
+p.explain{font-size:15.5px;color:var(--gray);margin:22px 0 8px}
+strong{color:var(--ink);font-weight:700}
+code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
+
+.code-block{margin:8px 0 0;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}
+.code-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#161616}
+.code-header .dot{width:10px;height:10px;border-radius:50%}
+.code-header .dot.r{background:#FF5F56}.code-header .dot.y{background:#FFBD2E}.code-header .dot.g{background:#27C93F}
+.code-header .fname{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}
+.code-body{background:var(--code-bg);color:var(--code-default);padding:14px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.7;overflow-x:auto;white-space:pre}
+.code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
+.code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
+
+.result-wrap{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:14px 18px 10px;margin-bottom:26px;overflow-x:auto}
+table.result-table{width:auto;min-width:100%;border-collapse:collapse;margin:0;background:white;font-size:13.5px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.result-table th,table.result-table td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;white-space:nowrap}
+table.result-table thead th{background:var(--panel);color:var(--ink);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+table.result-table tbody tr:last-child td{border-bottom:none}
+.row-note{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray-muted);margin:8px 0 0}
+.row-note.status{color:var(--insight-ti)}
+
+.callout{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid var(--blue);background:var(--panel)}
+.callout .ti{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px;color:var(--blue-dark)}
+.callout p{font-size:14.5px;margin:0}
+
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
+@media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:28px}}
+</style>
+</head>
+<body><div class="page">
+
+<div class="crumb">Day 01 of 9 &middot; Walkthrough</div>
+<h1 class="title">SQL Foundations</h1>
+<p class="subtitle">Every statement from <code class="inline">day01_sql_foundations.sql</code>, executed live against <code class="inline">world</code> &mdash; SQL and real output, side by side.</p>
+
+<div class="callout">
+  <div class="ti">Generated page</div>
+  <p>This page is generated from <code class="inline">day01_sql_foundations.sql</code> by running it statement-by-statement
+  against a local MySQL server and capturing the real output &mdash; it is not hand-written. If the walkthrough
+  file changes, regenerate this page rather than editing it directly.</p>
+</div>
+
+<h2 class="section"><span class="num">1</span>EXPLORING THE SERVER</h2>
+<p class="explain">You&#x27;ve just been given access to the server — before writing any real query, see what data is even available (SCHEMAS and DATABASES are interchangeable in MySQL)</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SHOW</span> <span class="kw">DATABASES</span>;
+
+<span class="kw">SHOW</span> <span class="kw">SCHEMAS</span>;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Database</th></tr></thead><tbody><tr><td>information_schema</td></tr><tr><td>mysql</td></tr><tr><td>parch_and_posey</td></tr><tr><td>performance_schema</td></tr><tr><td>sys</td></tr><tr><td>world</td></tr></tbody></table><p class="row-note">6 rows</p></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Database</th></tr></thead><tbody><tr><td>information_schema</td></tr><tr><td>mysql</td></tr><tr><td>parch_and_posey</td></tr><tr><td>performance_schema</td></tr><tr><td>sys</td></tr><tr><td>world</td></tr></tbody></table><p class="row-note">6 rows</p></div>
+<p class="explain">Point this session at the world database so every query below runs against it</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">USE</span> world;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
+<p class="explain">See what tables exist inside world before querying any of them</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SHOW</span> <span class="kw">TABLES</span>;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Tables_in_world</th></tr></thead><tbody><tr><td>city</td></tr><tr><td>country</td></tr><tr><td>countrylanguage</td></tr></tbody></table><p class="row-note">3 rows</p></div>
+<p class="explain">Check the country table&#x27;s actual column names and types before you query it</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">DESCRIBE</span> country;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr></thead><tbody><tr><td>Code</td><td>char(3)</td><td>NO</td><td>PRI</td><td></td><td></td></tr><tr><td>Name</td><td>char(52)</td><td>NO</td><td></td><td></td><td></td></tr><tr><td>Continent</td><td>enum(&#x27;Asia&#x27;,&#x27;Europe&#x27;,&#x27;North America&#x27;,&#x27;Africa&#x27;,&#x27;Oceania&#x27;,&#x27;Antarctica&#x27;,&#x27;South America&#x27;)</td><td>NO</td><td></td><td>Asia</td><td></td></tr><tr><td>Region</td><td>char(26)</td><td>NO</td><td></td><td></td><td></td></tr><tr><td>SurfaceArea</td><td>decimal(10,2)</td><td>NO</td><td></td><td>0.00</td><td></td></tr><tr><td>IndepYear</td><td>smallint</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>Population</td><td>int</td><td>NO</td><td></td><td>0</td><td></td></tr><tr><td>LifeExpectancy</td><td>decimal(3,1)</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>GNP</td><td>decimal(10,2)</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>GNPOld</td><td>decimal(10,2)</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>LocalName</td><td>char(45)</td><td>NO</td><td></td><td></td><td></td></tr><tr><td>GovernmentForm</td><td>char(45)</td><td>NO</td><td></td><td></td><td></td></tr><tr><td>HeadOfState</td><td>char(60)</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>Capital</td><td>int</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>Code2</td><td>char(2)</td><td>NO</td><td></td><td></td><td></td></tr></tbody></table><p class="row-note">15 rows</p></div>
+<h2 class="section"><span class="num">2</span>SELECT</h2>
+<p class="explain">Leadership wants a first look at every country on file, every column, every row</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> *
+<span class="kw">FROM</span> country;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Code</th><th>Name</th><th>Continent</th><th>Region</th><th>SurfaceArea</th><th>IndepYear</th><th>Population</th><th>LifeExpectancy</th><th>GNP</th><th>GNPOld</th><th>LocalName</th><th>GovernmentForm</th><th>HeadOfState</th><th>Capital</th><th>Code2</th></tr></thead><tbody><tr><td>ABW</td><td>Aruba</td><td>North America</td><td>Caribbean</td><td>193.00</td><td></td><td>103000</td><td>78.4</td><td>828.00</td><td>793.00</td><td>Aruba</td><td>Nonmetropolitan Territory of The Netherlands</td><td>Beatrix</td><td>129</td><td>AW</td></tr><tr><td>AFG</td><td>Afghanistan</td><td>Asia</td><td>Southern and Central Asia</td><td>652090.00</td><td>1919</td><td>22720000</td><td>45.9</td><td>5976.00</td><td></td><td>Afganistan/Afqanestan</td><td>Islamic Emirate</td><td>Mohammad Omar</td><td>1</td><td>AF</td></tr><tr><td>AGO</td><td>Angola</td><td>Africa</td><td>Central Africa</td><td>1246700.00</td><td>1975</td><td>12878000</td><td>38.3</td><td>6648.00</td><td>7984.00</td><td>Angola</td><td>Republic</td><td>José Eduardo dos Santos</td><td>56</td><td>AO</td></tr><tr><td>AIA</td><td>Anguilla</td><td>North America</td><td>Caribbean</td><td>96.00</td><td></td><td>8000</td><td>76.1</td><td>63.20</td><td></td><td>Anguilla</td><td>Dependent Territory of the UK</td><td>Elisabeth II</td><td>62</td><td>AI</td></tr><tr><td>ALB</td><td>Albania</td><td>Europe</td><td>Southern Europe</td><td>28748.00</td><td>1912</td><td>3401200</td><td>71.6</td><td>3205.00</td><td>2500.00</td><td>Shqipëria</td><td>Republic</td><td>Rexhep Mejdani</td><td>34</td><td>AL</td></tr><tr><td>AND</td><td>Andorra</td><td>Europe</td><td>Southern Europe</td><td>468.00</td><td>1278</td><td>78000</td><td>83.5</td><td>1630.00</td><td></td><td>Andorra</td><td>Parliamentary Coprincipality</td><td></td><td>55</td><td>AD</td></tr><tr><td>ANT</td><td>Netherlands Antilles</td><td>North America</td><td>Caribbean</td><td>800.00</td><td></td><td>217000</td><td>74.7</td><td>1941.00</td><td></td><td>Nederlandse Antillen</td><td>Nonmetropolitan Territory of The Netherlands</td><td>Beatrix</td><td>33</td><td>AN</td></tr><tr><td>ARE</td><td>United Arab Emirates</td><td>Asia</td><td>Middle East</td><td>83600.00</td><td>1971</td><td>2441000</td><td>74.1</td><td>37966.00</td><td>36846.00</td><td>Al-Imarat al-´Arabiya al-Muttahida</td><td>Emirate Federation</td><td>Zayid bin Sultan al-Nahayan</td><td>65</td><td>AE</td></tr><tr><td>ARG</td><td>Argentina</td><td>South America</td><td>South America</td><td>2780400.00</td><td>1816</td><td>37032000</td><td>75.1</td><td>340238.00</td><td>323310.00</td><td>Argentina</td><td>Federal Republic</td><td>Fernando de la Rúa</td><td>69</td><td>AR</td></tr><tr><td>ARM</td><td>Armenia</td><td>Asia</td><td>Middle East</td><td>29800.00</td><td>1991</td><td>3520000</td><td>66.4</td><td>1813.00</td><td>1627.00</td><td>Hajastan</td><td>Republic</td><td>Robert Kotšarjan</td><td>126</td><td>AM</td></tr><tr><td>ASM</td><td>American Samoa</td><td>Oceania</td><td>Polynesia</td><td>199.00</td><td></td><td>68000</td><td>75.1</td><td>334.00</td><td></td><td>Amerika Samoa</td><td>US Territory</td><td>George W. Bush</td><td>54</td><td>AS</td></tr><tr><td>ATA</td><td>Antarctica</td><td>Antarctica</td><td>Antarctica</td><td>13120000.00</td><td></td><td>0</td><td></td><td>0.00</td><td></td><td>–</td><td>Co-administrated</td><td></td><td></td><td>AQ</td></tr><tr><td>ATF</td><td>French Southern territories</td><td>Antarctica</td><td>Antarctica</td><td>7780.00</td><td></td><td>0</td><td></td><td>0.00</td><td></td><td>Terres australes françaises</td><td>Nonmetropolitan Territory of France</td><td>Jacques Chirac</td><td></td><td>TF</td></tr><tr><td>ATG</td><td>Antigua and Barbuda</td><td>North America</td><td>Caribbean</td><td>442.00</td><td>1981</td><td>68000</td><td>70.5</td><td>612.00</td><td>584.00</td><td>Antigua and Barbuda</td><td>Constitutional Monarchy</td><td>Elisabeth II</td><td>63</td><td>AG</td></tr><tr><td>AUS</td><td>Australia</td><td>Oceania</td><td>Australia and New Zealand</td><td>7741220.00</td><td>1901</td><td>18886000</td><td>79.8</td><td>351182.00</td><td>392911.00</td><td>Australia</td><td>Constitutional Monarchy, Federation</td><td>Elisabeth II</td><td>135</td><td>AU</td></tr></tbody></table><p class="row-note">showing 15 of 239 rows</p></div>
+<p class="explain">They only care about region, continent, and name for now — trim the columns down</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> Region, Continent, Name
+<span class="kw">FROM</span> country;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Region</th><th>Continent</th><th>Name</th></tr></thead><tbody><tr><td>Caribbean</td><td>North America</td><td>Aruba</td></tr><tr><td>Southern and Central Asia</td><td>Asia</td><td>Afghanistan</td></tr><tr><td>Central Africa</td><td>Africa</td><td>Angola</td></tr><tr><td>Caribbean</td><td>North America</td><td>Anguilla</td></tr><tr><td>Southern Europe</td><td>Europe</td><td>Albania</td></tr><tr><td>Southern Europe</td><td>Europe</td><td>Andorra</td></tr><tr><td>Caribbean</td><td>North America</td><td>Netherlands Antilles</td></tr><tr><td>Middle East</td><td>Asia</td><td>United Arab Emirates</td></tr><tr><td>South America</td><td>South America</td><td>Argentina</td></tr><tr><td>Middle East</td><td>Asia</td><td>Armenia</td></tr><tr><td>Polynesia</td><td>Oceania</td><td>American Samoa</td></tr><tr><td>Antarctica</td><td>Antarctica</td><td>Antarctica</td></tr><tr><td>Antarctica</td><td>Antarctica</td><td>French Southern territories</td></tr><tr><td>Caribbean</td><td>North America</td><td>Antigua and Barbuda</td></tr><tr><td>Australia and New Zealand</td><td>Oceania</td><td>Australia</td></tr></tbody></table><p class="row-note">showing 15 of 239 rows</p></div>
+<h2 class="section"><span class="num">3</span>LIMIT &amp; OFFSET</h2>
+<p class="explain">That&#x27;s too much to scroll through by eye — just show a 5-row sample</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> *
+<span class="kw">FROM</span> country
+<span class="kw">LIMIT</span> 5;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Code</th><th>Name</th><th>Continent</th><th>Region</th><th>SurfaceArea</th><th>IndepYear</th><th>Population</th><th>LifeExpectancy</th><th>GNP</th><th>GNPOld</th><th>LocalName</th><th>GovernmentForm</th><th>HeadOfState</th><th>Capital</th><th>Code2</th></tr></thead><tbody><tr><td>ABW</td><td>Aruba</td><td>North America</td><td>Caribbean</td><td>193.00</td><td></td><td>103000</td><td>78.4</td><td>828.00</td><td>793.00</td><td>Aruba</td><td>Nonmetropolitan Territory of The Netherlands</td><td>Beatrix</td><td>129</td><td>AW</td></tr><tr><td>AFG</td><td>Afghanistan</td><td>Asia</td><td>Southern and Central Asia</td><td>652090.00</td><td>1919</td><td>22720000</td><td>45.9</td><td>5976.00</td><td></td><td>Afganistan/Afqanestan</td><td>Islamic Emirate</td><td>Mohammad Omar</td><td>1</td><td>AF</td></tr><tr><td>AGO</td><td>Angola</td><td>Africa</td><td>Central Africa</td><td>1246700.00</td><td>1975</td><td>12878000</td><td>38.3</td><td>6648.00</td><td>7984.00</td><td>Angola</td><td>Republic</td><td>José Eduardo dos Santos</td><td>56</td><td>AO</td></tr><tr><td>AIA</td><td>Anguilla</td><td>North America</td><td>Caribbean</td><td>96.00</td><td></td><td>8000</td><td>76.1</td><td>63.20</td><td></td><td>Anguilla</td><td>Dependent Territory of the UK</td><td>Elisabeth II</td><td>62</td><td>AI</td></tr><tr><td>ALB</td><td>Albania</td><td>Europe</td><td>Southern Europe</td><td>28748.00</td><td>1912</td><td>3401200</td><td>71.6</td><td>3205.00</td><td>2500.00</td><td>Shqipëria</td><td>Republic</td><td>Rexhep Mejdani</td><td>34</td><td>AL</td></tr></tbody></table><p class="row-note">5 rows</p></div>
+<p class="explain">Same sample, but only the columns leadership actually asked about</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> Region, Continent
+<span class="kw">FROM</span> country
+<span class="kw">LIMIT</span> 5;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Region</th><th>Continent</th></tr></thead><tbody><tr><td>Caribbean</td><td>North America</td></tr><tr><td>Southern and Central Asia</td><td>Asia</td></tr><tr><td>Central Africa</td><td>Africa</td></tr><tr><td>Caribbean</td><td>North America</td></tr><tr><td>Southern Europe</td><td>Europe</td></tr></tbody></table><p class="row-note">5 rows</p></div>
+<p class="explain">MySQL shortcut: LIMIT offset, count — show &quot;page 2&quot; of 3-country pages: skip the first 2, return the next 3</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> *
+<span class="kw">FROM</span> country
+<span class="kw">LIMIT</span> 2,3;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Code</th><th>Name</th><th>Continent</th><th>Region</th><th>SurfaceArea</th><th>IndepYear</th><th>Population</th><th>LifeExpectancy</th><th>GNP</th><th>GNPOld</th><th>LocalName</th><th>GovernmentForm</th><th>HeadOfState</th><th>Capital</th><th>Code2</th></tr></thead><tbody><tr><td>AGO</td><td>Angola</td><td>Africa</td><td>Central Africa</td><td>1246700.00</td><td>1975</td><td>12878000</td><td>38.3</td><td>6648.00</td><td>7984.00</td><td>Angola</td><td>Republic</td><td>José Eduardo dos Santos</td><td>56</td><td>AO</td></tr><tr><td>AIA</td><td>Anguilla</td><td>North America</td><td>Caribbean</td><td>96.00</td><td></td><td>8000</td><td>76.1</td><td>63.20</td><td></td><td>Anguilla</td><td>Dependent Territory of the UK</td><td>Elisabeth II</td><td>62</td><td>AI</td></tr><tr><td>ALB</td><td>Albania</td><td>Europe</td><td>Southern Europe</td><td>28748.00</td><td>1912</td><td>3401200</td><td>71.6</td><td>3205.00</td><td>2500.00</td><td>Shqipëria</td><td>Republic</td><td>Rexhep Mejdani</td><td>34</td><td>AL</td></tr></tbody></table><p class="row-note">3 rows</p></div>
+<p class="explain">Same &quot;page 2&quot; request, written the standard SQL way instead of the MySQL shortcut</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> *
+<span class="kw">FROM</span> country
+<span class="kw">LIMIT</span> 3 <span class="kw">OFFSET</span> 2;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Code</th><th>Name</th><th>Continent</th><th>Region</th><th>SurfaceArea</th><th>IndepYear</th><th>Population</th><th>LifeExpectancy</th><th>GNP</th><th>GNPOld</th><th>LocalName</th><th>GovernmentForm</th><th>HeadOfState</th><th>Capital</th><th>Code2</th></tr></thead><tbody><tr><td>AGO</td><td>Angola</td><td>Africa</td><td>Central Africa</td><td>1246700.00</td><td>1975</td><td>12878000</td><td>38.3</td><td>6648.00</td><td>7984.00</td><td>Angola</td><td>Republic</td><td>José Eduardo dos Santos</td><td>56</td><td>AO</td></tr><tr><td>AIA</td><td>Anguilla</td><td>North America</td><td>Caribbean</td><td>96.00</td><td></td><td>8000</td><td>76.1</td><td>63.20</td><td></td><td>Anguilla</td><td>Dependent Territory of the UK</td><td>Elisabeth II</td><td>62</td><td>AI</td></tr><tr><td>ALB</td><td>Albania</td><td>Europe</td><td>Southern Europe</td><td>28748.00</td><td>1912</td><td>3401200</td><td>71.6</td><td>3205.00</td><td>2500.00</td><td>Shqipëria</td><td>Republic</td><td>Rexhep Mejdani</td><td>34</td><td>AL</td></tr></tbody></table><p class="row-note">3 rows</p></div>
+<h2 class="section"><span class="num">4</span>DISTINCT</h2>
+<p class="explain">Before segmenting anything by region, find out what regions actually exist in the data</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="kw">DISTINCT</span> Region
+<span class="kw">FROM</span> country;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Region</th></tr></thead><tbody><tr><td>Caribbean</td></tr><tr><td>Southern and Central Asia</td></tr><tr><td>Central Africa</td></tr><tr><td>Southern Europe</td></tr><tr><td>Middle East</td></tr><tr><td>South America</td></tr><tr><td>Polynesia</td></tr><tr><td>Antarctica</td></tr><tr><td>Australia and New Zealand</td></tr><tr><td>Western Europe</td></tr><tr><td>Eastern Africa</td></tr><tr><td>Western Africa</td></tr><tr><td>Eastern Europe</td></tr><tr><td>Central America</td></tr><tr><td>North America</td></tr></tbody></table><p class="row-note">showing 15 of 25 rows</p></div>
+<h2 class="section"><span class="num">5</span>AGGREGATION (COUNT)</h2>
+<p class="explain">How many distinct regions does the world dataset cover?</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> Region)
+<span class="kw">FROM</span> country;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>COUNT(DISTINCT Region)</th></tr></thead><tbody><tr><td>25</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<p class="explain">Same question, with a result column name a report reader would actually understand</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> Region) <span class="kw">AS</span> Regions_CNT
+<span class="kw">FROM</span> country;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Regions_CNT</th></tr></thead><tbody><tr><td>25</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<p class="explain">AS is optional — the alias can follow the expression directly</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> Region) Regions_CNT
+<span class="kw">FROM</span> country;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Regions_CNT</th></tr></thead><tbody><tr><td>25</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<p class="explain">How many countries are in the dataset in total?</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">COUNT</span>(*) <span class="kw">AS</span> CNTRY_CNT
+<span class="kw">FROM</span> country;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>CNTRY_CNT</th></tr></thead><tbody><tr><td>239</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<p class="explain">How many countries actually have a country code on file? (COUNT on a column ignores NULLs)</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">COUNT</span>(Code) no_of_countries
+<span class="kw">FROM</span> country;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>no_of_countries</th></tr></thead><tbody><tr><td>239</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<h2 class="section"><span class="num">6</span>ORDER BY</h2>
+<p class="explain">Give the ops team a quick alphabetical reference: the first 5 countries by name</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> Name, Population
+<span class="kw">FROM</span> country
+<span class="kw">ORDER BY</span> Name <span class="kw">ASC</span>
+<span class="kw">LIMIT</span> 5;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Name</th><th>Population</th></tr></thead><tbody><tr><td>Afghanistan</td><td>22720000</td></tr><tr><td>Albania</td><td>3401200</td></tr><tr><td>Algeria</td><td>31471000</td></tr><tr><td>American Samoa</td><td>68000</td></tr><tr><td>Andorra</td><td>78000</td></tr></tbody></table><p class="row-note">5 rows</p></div>
+<p class="explain">Which 5 countries have the largest population — the obvious first candidates for a market-entry priority list?</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div><div class="code-body"><span class="kw">SELECT</span> Name, Population
+<span class="kw">FROM</span> country
+<span class="kw">ORDER BY</span> Population <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 5;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>Name</th><th>Population</th></tr></thead><tbody><tr><td>China</td><td>1277558000</td></tr><tr><td>India</td><td>1013662000</td></tr><tr><td>United States</td><td>278357000</td></tr><tr><td>Indonesia</td><td>212107000</td></tr><tr><td>Brazil</td><td>170115000</td></tr></tbody></table><p class="row-note">5 rows</p></div>
+
+<footer>Day 01 &middot; SQL Foundations &middot; walkthrough &middot; self-paced</footer>
+</div>
+</body></html>

@@ -396,7 +396,49 @@ ORDER BY account_id;
 
 
 -- ======================================
--- SECTION 13 — DATE Functions
+-- SECTION 13 — HAVING (filtering grouped results)
+-- ======================================
+
+-- WHERE filters rows BEFORE grouping; HAVING filters groups AFTER
+-- aggregation runs — COUNT(*)/SUM(...) don't exist yet at the point WHERE
+-- is evaluated, so only HAVING can filter on them.
+
+-- Marketing only wants channels that actually moved the needle — more than 500 web events
+SELECT channel, COUNT(*) AS Cnt
+FROM web_events
+GROUP BY channel
+HAVING COUNT(*) > 500
+ORDER BY Cnt DESC;
+
+-- WHERE COUNT(*) > 500 here would be a syntax error —
+-- COUNT(*) doesn't exist yet at the point WHERE runs
+
+-- Which accounts have placed more than 10 orders — repeat customers worth flagging for a loyalty program?
+SELECT account_id, COUNT(*) AS Cnt
+FROM orders
+GROUP BY account_id
+HAVING COUNT(*) > 10
+ORDER BY Cnt DESC;
+
+-- Which accounts have spent less than $500 total — candidates for a re-engagement email?
+SELECT account_id, SUM(total_amt_usd) AS TotalSpent
+FROM orders
+GROUP BY account_id
+HAVING SUM(total_amt_usd) < 500
+ORDER BY TotalSpent;
+
+-- HAVING stacks with WHERE: restrict to 2016 orders first, then keep only
+-- the accounts whose 2016 total topped $50,000
+SELECT account_id, SUM(total_amt_usd) AS TotalSpent2016
+FROM orders
+WHERE occurred_at LIKE "2016%"
+GROUP BY account_id
+HAVING SUM(total_amt_usd) > 50000
+ORDER BY TotalSpent2016 DESC;
+
+
+-- ======================================
+-- SECTION 14 — DATE Functions
 -- for REF : https://www.w3schools.com/sql/func_mysql_date.asp
 -- ======================================
 

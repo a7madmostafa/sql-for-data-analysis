@@ -267,28 +267,45 @@ USE parch_and_posey;
 
 
 -- ======================================
--- SECTION 13 — DATE Functions
+-- SECTION 13 — HAVING
 -- ======================================
 
--- 13.1 Show the 5 busiest single calendar dates in company history, by
+-- 13.1 Which sales reps currently manage 10 or more accounts?
+
+-- 13.2 Which accounts have placed more than 60 orders — the company's
+--      very top repeat buyers?
+
+-- 13.3 Which accounts have spent more than $100,000 total, across every
+--      order they've ever placed?
+
+-- 13.4 Looking only at orders placed in 2015, which accounts spent more
+--      than $20,000 that year? (Combine WHERE and HAVING in one query.)
+
+
+
+-- ======================================
+-- SECTION 14 — DATE Functions
+-- ======================================
+
+-- 14.1 Show the 5 busiest single calendar dates in company history, by
 --      number of orders placed.
 
--- 13.2 What's the earliest year and the latest year the company has order
+-- 14.2 What's the earliest year and the latest year the company has order
 --      data for?
 
--- 13.3 Finance wants total revenue by year, ordered chronologically, to
+-- 14.3 Finance wants total revenue by year, ordered chronologically, to
 --      see the company's growth trend.
 
--- 13.4 Leadership suspects Q4 (Oct–Dec) is the strongest stretch every
+-- 14.4 Leadership suspects Q4 (Oct–Dec) is the strongest stretch every
 --      year. Test that more generally: total revenue by month across all
 --      years, ranked highest first.
 
--- 13.5 Walmart's team wants to know: in which month and year did they
+-- 14.5 Walmart's team wants to know: in which month and year did they
 --      spend the most on STANDARD paper specifically? (You'll need a JOIN
 --      to get from account name to orders — same pattern used in the
 --      walkthrough for their gloss-paper spend.)
 
--- 13.6 Customer service promises delivery within 7 days of the order date.
+-- 14.6 Customer service promises delivery within 7 days of the order date.
 --      For the 10 most recent orders, show the order id, order date, and
 --      expected delivery date.
 

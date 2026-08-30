@@ -100,7 +100,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
 
 <div class="crumb">Day 02 of 9 · Filtering &amp; Aggregation</div>
 <h1 class="title">Filtering &amp; Aggregation</h1>
-<p class="subtitle">WHERE · AND/OR · BETWEEN · IN · NULL · LIKE · GROUP BY · DATE functions — on a new dataset, <code class="inline">parch_and_posey</code>.</p>
+<p class="subtitle">WHERE · AND/OR · BETWEEN · IN · NULL · LIKE · GROUP BY · HAVING · DATE functions — on a new dataset, <code class="inline">parch_and_posey</code>.</p>
 
 <div class="objectives">
   <h2>What you'll be able to do after this lesson</h2>
@@ -454,7 +454,31 @@ per group:</p>
   <div class="annotation"><b>Multi-column groups</b><p><code class="inline">GROUP BY account_id, channel</code> gives one row per <em>combination</em> — this account, that channel.</p></div>
 </div>
 
-<h2 class="section"><span class="num">10</span>DATE functions</h2>
+<h2 class="section"><span class="num">10</span>HAVING — filtering grouped results</h2>
+<p><code class="inline">WHERE</code> filters rows <em>before</em> grouping; <code class="inline">HAVING</code>
+filters groups <em>after</em> aggregation runs. That distinction matters because an aggregate like
+<code class="inline">COUNT(*)</code> or <code class="inline">SUM(...)</code> doesn't exist yet at the
+point <code class="inline">WHERE</code> is evaluated — only <code class="inline">HAVING</code> can
+filter on it.</p>
+<p><strong>Business question:</strong> which marketing channels actually moved the needle — more than 500 web events?</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> Cnt
+<span class="kw">FROM</span> web_events
+<span class="kw">GROUP BY</span> channel
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; 500
+<span class="kw">ORDER BY</span> Cnt <span class="kw">DESC</span>;
+
+<span class="com">-- WHERE COUNT(*) > 500 here would be a syntax error —</span>
+<span class="com">-- COUNT(*) doesn't exist yet at the point WHERE runs</span></div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Accounts with more than 10 orders</b><p><code class="inline">GROUP BY account_id HAVING COUNT(*) &gt; 10</code> — same shape, a different single table.</p></div>
+  <div class="annotation"><b>Accounts that spent under $500 total</b><p><code class="inline">HAVING SUM(total_amt_usd) &lt; 500</code> — <code class="inline">HAVING</code> works with any aggregate, not just <code class="inline">COUNT</code>.</p></div>
+  <div class="annotation"><b>Stacks with WHERE</b><p>Filter rows first with <code class="inline">WHERE</code>, then filter the resulting groups with <code class="inline">HAVING</code> — the two run at different stages, so a query can use both at once.</p></div>
+</div>
+
+<h2 class="section"><span class="num">11</span>DATE functions</h2>
 <p>MySQL pulls pieces out of a <code class="inline">TIMESTAMP</code> with dedicated functions:
 <code class="inline">YEAR()</code>, <code class="inline">MONTH()</code>,
 <code class="inline">DAY()</code>, <code class="inline">HOUR()</code>,
