@@ -210,6 +210,45 @@ def render_result_html(result):
     return f'<div class="result-wrap"><p class="row-note status">&#10003; {note}</p></div>'
 
 
+DAYS = [
+    ("01", "day01_reading.html", "SQL Foundations"),
+    ("02", "day02_reading.html", "Filtering &amp; Aggregation"),
+    ("03", "day03_reading.html", "JOINs, CASE &amp; Strings"),
+    ("04", "day04_reading.html", "Subqueries, CTEs &amp; Views"),
+    ("05", "day05_reading.html", "Window Functions &amp; Procedures"),
+    ("06", "day06_reading.html", "Python Connectivity"),
+]
+
+SIDEBAR_CSS = """.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:#F3F4F6;border-right:1px solid #E5E7EB;padding:22px 0;overflow-y:auto;z-index:100}
+.site-sidebar .brand{font-family:'Bricolage Grotesque',Georgia,serif;font-weight:800;font-size:14.5px;color:#141414;padding:0 20px 16px;border-bottom:1px solid #E5E7EB;margin-bottom:8px;line-height:1.3}
+.site-sidebar a{display:block;padding:9px 20px;font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;font-size:14px;color:#5B6472;text-decoration:none;border-left:3px solid transparent}
+.site-sidebar a:hover{background:#fff;color:#2F63E8}
+.site-sidebar a.active{background:#fff;color:#2F63E8;font-weight:700;border-left-color:#2F63E8}
+.site-sidebar .daynum{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9CA3AF;display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+.site-sidebar a.active .daynum{color:#2F63E8}
+body{margin-left:220px}
+@media(max-width:900px){
+.site-sidebar{position:static;width:auto;height:auto;border-right:none;border-bottom:1px solid #E5E7EB;display:flex;overflow-x:auto;padding:8px 0;white-space:nowrap}
+.site-sidebar .brand{display:none}
+.site-sidebar a{display:inline-block;padding:8px 14px;border-left:none;border-bottom:3px solid transparent}
+.site-sidebar a.active{border-left-color:transparent;border-bottom-color:#2F63E8}
+body{margin-left:0}
+}"""
+
+
+def render_sidebar(active_day):
+    parts = [
+        '<nav class="site-sidebar">',
+        '<div class="brand">SQL for Data Analysis</div>',
+        '<a href="../index.html">Home</a>',
+    ]
+    for num, fname, title in DAYS:
+        cls = ' class="active"' if num == active_day else ""
+        parts.append(f'<a href="../Day%20{num}/{fname}"{cls}><span class="daynum">Day {num}</span>{title}</a>')
+    parts.append("</nav>")
+    return "\n".join(parts)
+
+
 PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -231,8 +270,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 body{{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}}
 .page{{max-width:920px;margin:0 auto;padding:56px 48px 90px}}
 .crumb{{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}}
-.home-link{{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray);text-decoration:none;margin-bottom:10px}}
-.home-link:hover{{color:var(--blue)}}
+{sidebar_css}
 h1.title{{font-family:'Bricolage Grotesque',Georgia,serif;font-size:38px;line-height:1.15;color:var(--ink);margin:0 0 12px;font-weight:800}}
 .subtitle{{font-size:17px;color:var(--gray);margin:0 0 30px}}
 h2.section{{font-family:'Bricolage Grotesque',Georgia,serif;font-size:24px;color:var(--ink);margin:48px 0 8px;padding-bottom:9px;border-bottom:2px solid var(--ink);font-weight:700}}
@@ -267,9 +305,10 @@ footer{{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);colo
 @media(max-width:760px){{.page{{padding:32px 22px}}h1.title{{font-size:28px}}}}
 </style>
 </head>
-<body><div class="page">
+<body>
+{sidebar}
+<div class="page">
 
-<a class="home-link" href="../index.html">&larr; Course home</a>
 <div class="crumb">Day {day:02d} of 10 &middot; Walkthrough</div>
 <h1 class="title">{title}</h1>
 <p class="subtitle">Every statement from <code class="inline">{sql_filename}</code>, executed live against <code class="inline">{database}</code> &mdash; SQL and real output, side by side.</p>
@@ -308,6 +347,7 @@ def render_page(day, title, database, sql_filename, events):
     return PAGE_TEMPLATE.format(
         day=day, title=html.escape(title), database=html.escape(database),
         sql_filename=html.escape(sql_filename), body="\n".join(body_parts),
+        sidebar_css=SIDEBAR_CSS, sidebar=render_sidebar(f"{day:02d}"),
     )
 
 

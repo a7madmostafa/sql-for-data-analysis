@@ -13082,18 +13082,38 @@ div#notebook {
     }
     init_mathjax();
     </script>
-<!-- End of mathjax configuration --></head>
+<!-- End of mathjax configuration --><style>
+.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:#F3F4F6;border-right:1px solid #E5E7EB;padding:22px 0;overflow-y:auto;z-index:1000}
+.site-sidebar .brand{font-family:Georgia,serif;font-weight:800;font-size:14.5px;color:#141414;padding:0 20px 16px;border-bottom:1px solid #E5E7EB;margin-bottom:8px;line-height:1.3}
+.site-sidebar a{display:block;padding:9px 20px;font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:#5B6472;text-decoration:none;border-left:3px solid transparent}
+.site-sidebar a:hover{background:#fff;color:#2F63E8}
+.site-sidebar a.active{background:#fff;color:#2F63E8;font-weight:700;border-left-color:#2F63E8}
+.site-sidebar .daynum{font-family:monospace;font-size:10.5px;color:#9CA3AF;display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+.site-sidebar a.active .daynum{color:#2F63E8}
+body{margin-left:220px}
+@media(max-width:900px){
+.site-sidebar{position:static;width:auto;height:auto;border-right:none;border-bottom:1px solid #E5E7EB;display:flex;overflow-x:auto;padding:8px 0;white-space:nowrap}
+.site-sidebar .brand{display:none}
+.site-sidebar a{display:inline-block;padding:8px 14px;border-left:none;border-bottom:3px solid transparent}
+.site-sidebar a.active{border-left-color:transparent;border-bottom-color:#2F63E8}
+body{margin-left:0}
+}
+</style>
+</head>
 <body>
+<nav class="site-sidebar">
+<div class="brand">SQL for Data Analysis</div>
+<a href="../index.html">Home</a>
+<a href="../Day%2001/day01_reading.html"><span class="daynum">Day 01</span>SQL Foundations</a>
+<a href="../Day%2002/day02_reading.html"><span class="daynum">Day 02</span>Filtering &amp; Aggregation</a>
+<a href="../Day%2003/day03_reading.html"><span class="daynum">Day 03</span>JOINs, CASE &amp; Strings</a>
+<a href="../Day%2004/day04_reading.html"><span class="daynum">Day 04</span>Subqueries, CTEs &amp; Views</a>
+<a href="../Day%2005/day05_reading.html"><span class="daynum">Day 05</span>Window Functions &amp; Procedures</a>
+<a href="../Day%2006/day06_reading.html" class="active"><span class="daynum">Day 06</span>Python Connectivity</a>
+</nav>
 <main>
 <div class="border-box-sizing" id="notebook" tabindex="-1">
 <div class="container" id="notebook-container">
-<div class="cell border-box-sizing text_cell rendered" id="cell-id=d11b52ea"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="../index.html">← Course home</a></p>
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing text_cell rendered" id="cell-id=38918bd7"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
