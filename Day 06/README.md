@@ -1,42 +1,51 @@
-# Day 06 — Project: NBA
+# Day 05 — Python Connectivity: MySQL & SQLite
 
-The first of four applied project days. You're helping an editor at a sports-media outlet put
-together an NBA season-preview feature — twenty real questions about draft trends and franchise
-history, answered against a real, 16-table SQLite dataset instead of the familiar
-`parch_and_posey`/`world` databases. No new SQL syntax — everything here is Days 01-04.
+No new SQL today — everything from Days 01–04, now reached from Python. This is the first day
+needing a Python environment, and the first notebooks instead of plain `.sql` files.
 
-This is also the first day that needs no MySQL server and no `.env` file — everything here runs
-against a local SQLite file.
+The MySQL notebook is intentionally short — just enough to prove the Python↔MySQL plumbing works.
+Every remaining project day (06–09) runs on SQLite, not MySQL, so the real depth — a full sweep
+through every Day 01–04 concept, plus safe parameter binding — lives in the SQLite notebook and the
+exercises.
 
 ## What you'll learn
 
-- Read and orient yourself in an unfamiliar 16-table schema before writing a single query.
-- Answer real business questions with filtering, aggregation, and every JOIN shape from Day 03 —
-  including the anti-join pattern — applied to data that wasn't pre-shaped for these exact
-  questions.
-- Bucket dates with SQLite's `STRFTIME()` (by year, decade, month) — the SQLite counterpart to
-  MySQL's `DATE_FORMAT()`.
-- Sanity-check a surprising query result instead of reporting it at face value — twice in this
-  project, the obvious query is quietly wrong.
-- Turn a query result into a quick chart with `pandas.plot()`, reached through jupysql's `%%sql`
-  magic from Day 05.
+- Use the raw cursor pattern (connect, cursor, execute, fetchall) that every higher-level tool is built on.
+- Connect from Python to MySQL with SQLAlchemy, credentials pulled from a local `.env` file — never hardcoded.
+- Run SQL directly inside a notebook with jupysql's `%sql`/`%%sql` magic, and load results into pandas.
+- Pass values into a query safely with bound parameters, instead of an f-string that opens the door to SQL injection.
+- Avoid two real driver gotchas that only show up once you call stored procedures from Python.
+- Migrate a live MySQL database into a local SQLite file with pandas, verify the migration, and connect to the copy two ways — with SQLAlchemy, or with a bare connection string (no SQLAlchemy needed).
+- Turn a query result into a chart with pandas — the payoff SQL alone can't give you.
+- Recognize the handful of SQL differences between MySQL and SQLite that Days 06–09 will lean on.
 
 ## Files
 
 | File | What it is |
 |---|---|
-| `day06_reading.html` | Start here — the business case, the dataset (including how to download it — it's not committed to this repo), and all 20 questions. Open directly in a browser. |
-| `project_06.ipynb` | The working notebook — all 20 questions, worked in order. |
+| `day05_reading.html` | Start here. Concepts and worked examples — open directly in a browser. |
+| `day05_python_mysql.ipynb` | Short — the raw cursor pattern, connect to MySQL, one quick sanity check, call stored procedures from Python. |
+| `day05_python_sqlite.ipynb` | The main notebook — migrate `parch_and_posey` into a local SQLite file, verify it, connect two ways (SQLAlchemy vs. a bare connection string), sweep through every Day 01–04 concept, visualize a few results, and safe parameter binding. |
+| `day05_exercises.ipynb` | Practice questions, SQLite-focused, business-framed. Try these before looking at the solutions. |
+| `day05_exercises_solutions.ipynb` | Answer key, numbered to match the exercises. |
 
-## Before you start
+## Before you start — environment setup
 
-1. **Dataset:** `day06_reading.html` has the download link and instructions for `nba.sqlite`
-   (~2.3 GB, from Kaggle) — place it at `Day 06/nba.sqlite`. It's git-ignored — there's nothing to
-   commit, just download it once.
-2. **Python packages:** from the repo root, `pip install -r requirements.txt` if you haven't
-   already — this day runs every query through jupysql's `%sql`/`%%sql` magic (same as
-   `day05_python_sqlite.ipynb`), plus `pandas` and `matplotlib` for the charts. No MySQL server or
-   `.env` needed.
-3. **Launch:** `jupyter notebook` from the repo root, then open `Day 06/project_06.ipynb`.
+1. **Database:** run `../Databases/Parch & Posey Database.sql` if you haven't already.
+2. **Day 04:** run `Day 04/day04_subqueries_ctes_and_window_functions.sql` first —
+   `day05_python_mysql.ipynb` `CALL`s the stored procedures that file creates
+   (`account_sales_report`, `get_total_revenue`). The SQLite notebook and exercises don't need
+   this — SQLite has no stored procedures, so they use a plain Python function instead.
+3. **Python packages:** from the repo root, `pip install -r requirements.txt` (installs
+   `mysql-connector-python`, `SQLAlchemy`, `pandas`, `python-dotenv`, `jupyter`, `jupysql`, and
+   `matplotlib`).
+4. **Credentials:** copy `../.env.example` to `../.env`, and fill in your local MySQL host/user/
+   password. `.env` is git-ignored on purpose — never commit real credentials; only
+   `.env.example` (a template with placeholder values) is tracked.
+5. **Launch:** `jupyter notebook` from the repo root, then open `day05_python_mysql.ipynb`.
 
-**Order:** `day06_reading.html` → `project_06.ipynb`.
+`day05_python_sqlite.ipynb` generates a local `parch_and_posey.sqlite` file — it's git-ignored and
+regenerated by re-running the notebook, same reasoning as never committing `.env`.
+
+**Order:** `day05_reading.html` → `day05_python_mysql.ipynb` → `day05_python_sqlite.ipynb` →
+`day05_exercises.ipynb`.

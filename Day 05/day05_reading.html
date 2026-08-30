@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Day 05 — Python Connectivity: MySQL &amp; SQLite</title>
+<title>Day 05 — Window Functions &amp; Stored Procedures</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -95,329 +95,281 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
   </defs>
 </svg>
 
-<div class="crumb">Day 05 of 9 · Python Connectivity: MySQL &amp; SQLite</div>
-<h1 class="title">Python Connectivity: MySQL &amp; SQLite</h1>
-<p class="subtitle">No new SQL today — everything from Days 01–04, now reached from Python, against both engines every remaining project day will use.</p>
+<div class="crumb">Day 05 of 10 · Window Functions &amp; Stored Procedures</div>
+<h1 class="title">Window Functions &amp; Stored Procedures</h1>
+<p class="subtitle">Ranking and running totals without collapsing rows, then reusable logic saved inside the database itself.</p>
 
 <div class="objectives">
   <h2>What you'll be able to do after this lesson</h2>
   <ul>
-    <li>Use the raw cursor pattern (connect, cursor, execute, fetchall) that every higher-level tool is built on.</li>
-    <li>Connect from Python to MySQL with SQLAlchemy, credentials pulled from a local .env file — never hardcoded.</li>
-    <li>Run SQL directly inside a notebook with jupysql's %sql/%%sql magic, and load results into pandas.</li>
-    <li>Pass values into a query safely with bound parameters, instead of an f-string that opens the door to SQL injection.</li>
-    <li>Avoid two real driver gotchas that only show up once you call stored procedures from Python.</li>
-    <li>Migrate a live MySQL database into a local SQLite file with pandas, verify the migration, and connect to the copy two ways — with SQLAlchemy, or with a bare connection string.</li>
-    <li>Turn a query result into a chart with pandas — the payoff SQL alone can't give you.</li>
-    <li>Recognize the handful of SQL differences between MySQL and SQLite that Days 06–09 will lean on.</li>
+    <li>Compute a running total, rank, or row-to-row comparison with a window function, without collapsing rows the way GROUP BY does.</li>
+    <li>Reset a window per group with PARTITION BY, and tell RANK/DENSE_RANK/ROW_NUMBER apart by how each handles ties.</li>
+    <li>Look at a neighboring row with LAG/LEAD, for month-over-month style comparisons.</li>
+    <li>Write, and CALL, a stored procedure with IN and OUT parameters, using DELIMITER correctly.</li>
   </ul>
 </div>
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p><code class="inline">parch_and_posey</code> — run <code class="inline">Databases/Parch &amp; Posey Database.sql</code>
-  first if you haven't already. This is the first day needing a Python environment: copy
-  <code class="inline">.env.example</code> (repo root) to <code class="inline">.env</code> and fill in your local MySQL
-  credentials, then <code class="inline">pip install -r requirements.txt</code>. <code class="inline">.env</code> is
-  git-ignored on purpose — never commit real credentials. See this day's <code class="inline">README.md</code> for the
-  full setup checklist.</p>
+  <p>Continuing straight on from Day 04, still the same <code class="inline">parch_and_posey</code>
+  database — run <code class="inline">Databases/Parch &amp; Posey Database.sql</code> first if you
+  haven't already, then <code class="inline">USE parch_and_posey;</code>. No new setup script today.</p>
 </div>
 
-<h2 class="section"><span class="num">1</span>The cursor — what every database call reduces to</h2>
-<p>Before reaching for any convenience layer, it's worth seeing the raw pattern once: a
-<strong>connection</strong> to the database, a <strong>cursor</strong> to run statements through,
-<code class="inline">execute()</code> to run a query, and <code class="inline">fetchall()</code>/
-<code class="inline">fetchone()</code> to pull the results back. Every tool in this lesson — pandas,
-SQLAlchemy, jupysql's <code class="inline">%%sql</code> — is built on exactly this, for any database
-driver.</p>
+<h2 class="section"><span class="num">1</span>Window functions — OVER, without collapsing rows</h2>
+<p>Every aggregate so far (<code class="inline">SUM</code>, <code class="inline">COUNT</code>,
+<code class="inline">AVG</code>...) needed <code class="inline">GROUP BY</code>, and
+<code class="inline">GROUP BY</code> always <strong>collapses</strong> many rows into one per group.
+A <strong>window function</strong> computes that same kind of aggregate, but keeps every row — each
+one just gains an extra column computed by looking through a "window" of other rows, defined by
+<code class="inline">OVER (...)</code>.</p>
+<figure>
+<svg viewBox="0 0 700 195" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
+  <rect x="0" y="0" width="700" height="195" fill="#ffffff"/>
+  <rect x="0" y="0" width="700" height="195" fill="url(#erd-grid)"/>
+
+  <text x="105" y="18" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">GROUP BY — 4 rows become 2</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="10" y="30" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="55" y="46">A, 100</text>
+    <rect x="10" y="58" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="55" y="74">A, 150</text>
+    <rect x="10" y="86" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="55" y="102">B, 80</text>
+    <rect x="10" y="114" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="55" y="130">B, 120</text>
+  </g>
+  <text x="127" y="80" text-anchor="middle" font-size="10.5" fill="#666">SUM(amt)</text>
+  <text x="127" y="93" text-anchor="middle" font-size="10.5" fill="#666">GROUP BY acct</text>
+  <line x1="104" y1="84" x2="150" y2="84" stroke="#333" stroke-width="1.4"/>
+  <path d="M144,78 L150,84 L144,90" stroke="#333" stroke-width="1.4" fill="none"/>
+  <g font-size="12" text-anchor="middle">
+    <rect x="156" y="46" width="90" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="201" y="62" fill="#1f4e82">A, 250</text>
+    <rect x="156" y="86" width="90" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="201" y="102" fill="#1f4e82">B, 200</text>
+  </g>
+  <text x="128" y="160" text-anchor="middle" font-size="11.5" fill="#666">4 rows in → 2 rows out —</text>
+  <text x="128" y="174" text-anchor="middle" font-size="11.5" fill="#666">individual rows are gone</text>
+
+  <line x1="345" y1="25" x2="345" y2="145" stroke="#ccc" stroke-width="1.2" stroke-dasharray="4,3"/>
+
+  <text x="533" y="18" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">Window function — 4 rows stay 4</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="380" y="30" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="425" y="46">A, 100</text>
+    <rect x="380" y="58" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="425" y="74">A, 150</text>
+    <rect x="380" y="86" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="425" y="102">B, 80</text>
+    <rect x="380" y="114" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="425" y="130">B, 120</text>
+  </g>
+  <text x="498" y="74" text-anchor="middle" font-size="9.5" fill="#666">SUM(amt) OVER</text>
+  <text x="498" y="87" text-anchor="middle" font-size="9.5" fill="#666">(PARTITION BY acct</text>
+  <text x="498" y="100" text-anchor="middle" font-size="9.5" fill="#666">ORDER BY amt)</text>
+  <line x1="474" y1="84" x2="520" y2="84" stroke="#333" stroke-width="1.4"/>
+  <path d="M514,78 L520,84 L514,90" stroke="#333" stroke-width="1.4" fill="none"/>
+  <g font-size="11.5" text-anchor="middle">
+    <rect x="526" y="30" width="164" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="608" y="46" fill="#1f4e82">A, 100, running: 100</text>
+    <rect x="526" y="58" width="164" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="608" y="74" fill="#1f4e82">A, 150, running: 250</text>
+    <rect x="526" y="86" width="164" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="608" y="102" fill="#1f4e82">B, 80, running: 80</text>
+    <rect x="526" y="114" width="164" height="24" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/><text x="608" y="130" fill="#1f4e82">B, 120, running: 200</text>
+  </g>
+  <text x="498" y="160" text-anchor="middle" font-size="11.5" fill="#666">4 rows in → 4 rows out —</text>
+  <text x="498" y="174" text-anchor="middle" font-size="11.5" fill="#666">every row survives, gains a column</text>
+</svg>
+<figcaption>Same 4 input rows, two different tools: GROUP BY collapses to one row per group; a window function keeps every row and just appends a computed value.</figcaption>
+</figure>
+<p><strong>Business question:</strong> finance wants to see paper-order volume build up over time — a
+running total, not a single company-wide sum.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
-  <div class="code-body"><span class="kw">import</span> mysql.connector
-
-raw_conn = mysql.connector.connect(
-    host=os.getenv(<span class="str">"DB_HOST"</span>), port=<span class="fn">int</span>(os.getenv(<span class="str">"DB_PORT"</span>, <span class="str">"3306"</span>)),
-    user=os.getenv(<span class="str">"DB_USER"</span>), password=os.getenv(<span class="str">"DB_PASSWORD"</span>),
-    database=os.getenv(<span class="str">"DB_NAME"</span>), use_pure=<span class="kw">True</span>,
-)
-cursor = raw_conn.cursor()
-cursor.execute(<span class="str">"SELECT name FROM region ORDER BY name"</span>)
-
-<span class="kw">for</span> row <span class="kw">in</span> cursor.fetchall():
-    <span class="fn">print</span>(row)
-
-cursor.close()
-raw_conn.close()</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> occurred_at, standard_qty,
+       <span class="fn">SUM</span>(standard_qty) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> occurred_at) <span class="kw">AS</span> running_total
+<span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> occurred_at
+<span class="kw">LIMIT</span> 10;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Plain tuples, not a DataFrame</b><p><code class="inline">fetchall()</code> returns a list of plain tuples — no column names, no formatting. That gap is exactly what pandas and jupysql fill next.</p></div>
-  <div class="annotation"><b>Tied to one driver</b><p>This exact code only works with <code class="inline">mysql-connector-python</code>. SQLAlchemy's whole purpose (Section 2) is giving you the same interface regardless of which driver or engine is underneath.</p></div>
+  <div class="annotation"><b>OVER is what makes it a window function</b><p>Drop the <code class="inline">OVER (...)</code> and this is a plain aggregate needing <code class="inline">GROUP BY</code>. Add it, and <code class="inline">SUM</code> instead computes a value per row, looking at the set of rows <code class="inline">ORDER BY</code> defines as "so far."</p></div>
+  <div class="annotation"><b>The window's ORDER BY is independent</b><p><code class="inline">ORDER BY occurred_at</code> inside <code class="inline">OVER(...)</code> controls calculation order (which rows count as "before" this one) — a separate, outer <code class="inline">ORDER BY</code> would control display order, and both are usually the same column here.</p></div>
 </div>
 
-<h2 class="section"><span class="num">2</span>Connecting Python to MySQL with SQLAlchemy</h2>
-<p><code class="inline">create_engine(...)</code> is the standard way to open a database
-connection from Python — one function, and the connection string's prefix is the only thing that
-changes between database engines.</p>
-<p><strong>Business question:</strong> credentials need to live somewhere real code can read them,
-without ever being typed into a notebook or committed to git.</p>
+<h2 class="section"><span class="num">2</span>PARTITION BY — resetting the window per group</h2>
+<p><code class="inline">PARTITION BY</code> inside <code class="inline">OVER(...)</code> is to a
+window function what <code class="inline">GROUP BY</code> is to a plain aggregate — it restarts the
+calculation every time the partition column's value changes, without collapsing any rows.</p>
+<p><strong>Business question:</strong> the same running total, but per account — not one company-wide
+number mixing every customer together.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
-  <div class="code-body"><span class="kw">import</span> os
-<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
-<span class="kw">from</span> sqlalchemy <span class="kw">import</span> create_engine, text
-<span class="kw">from</span> sqlalchemy.engine <span class="kw">import</span> URL
-<span class="kw">import</span> pandas <span class="kw">as</span> pd
-
-load_dotenv()  <span class="com"># reads the local .env file into environment variables</span>
-
-mysql_url = URL.create(
-    <span class="str">"mysql+mysqlconnector"</span>,
-    username=os.getenv(<span class="str">"DB_USER"</span>),
-    password=os.getenv(<span class="str">"DB_PASSWORD"</span>),
-    host=os.getenv(<span class="str">"DB_HOST"</span>),
-    port=<span class="fn">int</span>(os.getenv(<span class="str">"DB_PORT"</span>, <span class="str">"3306"</span>)),
-    database=os.getenv(<span class="str">"DB_NAME"</span>),
-)
-mysql_engine = create_engine(mysql_url, connect_args={<span class="str">"use_pure"</span>: <span class="kw">True</span>})</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> account_id, occurred_at, total_amt_usd,
+       <span class="fn">SUM</span>(total_amt_usd) <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> account_id <span class="kw">ORDER BY</span> occurred_at) <span class="kw">AS</span> account_running_total
+<span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> account_id, occurred_at;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>.env is never committed</b><p><code class="inline">.env</code> is listed in <code class="inline">.gitignore</code> — only <code class="inline">.env.example</code> (a template with no real values) is tracked in git. Copy it, fill in your own credentials, keep the real file local.</p></div>
-  <div class="annotation"><b>URL.create(...), not an f-string</b><p>Hand-building the connection string with an f-string breaks the moment a password contains <code class="inline">@</code>, <code class="inline">:</code>, <code class="inline">/</code>, or <code class="inline">%</code> — an <code class="inline">@</code> inside the password gets misread as the separator before the hostname, producing a confusing "unknown host" error that has nothing to do with the actual host. <code class="inline">URL.create()</code> percent-encodes every part correctly, regardless of what characters it contains — a real bug found while testing this lesson.</p></div>
-  <div class="annotation"><b>use_pure — see the callout in Section 5</b><p>Forces the pure-Python driver instead of the C extension, avoiding a "commands out of sync" bug the C extension has with stored procedures that return a result set.</p></div>
+  <div class="annotation"><b>Order inside OVER matters</b><p><code class="inline">PARTITION BY</code> always comes before <code class="inline">ORDER BY</code> inside the same <code class="inline">OVER(...)</code> — think "which group, then in what order within it."</p></div>
 </div>
 
-<h2 class="section"><span class="num">3</span>jupysql — running SQL cells directly in a notebook</h2>
-<p><strong>jupysql</strong> (the actively-maintained successor to the older
-<code class="inline">ipython-sql</code>) adds <code class="inline">%sql</code> (one line) and
-<code class="inline">%%sql</code> (a whole cell) magics — write real SQL directly in a notebook cell
-instead of wrapping every query in <code class="inline">pd.read_sql(text("..."), engine)</code>.</p>
-<p><strong>Business question:</strong> re-run a familiar Day 03 JOIN straight from the notebook, to
-confirm the connection actually works end to end.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
-  <div class="code-body">%load_ext sql
-%sql mysql_engine --alias mysql   <span class="com"># bind jupysql to an existing SQLAlchemy engine</span>
-
-%%sql
-<span class="kw">SELECT</span> a.name <span class="kw">AS</span> account_name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
-<span class="kw">FROM</span> orders o
-<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-<span class="kw">GROUP BY</span> a.name
-<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
-<span class="kw">LIMIT</span> 5;</div>
-</div>
-<div class="annotations">
-  <div class="annotation"><b>Passing an engine variable is the cleanest pattern</b><p><code class="inline">%sql mysql_engine</code> reuses the exact same engine the rest of your Python code (like <code class="inline">pd.read_sql</code>) already uses — no second, separate connection string to keep in sync.</p></div>
-  <div class="annotation"><b>Nothing new syntactically</b><p>Same JOIN technique from Day 03 — the point of this quick check is proving the plumbing works, not teaching new SQL. The full sweep through every technique happens in <code class="inline">day05_python_sqlite.ipynb</code>, below.</p></div>
-</div>
-<div class="callout tip">
-  <div class="ti">day05_python_mysql.ipynb stays short on purpose</div>
-  <p>This notebook is just a quick check that the Python↔MySQL plumbing works — one JOIN, then the
-  stored-procedure calls in Section 5. Every remaining project day (06–09) runs on SQLite, not
-  MySQL, so the real depth lives in <code class="inline">day05_python_sqlite.ipynb</code>: a full
-  sweep through <strong>every</strong> Day 01–04 concept — <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>,
-  <code class="inline">WHERE</code>, every JOIN variant, <code class="inline">CASE</code>, string
-  functions, subqueries, CTEs, temp tables, views, every window function, all re-run via
-  <code class="inline">%%sql</code> against the migrated copy.</p>
-</div>
-
-<h2 class="section"><span class="num">4</span>Passing parameters safely</h2>
-<p>Every query so far has had its filter values hardcoded. Real code usually takes that value from
-somewhere else — a form field, a function argument, another system — and the way you get it into
-the query matters. This is covered hands-on in <code class="inline">day05_python_sqlite.ipynb</code>,
-since SQLite is where the rest of this course's Python work happens.</p>
-<p><strong>Business question:</strong> build a small function, <code class="inline">orders_for_account(account_id)</code>,
-that a dashboard could call with whatever account a user picks.</p>
-<div class="compare">
-  <div class="col bad">
-    <h4>The wrong way — an f-string</h4>
-    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">def orders_for_account_UNSAFE(account_id):
-    query = f"SELECT ... WHERE account_id = {account_id}"
-    return pd.read_sql(text(query), sqlite_engine)</pre>
-  </div>
-  <div class="col good">
-    <h4>The right way — a bound parameter</h4>
-    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">def orders_for_account(account_id):
-    query = text("SELECT ... WHERE account_id = :acct_id")
-    return pd.read_sql(query, sqlite_engine, params={"acct_id": account_id})</pre>
-  </div>
-</div>
-<div class="callout warn">
-  <div class="ti">What actually happens with a malicious input — tested on both engines</div>
-  <p>Call the f-string version with <code class="inline">account_id = "1001 OR 1=1"</code> and it
-  returns <strong>every order in the table</strong>, on either engine — classic SQL injection, since
-  the value was pasted directly into the query text and then parsed as SQL. Call the
-  bound-parameter version with the exact same input and both engines come back safe, but not
-  identically: MySQL coerces the string down to the number it starts with (<code class="inline">1001</code>)
-  and returns the normal 28 rows for that account; SQLite is stricter about comparing text to an
-  integer column and returns <strong>zero rows</strong> instead, since the malicious string simply
-  matches nothing. Different failure mode, equally safe either way — the value never got a chance
-  to be parsed as SQL on either engine, which is the only guarantee that actually matters.</p>
-</div>
-<p><strong>The single most important habit in this notebook:</strong> never build a query string
-with f-strings/<code class="inline">.format()</code>/<code class="inline">%</code>-formatting using
-a value that came from outside your own code. Always use a placeholder
-(<code class="inline">:name</code> with SQLAlchemy, <code class="inline">%s</code> with a raw DBAPI
-cursor) and pass the value separately.</p>
-
-<h2 class="section"><span class="num">5</span>Calling stored procedures from Python</h2>
-<p>Day 04's stored procedures needed <code class="inline">DELIMITER</code> because the
-<code class="inline">mysql</code> CLI splits a script into statements on every semicolon. A Python
-driver sends the whole procedure body as one request — no <code class="inline">DELIMITER</code>
-needed at all from here on.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
-  <div class="code-body">%%sql
-<span class="kw">CALL</span> account_sales_report(1001);
-
-%%sql
-<span class="kw">CALL</span> get_total_revenue(@rev);
-
-%%sql
-<span class="kw">SELECT</span> @rev <span class="kw">AS</span> total_revenue;</div>
-</div>
-<div class="callout warn">
-  <div class="ti">Two real driver bugs, found while testing this lesson</div>
-  <p><code class="inline">mysql-connector-python</code> ships two implementations: a fast C
-  extension (the default) and a pure-Python fallback. The C extension has a known bug calling a
-  stored procedure that returns a result set — it leaves the connection in a broken "commands out
-  of sync" state for whatever query runs next. Section 2's <code class="inline">connect_args={&quot;use_pure&quot;: True}</code>
-  avoids this entirely.</p>
-  <p>Separately, calling a result-returning procedure (<code class="inline">account_sales_report</code>)
-  right before an <code class="inline">OUT</code>-parameter one (<code class="inline">get_total_revenue</code>)
-  can silently leave <code class="inline">@rev</code> empty, even with <code class="inline">use_pure</code>
-  — the driver gets confused switching between the two call styles.
-  <code class="inline">mysql_engine.dispose()</code> (closes every pooled connection so the next
-  query starts fresh) right before calling <code class="inline">get_total_revenue</code> is the fix
-  — see it in <code class="inline">day05_python_mysql.ipynb</code>.</p>
-</div>
-
-<h2 class="section"><span class="num">6</span>Loading results into pandas</h2>
-<p><strong>Business question:</strong> finance wants the daily sales trend as a chart for a deck, not
-a table of numbers to read row by row.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_mysql.ipynb</span></div>
-  <div class="code-body">daily_sales = pd.read_sql(
-    text(<span class="str">"SELECT DATE(occurred_at) AS day, SUM(total_amt_usd) AS daily_sales FROM orders GROUP BY day"</span>),
-    mysql_engine,
-)
-daily_sales.plot(x=<span class="str">"day"</span>, y=<span class="str">"daily_sales"</span>, figsize=(10, 4), title=<span class="str">"Daily Sales"</span>)</div>
-</div>
-<div class="annotations">
-  <div class="annotation"><b>text() is the version-safe habit</b><p>Wrapping the query string in <code class="inline">text(...)</code> is required on modern SQLAlchemy (2.x) — a bare string still works on older versions, but <code class="inline">text()</code> is the pattern that won't break later.</p></div>
-  <div class="annotation"><b>A completely normal DataFrame from here</b><p><code class="inline">daily_sales</code> behaves exactly like data loaded any other way — every pandas method (<code class="inline">.plot()</code>, <code class="inline">.describe()</code>, <code class="inline">.to_csv()</code>) works the same.</p></div>
-</div>
-
-<h2 class="section"><span class="num">7</span>Migrating to SQLite with pandas</h2>
-<p>Every project day from Day 06 on runs against a local <code class="inline">.sqlite</code> file
-instead of a MySQL server. Rather than jumping straight into an unfamiliar project dataset,
-<code class="inline">day05_python_sqlite.ipynb</code> first rebuilds the already-familiar
-<code class="inline">parch_and_posey</code> as a local SQLite file — a real, useful skill on its own
-(migrating between engines), and a gentler way to meet the SQLite connection pattern.</p>
-<p><strong>Business question:</strong> a teammate without MySQL installed still needs to work with
-this data — hand them a single portable file instead.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_sqlite.ipynb</span></div>
-  <div class="code-body"><span class="kw">import</span> sqlite3
-
-sqlite_conn = sqlite3.connect(<span class="str">"parch_and_posey.sqlite"</span>)
-
-<span class="kw">for</span> table <span class="kw">in</span> [<span class="str">"region"</span>, <span class="str">"sales_reps"</span>, <span class="str">"accounts"</span>, <span class="str">"orders"</span>, <span class="str">"web_events"</span>]:
-    df = pd.read_sql(text(<span class="fn">f</span><span class="str">"SELECT * FROM {table}"</span>), mysql_engine)
-    df.to_sql(table, sqlite_conn, index=<span class="kw">False</span>, if_exists=<span class="str">"replace"</span>)
-
-sqlite_conn.commit()</div>
-</div>
-<div class="annotations">
-  <div class="annotation"><b>No SQLAlchemy on the destination side</b><p><code class="inline">sqlite3</code> is a Python stdlib module — nothing to install. <code class="inline">df.to_sql</code> accepts a raw <code class="inline">sqlite3.Connection</code> just as happily as a SQLAlchemy engine; the source side (<code class="inline">mysql_engine</code>) still needs SQLAlchemy, for the reasons in Section 2.</p></div>
-  <div class="annotation"><b>Read from one engine, write to another</b><p><code class="inline">pd.read_sql</code> and <code class="inline">df.to_sql</code> don't care what's on either end — a DataFrame is the universal middle step.</p></div>
-  <div class="annotation"><b>Generated, not committed</b><p>This file is regenerated by running the notebook, not stored in git — same reasoning as never committing <code class="inline">.env</code>: it's derived, disposable local state.</p></div>
-</div>
-
-<h2 class="section"><span class="num">8</span>The cursor, once more, on SQLite</h2>
-<p>Same DB-API pattern from Section 1, different driver underneath — and this time, no new
-connection needed: <code class="inline">sqlite_conn</code> from the migration step above already
-<em>is</em> a connection.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_sqlite.ipynb</span></div>
-  <div class="code-body">cursor = sqlite_conn.cursor()
-cursor.execute(<span class="str">"SELECT name FROM region ORDER BY name"</span>)
-
-<span class="kw">for</span> row <span class="kw">in</span> cursor.fetchall():
-    <span class="fn">print</span>(row)
-
-cursor.close()</div>
-</div>
-
-<h2 class="section"><span class="num">9</span>Two ways to run %%sql against SQLite</h2>
-<p>No host, no username, no password — SQLite is just a single file the Python process opens
-directly. Everything else about querying it is identical to MySQL — including having a choice in
-how to connect.</p>
-<div class="compare">
-  <div class="col">
-    <h4>Option 1 — through SQLAlchemy</h4>
-    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">sqlalchemy_demo_engine = create_engine(
-    "sqlite:///parch_and_posey.sqlite"
-)
-%sql sqlalchemy_demo_engine --alias sqlite_via_sqlalchemy</pre>
-  </div>
-  <div class="col good">
-    <h4>Option 2 — jupysql directly, no SQLAlchemy</h4>
-    <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">%sql sqlite:///parch_and_posey.sqlite --alias sqlite_pp</pre>
-  </div>
-</div>
-<p>Both register a connection jupysql can run <code class="inline">%%sql</code> against, and both
-return identical results for the same query. Option 2 is what
-<code class="inline">day05_python_sqlite.ipynb</code> uses from here on — it's also the exact
-pattern the Kaggle-based project notebooks (Days 06–09) already use, so getting comfortable with
-it now pays off directly later.</p>
-<div class="annotations">
-  <div class="annotation"><b>jupysql needs a connection string or an Engine — nothing less</b><p>It can't bind directly to a raw <code class="inline">sqlite3.Connection</code> the way pandas can. That's the one place SQLAlchemy genuinely earns its keep for SQLite — not for connecting in general, just for this specific magic.</p></div>
-</div>
-
-<h2 class="section"><span class="num">10</span>Visualizing results</h2>
-<p>SQL alone gets you a table. Python's real payoff is turning that table into something a
-stakeholder actually looks at.</p>
-<p><strong>Business question:</strong> sales leadership wants the daily revenue trend for their
-weekly review deck, not a table of numbers.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_python_sqlite.ipynb</span></div>
-  <div class="code-body">daily_sales = pd.read_sql(
-    <span class="str">"SELECT DATE(occurred_at) AS day, SUM(total_amt_usd) AS daily_sales FROM orders GROUP BY day"</span>,
-    sqlite_conn,
-)
-daily_sales.plot(x=<span class="str">"day"</span>, y=<span class="str">"daily_sales"</span>, figsize=(10, 4), title=<span class="str">"Daily Sales"</span>)</div>
-</div>
-<p>The notebook does this two more times — total revenue by region as a bar chart for a quarterly
-review, and web-event channel mix as a pie chart for a marketing review — pulling straight from
-queries already in the sweep. Same idea every time: get a DataFrame, call
-<code class="inline">.plot()</code>, pick the chart shape that fits the question — a line for a
-trend over time, a bar for comparing categories, a pie for a proportional split.</p>
-
-<h2 class="section"><span class="num">11</span>MySQL vs SQLite — what actually differs</h2>
-<p>Most of what you've learned transfers directly. A handful of functions don't exist in SQLite, or
-are spelled differently — worth recognizing before Days 06–09.</p>
+<h2 class="section"><span class="num">3</span>RANK, DENSE_RANK, ROW_NUMBER</h2>
+<p>All three number rows 1, 2, 3... in the order <code class="inline">OVER (ORDER BY ...)</code>
+defines — they only disagree once two rows tie on that ordering column.</p>
 <table class="api">
-  <thead><tr><th>Need</th><th>MySQL</th><th>SQLite</th></tr></thead>
+  <thead><tr><th>Function</th><th>On a tie (e.g. two rows both rank 2nd)</th></tr></thead>
   <tbody>
-    <tr><td>Format a date</td><td><code class="inline">DATE_FORMAT(col, '%Y-%m')</code></td><td><code class="inline">STRFTIME('%Y-%m', col)</code></td></tr>
-    <tr><td>Difference between two dates</td><td><code class="inline">DATEDIFF(d1, d2)</code></td><td>No <code class="inline">DATEDIFF</code> — subtract <code class="inline">JULIANDAY(d1) - JULIANDAY(d2)</code> instead</td></tr>
-    <tr><td>Concatenate strings</td><td><code class="inline">CONCAT(a, b)</code></td><td><code class="inline">a || b</code> (also works: <code class="inline">CONCAT</code> isn't standard SQLite, though some builds allow it)</td></tr>
-    <tr><td>Auto-incrementing primary key</td><td><code class="inline">AUTO_INCREMENT</code></td><td><code class="inline">AUTOINCREMENT</code></td></tr>
-    <tr><td>Stored procedures</td><td><code class="inline">CREATE PROCEDURE</code></td><td>Not supported at all — SQLite has no procedural logic</td></tr>
+    <tr><td><code class="inline">ROW_NUMBER()</code></td><td>Always unique — arbitrarily breaks the tie, never repeats a number: 1, 2, 3, 4.</td></tr>
+    <tr><td><code class="inline">RANK()</code></td><td>Tied rows share a number, then <strong>skips</strong> ahead by how many tied: 1, 2, 2, 4.</td></tr>
+    <tr><td><code class="inline">DENSE_RANK()</code></td><td>Tied rows share a number, but <strong>never skips</strong>: 1, 2, 2, 3.</td></tr>
   </tbody>
 </table>
-<div class="callout insight">
-  <div class="ti">Everything else transfers directly</div>
-  <p>JOINs, CASE, subqueries, CTEs, and window functions (including <code class="inline">RANK</code>/<code class="inline">LAG</code>/<code class="inline">LEAD</code>) all work identically in SQLite — Days 06–09 lean on exactly these, just without stored procedures or MySQL's date-function names.</p>
+<p><strong>Business question:</strong> leadership wants sales reps ranked by total sales — and wants
+to know exactly how ties get handled, since two reps landing on the same revenue isn't rare.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
+  <div class="code-body"><span class="kw">WITH</span> rep_totals <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> s.id, s.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> orders o
+    <span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
+    <span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> a.sales_rep_id = s.id
+    <span class="kw">GROUP BY</span> s.id, s.name
+)
+<span class="kw">SELECT</span> name, total_sales,
+       <span class="fn">RANK</span>()       <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> rank_with_gaps,
+       <span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> dense_rank_no_gaps,
+       <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> row_num
+<span class="kw">FROM</span> rep_totals
+<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>CTE first, ranking second</b><p>All three ranking functions need <code class="inline">rep_totals</code> already computed — the same CTE pattern from Day 04's Section 4, now feeding a window function instead of a plain <code class="inline">SELECT</code>.</p></div>
+  <div class="annotation"><b>Which one to reach for</b><p><code class="inline">DENSE_RANK</code> for gapless tiers ("top 3 revenue tiers"), <code class="inline">RANK</code> when a skipped number should reflect competition (like a race), <code class="inline">ROW_NUMBER</code> whenever you need exactly one row per rank no matter what — the next section depends on that guarantee.</p></div>
+</div>
+
+<h2 class="section"><span class="num">4</span>Ranking within a partition, then filtering to one per group</h2>
+<p>A window function can't be filtered directly in <code class="inline">WHERE</code> — the same rule
+that blocks <code class="inline">WHERE COUNT(*) &gt; 5</code> (Day 03). Compute the rank in a CTE
+first, then filter the CTE's output.</p>
+<p><strong>Business question:</strong> for every account, what was their single largest order? (Same
+shape as Day 04's Section 1 subquery question — a window function reaches the same answer more
+directly.)</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
+  <div class="code-body"><span class="kw">WITH</span> ranked_orders <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> account_id, id <span class="kw">AS</span> order_id, total_amt_usd,
+           <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> account_id <span class="kw">ORDER BY</span> total_amt_usd <span class="kw">DESC</span>) <span class="kw">AS</span> order_rank
+    <span class="kw">FROM</span> orders
+)
+<span class="kw">SELECT</span> account_id, order_id, total_amt_usd
+<span class="kw">FROM</span> ranked_orders
+<span class="kw">WHERE</span> order_rank = 1
+<span class="kw">ORDER BY</span> account_id;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>PARTITION BY here means "per account"</b><p>Without it, this would rank every order in the whole table against each other — <code class="inline">PARTITION BY account_id</code> is what makes rank 1 mean "this account's biggest order," restarting for each account.</p></div>
+</div>
+
+<h2 class="section"><span class="num">5</span>LAG / LEAD — comparing a row to a neighbor</h2>
+<p><code class="inline">LAG(col)</code> looks one row <em>back</em> (in whatever order
+<code class="inline">OVER (ORDER BY ...)</code> defines); <code class="inline">LEAD(col)</code>
+looks one row <em>forward</em>. Both default to an offset of 1 — <code class="inline">LAG(col,
+2)</code> would look back two rows instead.</p>
+<p><strong>Business question:</strong> is month-over-month revenue growing or shrinking?</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
+  <div class="code-body"><span class="kw">WITH</span> monthly_sales <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(occurred_at, <span class="str">'%Y-%m'</span>) <span class="kw">AS</span> month, <span class="fn">SUM</span>(total_amt_usd) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> orders
+    <span class="kw">GROUP BY</span> month
+)
+<span class="kw">SELECT</span> month, total_sales,
+       <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> prev_month_sales,
+       total_sales - <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> change_from_prev_month
+<span class="kw">FROM</span> monthly_sales
+<span class="kw">ORDER BY</span> month;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>The first row has nothing to look back to</b><p><code class="inline">LAG</code> returns <code class="inline">NULL</code> for the very first month — expected behavior, not a bug, same as any window function at the edge of its data.</p></div>
+</div>
+
+<h2 class="section"><span class="num">6</span>Stored procedures (IN parameters)</h2>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">skeleton</span></div>
+  <div class="code-body"><span class="kw">DELIMITER</span> $$
+
+<span class="kw">CREATE PROCEDURE</span> &lt;procedure_name&gt;(<span class="kw">IN</span> &lt;param_name&gt; &lt;type&gt;)
+<span class="kw">BEGIN</span>
+    &lt;one or more SQL statements&gt;;
+<span class="kw">END</span>$$
+
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> &lt;procedure_name&gt;(&lt;value&gt;);</div>
+</div>
+<p>A <strong>stored procedure</strong> is a named, reusable block of SQL logic saved inside the
+database itself — call it by name instead of re-pasting the same query every time someone needs it.
+An <code class="inline">IN</code> parameter passes a value into the procedure, the way a function
+argument would in any programming language.</p>
+<div class="callout warn">
+  <div class="ti">Why DELIMITER is required here</div>
+  <p>Running this file as a script (the <code class="inline">mysql</code> CLI, <code class="inline">source</code>,
+  or Workbench's "execute script") splits statements on every plain semicolon. Without switching the
+  delimiter first, it would try to run <code class="inline">BEGIN ... SELECT ...;</code> as a
+  complete statement and choke on the very first semicolon inside the procedure body.
+  <code class="inline">DELIMITER $$</code> temporarily changes the statement terminator to
+  <code class="inline">$$</code>, so the whole <code class="inline">CREATE PROCEDURE ... END</code>
+  block is read as one statement; <code class="inline">DELIMITER ;</code> switches it back
+  afterward. This becomes unnecessary in Day 06, once SQL is sent through a Python driver instead —
+  a Python driver sends the whole block as one request, with no client-side statement-splitting
+  involved at all.</p>
+</div>
+<p><strong>Business question:</strong> sales reps constantly ask for the same report — order count and
+total revenue for one account. Save it once as a procedure everyone can call.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
+  <div class="code-body"><span class="kw">DELIMITER</span> $$
+
+<span class="kw">CREATE PROCEDURE</span> account_sales_report(<span class="kw">IN</span> acct_id <span class="kw">INT</span>)
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> a.name <span class="kw">AS</span> account_name,
+           <span class="fn">COUNT</span>(o.id) <span class="kw">AS</span> num_orders,
+           <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> accounts a
+    <span class="kw">JOIN</span> orders o <span class="kw">ON</span> o.account_id = a.id
+    <span class="kw">WHERE</span> a.id = acct_id
+    <span class="kw">GROUP BY</span> a.name;
+<span class="kw">END</span>$$
+
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> account_sales_report(1001);</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>The parameter, used inside the body</b><p><code class="inline">acct_id</code> works exactly like a variable inside <code class="inline">BEGIN...END</code> — whatever value <code class="inline">CALL</code> passes in gets substituted wherever <code class="inline">acct_id</code> appears.</p></div>
+</div>
+
+<h2 class="section"><span class="num">7</span>Stored procedures (OUT parameters)</h2>
+<p>An <code class="inline">OUT</code> parameter hands a value back through a <strong>user session
+variable</strong> (conventionally written <code class="inline">@name</code>) instead of a result set
+— useful when the caller is another program that needs one number to act on, not a table to read.
+<code class="inline">SELECT ... INTO &lt;out_param&gt;</code> is how the procedure body assigns it.</p>
+<p><strong>Business question:</strong> a nightly batch job needs just the single number — total
+company-wide revenue — captured into a variable it can act on.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
+  <div class="code-body"><span class="kw">DELIMITER</span> $$
+
+<span class="kw">CREATE PROCEDURE</span> get_total_revenue(<span class="kw">OUT</span> total_revenue <span class="kw">DECIMAL</span>(14,2))
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amt_usd) <span class="kw">INTO</span> total_revenue <span class="kw">FROM</span> orders;
+<span class="kw">END</span>$$
+
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> get_total_revenue(@rev);
+<span class="kw">SELECT</span> @rev <span class="kw">AS</span> total_revenue;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Kept intentionally shallow</b><p>This is enough to read a stored procedure when you meet one in a real codebase — this is a data-analysis course, not a backend/app-dev one, so writing elaborate procedures isn't the goal here.</p></div>
 </div>
 
 <div class="callout recap">
-  <div class="ti">Next: Day 06 — Project: NBA</div>
-  <p>This closes the core curriculum. Days 06–09 apply everything from Days 01–05 — filtering,
-  JOINs, CASE, string functions, subqueries, CTEs, window functions, stored logic patterns — against
-  real SQLite datasets, with far less hand-holding.</p>
+  <div class="ti">Next: Day 06</div>
+  <p>This closes the core SQL curriculum. Day 06 applies everything from Days 01–05 from Python —
+  connecting to both MySQL and SQLite, ahead of Days 07–10's real SQLite projects.</p>
 </div>
 
-<footer>Day 05 · Python Connectivity: MySQL &amp; SQLite · self-paced</footer>
+<footer>Day 05 · Window Functions &amp; Stored Procedures · self-paced</footer>
 </div>
 </body></html>
