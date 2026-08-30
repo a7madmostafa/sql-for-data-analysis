@@ -33,10 +33,8 @@ SQLite file.
 
 ## Before you start
 
-1. **Dataset:** run `python _tools/generate_wasel_db.py` once from the repo root — it writes
-   `Databases/wasel.sqlite` directly (generated, not downloaded; a fixed random seed makes it
-   reproducible). Nothing to commit — it's git-ignored, just regenerate it if you ever lose the
-   file.
+1. **Dataset:** `Databases/wasel.sqlite` is already included in this repo — nothing to download,
+   nothing to run.
 2. **Python packages:** from the repo root, `pip install -r requirements.txt` if you haven't
    already — this day runs every query through jupysql's `%sql`/`%%sql` magic, plus `pandas` and
    `matplotlib` for the charts. No MySQL server or `.env` needed.

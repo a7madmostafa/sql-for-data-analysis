@@ -250,11 +250,10 @@ Giza, or Qalyubia (practically one metro area) also cover a neighboring one. <co
 ratings</code> are deliberately incomplete: some completed trips have a rider-side rating, some
 have a driver-side rating, some have both, and some have neither (Q19 asks exactly how many).</p>
 <div class="callout tip">
-  <div class="ti">Before you start — generated, not downloaded</div>
-  <p>Run <code class="inline">python _tools/generate_wasel_db.py</code> once from the repo root —
-  it writes <code class="inline">Databases/wasel.sqlite</code> directly (a fixed random seed means
-  re-running it produces the exact same data). No MySQL server or <code class="inline">.env</code>
-  needed — <code class="inline">project_07.ipynb</code> connects with a relative path
+  <div class="ti">Before you start</div>
+  <p><code class="inline">Databases/wasel.sqlite</code> is already included in this repo — no
+  download and no setup script needed. No MySQL server or <code class="inline">.env</code> either
+  — <code class="inline">project_07.ipynb</code> connects with a relative path
   (<code class="inline">sqlite:///../Databases/wasel.sqlite</code>), same as every project day.</p>
 </div>
 
