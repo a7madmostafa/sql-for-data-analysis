@@ -1,9 +1,9 @@
 -- ============================================================
--- SQL PRACTICE EXERCISES — world database
+-- SQL PRACTICE EXERCISES — rawaj database
 -- ============================================================
 -- Before starting:
---   1. Run "Databases/world_db.sql" once to create and load the database.
---   2. Tables available: country, city, countrylanguage — see
+--   1. Run "Databases/rawaj_db.sql" once to create and load the database.
+--   2. Tables available: customers, governorates — see
 --      day01_reading.html for what each one holds.
 --
 -- Instructions:
@@ -17,17 +17,17 @@
 --   COUNT — none of these need a WHERE clause (that's Day 02).
 -- ============================================================
 
-USE world;
+USE rawaj;
 
 
 -- ======================================
 -- SECTION 1 — EXPLORING THE SERVER
 -- ======================================
 
--- 1.1 A new analyst wants to see what tables exist in the `world` database
+-- 1.1 A new analyst wants to see what tables exist in the `rawaj` database
 --     before writing any queries. Show them the list.
 
--- 1.2 They also want to see what columns the `city` table has before
+-- 1.2 They also want to see what columns the `governorates` table has before
 --     querying it.
 
 
@@ -36,13 +36,13 @@ USE world;
 -- SECTION 2 — SELECT
 -- ======================================
 
--- 2.1 Show every column for every row in `country` — a raw dump for a
+-- 2.1 Show every column for every row in `customers` — a raw dump for a
 --     quick sanity check.
 
--- 2.2 For a country fact sheet, pull just the name, continent, and region
---     for every country.
+-- 2.2 For a customer contact sheet, pull just the first_name, last_name,
+--     and email for every customer.
 
--- 2.3 Pull just the city name and population for every row in `city`.
+-- 2.3 Pull just the governorate_name for every row in `governorates`.
 
 
 
@@ -50,13 +50,13 @@ USE world;
 -- SECTION 3 — LIMIT & OFFSET
 -- ======================================
 
--- 3.1 Preview the first 10 rows of `city`, exactly as stored.
+-- 3.1 Preview the first 10 rows of `customers`, exactly as stored.
 
--- 3.2 An analyst is paging through `country` in batches of 10. Show them
+-- 3.2 An analyst is paging through `customers` in batches of 10. Show them
 --     batch 3 (skip the first 20 rows, then return the next 10).
 
 -- 3.3 Using the MySQL shortcut form (LIMIT offset, count), return rows
---     6–10 of `countrylanguage`.
+--     6–10 of `customers`.
 
 
 
@@ -64,12 +64,10 @@ USE world;
 -- SECTION 4 — DISTINCT
 -- ======================================
 
--- 4.1 List every distinct continent represented in `country`.
+-- 4.1 List every distinct governorate_id represented in `customers`.
 
--- 4.2 List every distinct government form (e.g. 'Republic', 'Monarchy')
---     recorded in `country`.
-
--- 4.3 List every distinct district recorded in the `city` table.
+-- 4.2 List every distinct manager_id assigned across `governorates`
+--     (including any governorate with none assigned yet).
 
 
 
@@ -77,17 +75,16 @@ USE world;
 -- SECTION 5 — AGGREGATION (COUNT)
 -- ======================================
 
--- 5.1 How many countries total are stored in `country`?
+-- 5.1 How many customers total are stored in `customers`?
 
--- 5.2 `IndepYear` isn't filled in for every country. How many countries
---     DO have a recorded independence year?
+-- 5.2 `email` isn't filled in for every customer. How many customers DO
+--     have an email on file?
 
--- 5.3 How many distinct languages are tracked across all countries in
---     `countrylanguage`?
+-- 5.3 How many distinct governorates are customers registered in?
 
--- 5.4 Leadership wants one summary row: total number of countries, and
---     how many distinct continents and regions those countries span —
---     all in a single query.
+-- 5.4 Leadership wants one summary row: total number of customers, and how
+--     many distinct governorates those customers span — all in a single
+--     query.
 
 
 
@@ -95,17 +92,17 @@ USE world;
 -- SECTION 6 — ORDER BY
 -- ======================================
 
--- 6.1 List the 5 most populous cities in the world — name and population
---     only.
+-- 6.1 List the 5 earliest customer signups — first_name, last_name, and
+--     signup_date only.
 
--- 6.2 List the 5 countries with the lowest life expectancy — name and
---     life expectancy only.
+-- 6.2 List the 5 MOST RECENT customer signups — same columns, sorted the
+--     other direction.
 
--- 6.3 List every country's name and local name (`LocalName`), sorted
---     alphabetically by the local name.
+-- 6.3 List every customer's first_name and last_name, sorted alphabetically
+--     by last_name.
 
--- 6.4 Excluding the 3 largest countries by surface area, show the next 5
---     largest — i.e. ranked 4th through 8th by surface area.
+-- 6.4 Excluding the 3 earliest signups, show the next 5 — i.e. customers
+--     ranked 4th through 8th by signup_date.
 
 
 
@@ -113,10 +110,10 @@ USE world;
 -- CHALLENGE QUESTIONS (combine multiple concepts)
 -- ======================================
 
--- C1. For a quick country-size leaderboard, list the top 10 countries by
---     population, showing name, region, and population, most populous
---     first.
+-- C1. For a "founding customers" leaderboard, list the top 10 earliest-
+--     signed-up customers, showing first_name, last_name, governorate_id,
+--     and signup_date, earliest first.
 
--- C2. How many countries in `country` have never had a life expectancy
---     value recorded? (Hint: compare COUNT(*) to COUNT of the column —
---     no WHERE clause needed.)
+-- C2. How many customers in `customers` have never had an email recorded?
+--     (Hint: compare COUNT(*) to COUNT of the column — no WHERE clause
+--     needed.)

@@ -1,7 +1,7 @@
 # Day 02 — Filtering & Aggregation
 
-The **Parch & Posey** module, a fictional paper-sales company (`region`, `sales_reps`, `accounts`,
-`orders`, `web_events`).
+Still on the **Rawaj** database from Day 01 (no new setup script here) — this is where you dig
+deeper into `orders` and `web_events` alongside `customers`.
 
 ## What you'll learn
 
@@ -20,7 +20,7 @@ The **Parch & Posey** module, a fictional paper-sales company (`region`, `sales_
 | `day02_exercises.sql` | Practice questions, business-framed. Try these before looking at the solutions. |
 | `day02_exercises_solutions.sql` | Answer key, numbered to match the exercises. |
 
-**Before you start:** run `../Databases/Parch & Posey Database.sql` once — creates and loads the
-`parch_and_posey` database. Shared by Days 02–05.
+**Before you start:** run `../Databases/rawaj_db.sql` if you haven't already (Day 01 already
+covers this).
 
-**Order:** `Databases/Parch & Posey Database.sql` → `day02_reading.html` → `day02_filtering_and_aggregation.sql` → `day02_exercises.sql`.
+**Order:** `day02_reading.html` → `day02_filtering_and_aggregation.sql` → `day02_exercises.sql`.

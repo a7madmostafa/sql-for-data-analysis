@@ -22,6 +22,8 @@
 body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
 .page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
 .crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+.home-link{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray);text-decoration:none;margin-bottom:10px}
+.home-link:hover{color:var(--blue)}
 h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
 .subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
 .objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
@@ -98,9 +100,10 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
   </defs>
 </svg>
 
-<div class="crumb">Day 02 of 9 · Filtering &amp; Aggregation</div>
+<a class="home-link" href="../index.html">&larr; Course home</a>
+<div class="crumb">Day 02 of 10 · Filtering &amp; Aggregation</div>
 <h1 class="title">Filtering &amp; Aggregation</h1>
-<p class="subtitle">WHERE · AND/OR · BETWEEN · IN · NULL · LIKE · GROUP BY · HAVING · DATE functions — on a new dataset, <code class="inline">parch_and_posey</code>.</p>
+<p class="subtitle">WHERE · AND/OR · BETWEEN · IN · NULL · LIKE · GROUP BY · HAVING · DATE functions — still on <code class="inline">rawaj</code>, digging into two new tables.</p>
 
 <div class="objectives">
   <h2>What you'll be able to do after this lesson</h2>
@@ -114,205 +117,306 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p>Run <code class="inline">Databases/Parch &amp; Posey Database.sql</code> once — it creates the <code class="inline">parch_and_posey</code> database. Then <code class="inline">USE parch_and_posey;</code>, same as Day 01's <code class="inline">USE world;</code>.</p>
+  <p>Still the same <code class="inline">rawaj</code> database from Day 01 — run
+  <code class="inline">Databases/rawaj_db.sql</code> first if you haven't already, then
+  <code class="inline">USE rawaj;</code>. No new setup script today.</p>
 </div>
 
 <h2 class="section"><span class="num">1</span>The dataset</h2>
-<p class="section-intro">A fictional paper-sales company — bigger and more realistic than Day 01's <code class="inline">world</code> database.</p>
-<p>Parch &amp; Posey sells three kinds of paper — standard, poster, and glossy — to large corporate
-clients, through 50 sales reps organized into 4 regions across the US. Every one of those business
-facts becomes a table. Five of them, chained together entirely by one-to-many relationships:</p>
+<p class="section-intro">The full shape of Rawaj — bigger than Day 01's two-table slice.</p>
+<p>Rawaj is a marketplace: third-party sellers list products, individual customers buy them.
+Fourteen tables, chained together in two directions — a <strong>supply side</strong> (who's
+selling, what, to which region) and a <strong>demand side</strong> (who's buying, what they
+searched, what they ordered) — meeting in the middle at <code class="inline">product_listings</code>
+and <code class="inline">order_items</code>:</p>
 <figure>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 450" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
-  <rect x="0" y="0" width="900" height="450" fill="#ffffff"/>
-  <rect x="0" y="0" width="900" height="450" fill="url(#erd-grid)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 820" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
+  <rect x="0" y="0" width="920" height="820" fill="#ffffff"/>
+  <rect x="0" y="0" width="920" height="820" fill="url(#erd-grid)"/>
 
-  <!-- ===================== relationship lines (drawn first, under tables) ===================== -->
+  <!-- ===================== relationship lines ===================== -->
   <g stroke="#333" stroke-width="1.4" fill="none">
-    <!-- region to sales_reps -->
-    <polyline points="220,395 270,395 270,383 320,383"/>
-    <!-- sales_reps to accounts -->
-    <polyline points="220,343 270,343 270,229 320,229"/>
-    <!-- accounts to orders -->
-    <polyline points="520,73 570,73 570,139 620,139"/>
-    <!-- accounts to web_events -->
-    <polyline points="220,129 270,129 270,73 320,73"/>
+    <!-- account_managers -> governorates -->
+    <line x1="105" y1="76" x2="105" y2="100"/>
+    <!-- governorates -> sellers -->
+    <line x1="105" y1="182" x2="105" y2="210"/>
+    <!-- sellers -> customers -->
+    <line x1="105" y1="292" x2="105" y2="320"/>
+    <!-- customers -> web_events -->
+    <line x1="105" y1="402" x2="105" y2="430"/>
+    <!-- governorates -> customers (routed right, around sellers) -->
+    <polyline points="190,141 210,141 210,361 190,361"/>
+    <!-- brands -> products -->
+    <line x1="300" y1="76" x2="300" y2="180"/>
+    <!-- categories -> products -->
+    <line x1="380" y1="156" x2="380" y2="180"/>
+    <!-- products -> product_listings -->
+    <line x1="345" y1="288" x2="345" y2="310"/>
+    <!-- sellers -> product_listings (routed right) -->
+    <polyline points="190,251 225,251 225,364 250,364"/>
+    <!-- customers -> orders (routed right) -->
+    <polyline points="190,361 235,361 235,481 250,481"/>
+    <!-- orders -> order_items -->
+    <line x1="345" y1="522" x2="345" y2="550"/>
+    <!-- product_listings -> order_items (routed right within col2) -->
+    <polyline points="440,364 470,364 470,604 440,604"/>
+    <!-- order_items -> reviews -->
+    <line x1="345" y1="658" x2="345" y2="680"/>
+    <!-- reviews -> customers (long route left) -->
+    <polyline points="250,734 230,734 230,371 190,371"/>
+    <!-- delivery_partners -> shipments -->
+    <line x1="595" y1="76" x2="595" y2="310"/>
+    <!-- orders -> shipments (routed right) -->
+    <polyline points="440,481 470,481 470,350 500,350"/>
+    <!-- sellers -> shipments (routed far right, through the col2 gap) -->
+    <polyline points="190,262 215,262 215,299 460,299 460,400 500,400"/>
   </g>
 
-  <!-- crow's foot (many) and one-tick markers -->
+  <!-- crow's-foot / tick markers (one=tick, many=chevron) -->
   <g stroke="#333" stroke-width="1.4" fill="none">
-    <!-- Rel A: many at sales_reps(220,395) opening toward +x, one at region(320,383) tick toward negative x -->
-    <path d="M220,389 L232,395 L220,401"/>
-    <path d="M306,377 L306,389"/>
-
-    <!-- Rel B: one at sales_reps(220,343) tick toward +x, many at accounts(320,229) opening toward negative x -->
-    <path d="M230,337 L230,349"/>
-    <path d="M320,223 L310,229 L320,235"/>
-
-    <!-- Rel C: one at accounts(520,73) tick toward +x, many at orders(620,139) opening toward negative x -->
-    <path d="M530,67 L530,79"/>
-    <path d="M620,133 L610,139 L620,145"/>
-
-    <!-- Rel D: many at web_events(220,129) opening toward +x, one at accounts(320,73) tick toward negative x -->
-    <path d="M220,123 L232,129 L220,135"/>
-    <path d="M310,67 L310,79"/>
+    <path d="M99,82 L111,82"/><path d="M99,94 L105,100 L111,94"/>
+    <path d="M99,188 L111,188"/><path d="M99,200 L105,206 L111,200"/>
+    <path d="M99,298 L111,298"/><path d="M99,310 L105,316 L111,310"/>
+    <path d="M99,408 L111,408"/><path d="M99,420 L105,426 L111,420"/>
+    <path d="M184,135 L184,147"/><path d="M184,355 L190,361 L184,367"/>
+    <path d="M294,70 L306,70"/><path d="M294,174 L300,180 L306,174"/>
+    <path d="M374,150 L386,150"/><path d="M374,174 L380,180 L386,174"/>
+    <path d="M339,282 L351,282"/><path d="M339,304 L345,310 L351,304"/>
+    <path d="M184,245 L184,257"/><path d="M244,358 L250,364 L244,370"/>
+    <path d="M184,355 L184,367"/><path d="M244,475 L250,481 L244,487"/>
+    <path d="M339,516 L351,516"/><path d="M339,544 L345,550 L351,544"/>
+    <path d="M434,358 L434,370"/><path d="M434,598 L440,604 L434,610"/>
+    <path d="M339,652 L351,652"/><path d="M339,674 L345,680 L351,674"/>
+    <path d="M256,728 L256,740"/><path d="M184,365 L190,371 L184,377"/>
+    <path d="M589,70 L601,70"/><path d="M589,304 L595,310 L601,304"/>
+    <path d="M434,475 L434,487"/><path d="M494,344 L500,350 L494,356"/>
+    <path d="M184,256 L184,268"/><path d="M494,394 L500,400 L494,406"/>
   </g>
 
-  <!-- ===================== web_events ===================== -->
-  <g>
-    <rect x="30" y="60" width="190" height="134" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-    <rect x="30" y="60" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-    <text x="125" y="80" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">web_events</text>
-    <line x1="64" y1="90" x2="64" y2="194" stroke="#333" stroke-width="1"/>
-    <line x1="30" y1="116" x2="220" y2="116" stroke="#333" stroke-width="1"/>
-    <line x1="30" y1="142" x2="220" y2="142" stroke="#333" stroke-width="1"/>
-    <line x1="30" y1="168" x2="220" y2="168" stroke="#333" stroke-width="1"/>
-    <text x="47" y="107" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
-    <text x="47" y="133" text-anchor="middle" font-weight="bold" font-size="12">FK</text>
-    <text x="76" y="107" font-size="13">id</text>
-    <text x="76" y="133" font-size="13">account_id</text>
-    <text x="76" y="159" font-size="13">occurred_at</text>
-    <text x="76" y="185" font-size="13">channel</text>
-  </g>
+  <!-- ===================== Column 1 ===================== -->
+  <!-- account_managers -->
+  <rect x="20" y="20" width="170" height="56" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="20" y="20" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">account_managers</text>
+  <line x1="54" y1="50" x2="54" y2="76" stroke="#333" stroke-width="1"/>
+  <text x="37" y="67" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="64" y="67" font-size="12">manager_id</text>
 
-  <!-- ===================== accounts ===================== -->
-  <g>
-    <rect x="320" y="30" width="200" height="212" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-    <rect x="320" y="30" width="200" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-    <text x="420" y="50" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">accounts</text>
-    <line x1="354" y1="60" x2="354" y2="242" stroke="#333" stroke-width="1"/>
-    <line x1="320" y1="86" x2="520" y2="86" stroke="#333" stroke-width="1"/>
-    <line x1="320" y1="112" x2="520" y2="112" stroke="#333" stroke-width="1"/>
-    <line x1="320" y1="138" x2="520" y2="138" stroke="#333" stroke-width="1"/>
-    <line x1="320" y1="164" x2="520" y2="164" stroke="#333" stroke-width="1"/>
-    <line x1="320" y1="190" x2="520" y2="190" stroke="#333" stroke-width="1"/>
-    <line x1="320" y1="216" x2="520" y2="216" stroke="#333" stroke-width="1"/>
-    <text x="337" y="77" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
-    <text x="337" y="233" text-anchor="middle" font-weight="bold" font-size="12">FK</text>
-    <text x="366" y="77" font-size="13">id</text>
-    <text x="366" y="103" font-size="13">name</text>
-    <text x="366" y="129" font-size="13">website</text>
-    <text x="366" y="155" font-size="13">latitude</text>
-    <text x="366" y="181" font-size="13">longitude</text>
-    <text x="366" y="207" font-size="13">primary_poc</text>
-    <text x="366" y="233" font-size="13">sales_rep_id</text>
-  </g>
+  <!-- governorates -->
+  <rect x="20" y="100" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="20" y="100" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="120" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">governorates</text>
+  <line x1="54" y1="130" x2="54" y2="182" stroke="#333" stroke-width="1"/>
+  <line x1="20" y1="156" x2="190" y2="156" stroke="#333" stroke-width="1"/>
+  <text x="37" y="147" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="64" y="147" font-size="12">governorate_id</text>
+  <text x="37" y="173" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="64" y="173" font-size="12">manager_id</text>
 
-  <!-- ===================== orders ===================== -->
-  <g>
-    <rect x="620" y="70" width="220" height="316" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-    <rect x="620" y="70" width="220" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-    <text x="730" y="90" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">orders</text>
-    <line x1="654" y1="100" x2="654" y2="386" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="126" x2="840" y2="126" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="152" x2="840" y2="152" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="178" x2="840" y2="178" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="204" x2="840" y2="204" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="230" x2="840" y2="230" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="256" x2="840" y2="256" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="282" x2="840" y2="282" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="308" x2="840" y2="308" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="334" x2="840" y2="334" stroke="#333" stroke-width="1"/>
-    <line x1="620" y1="360" x2="840" y2="360" stroke="#333" stroke-width="1"/>
-    <text x="637" y="117" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
-    <text x="637" y="143" text-anchor="middle" font-weight="bold" font-size="12">FK</text>
-    <text x="666" y="117" font-size="13">id</text>
-    <text x="666" y="143" font-size="13">account_id</text>
-    <text x="666" y="169" font-size="13">occurred_at</text>
-    <text x="666" y="195" font-size="13">standard_qty</text>
-    <text x="666" y="221" font-size="13">gloss_qty</text>
-    <text x="666" y="247" font-size="13">poster_qty</text>
-    <text x="666" y="273" font-size="13">total</text>
-    <text x="666" y="299" font-size="13">standard_amt_usd</text>
-    <text x="666" y="325" font-size="13">gloss_amt_usd</text>
-    <text x="666" y="351" font-size="13">poster_amt_usd</text>
-    <text x="666" y="377" font-size="13">total_amt_usd</text>
-  </g>
+  <!-- sellers -->
+  <rect x="20" y="210" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="20" y="210" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="230" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">sellers</text>
+  <line x1="54" y1="240" x2="54" y2="292" stroke="#333" stroke-width="1"/>
+  <line x1="20" y1="266" x2="190" y2="266" stroke="#333" stroke-width="1"/>
+  <text x="37" y="257" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="64" y="257" font-size="12">seller_id</text>
+  <text x="37" y="283" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="64" y="283" font-size="12">governorate_id</text>
 
-  <!-- ===================== sales_reps ===================== -->
-  <g>
-    <rect x="30" y="300" width="190" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-    <rect x="30" y="300" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-    <text x="125" y="320" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">sales_reps</text>
-    <line x1="64" y1="330" x2="64" y2="408" stroke="#333" stroke-width="1"/>
-    <line x1="30" y1="356" x2="220" y2="356" stroke="#333" stroke-width="1"/>
-    <line x1="30" y1="382" x2="220" y2="382" stroke="#333" stroke-width="1"/>
-    <text x="47" y="347" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
-    <text x="47" y="399" text-anchor="middle" font-weight="bold" font-size="12">FK</text>
-    <text x="76" y="347" font-size="13">id</text>
-    <text x="76" y="373" font-size="13">name</text>
-    <text x="76" y="399" font-size="13">region_id</text>
-  </g>
+  <!-- customers -->
+  <rect x="20" y="320" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="20" y="320" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="340" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">customers</text>
+  <line x1="54" y1="350" x2="54" y2="402" stroke="#333" stroke-width="1"/>
+  <line x1="20" y1="376" x2="190" y2="376" stroke="#333" stroke-width="1"/>
+  <text x="37" y="367" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="64" y="367" font-size="12">customer_id</text>
+  <text x="37" y="393" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="64" y="393" font-size="12">governorate_id</text>
 
-  <!-- ===================== region ===================== -->
-  <g>
-    <rect x="320" y="340" width="200" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-    <rect x="320" y="340" width="200" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-    <text x="420" y="360" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">region</text>
-    <line x1="354" y1="370" x2="354" y2="422" stroke="#333" stroke-width="1"/>
-    <line x1="320" y1="396" x2="520" y2="396" stroke="#333" stroke-width="1"/>
-    <text x="337" y="387" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
-    <text x="366" y="387" font-size="13">id</text>
-    <text x="366" y="413" font-size="13">name</text>
-  </g>
+  <!-- web_events -->
+  <rect x="20" y="430" width="170" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="20" y="430" width="170" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="105" y="450" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">web_events</text>
+  <line x1="54" y1="460" x2="54" y2="512" stroke="#333" stroke-width="1"/>
+  <line x1="20" y1="486" x2="190" y2="486" stroke="#333" stroke-width="1"/>
+  <text x="37" y="477" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="64" y="477" font-size="12">event_id</text>
+  <text x="37" y="503" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="64" y="503" font-size="12">customer_id</text>
 
-  <text x="450" y="440" text-anchor="middle" font-size="11" fill="#666">Parch &amp; Posey database schema</text>
+  <!-- ===================== Column 2 ===================== -->
+  <!-- brands -->
+  <rect x="250" y="20" width="190" height="56" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="250" y="20" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="345" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">brands</text>
+  <line x1="284" y1="50" x2="284" y2="76" stroke="#333" stroke-width="1"/>
+  <text x="267" y="67" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="294" y="67" font-size="12">brand_id</text>
+
+  <!-- categories -->
+  <rect x="250" y="100" width="190" height="56" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="250" y="100" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="345" y="120" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">categories</text>
+  <line x1="284" y1="130" x2="284" y2="156" stroke="#333" stroke-width="1"/>
+  <text x="267" y="147" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="294" y="147" font-size="12">category_id</text>
+
+  <!-- products -->
+  <rect x="250" y="180" width="190" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="250" y="180" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="345" y="200" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">products</text>
+  <line x1="284" y1="210" x2="284" y2="288" stroke="#333" stroke-width="1"/>
+  <line x1="250" y1="236" x2="440" y2="236" stroke="#333" stroke-width="1"/>
+  <line x1="250" y1="262" x2="440" y2="262" stroke="#333" stroke-width="1"/>
+  <text x="267" y="227" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="294" y="227" font-size="12">product_id</text>
+  <text x="267" y="253" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="294" y="253" font-size="12">category_id</text>
+  <text x="267" y="279" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="294" y="279" font-size="12">brand_id</text>
+
+  <!-- product_listings -->
+  <rect x="250" y="310" width="190" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="250" y="310" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="345" y="330" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">product_listings</text>
+  <line x1="284" y1="340" x2="284" y2="418" stroke="#333" stroke-width="1"/>
+  <line x1="250" y1="366" x2="440" y2="366" stroke="#333" stroke-width="1"/>
+  <line x1="250" y1="392" x2="440" y2="392" stroke="#333" stroke-width="1"/>
+  <text x="267" y="357" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="294" y="357" font-size="12">listing_id</text>
+  <text x="267" y="383" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="294" y="383" font-size="12">product_id</text>
+  <text x="267" y="409" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="294" y="409" font-size="12">seller_id</text>
+
+  <!-- orders -->
+  <rect x="250" y="440" width="190" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="250" y="440" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="345" y="460" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">orders</text>
+  <line x1="284" y1="470" x2="284" y2="522" stroke="#333" stroke-width="1"/>
+  <line x1="250" y1="496" x2="440" y2="496" stroke="#333" stroke-width="1"/>
+  <text x="267" y="487" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="294" y="487" font-size="12">order_id</text>
+  <text x="267" y="513" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="294" y="513" font-size="12">customer_id</text>
+
+  <!-- order_items -->
+  <rect x="250" y="550" width="190" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="250" y="550" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="345" y="570" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">order_items</text>
+  <line x1="284" y1="580" x2="284" y2="658" stroke="#333" stroke-width="1"/>
+  <line x1="250" y1="606" x2="440" y2="606" stroke="#333" stroke-width="1"/>
+  <line x1="250" y1="632" x2="440" y2="632" stroke="#333" stroke-width="1"/>
+  <text x="267" y="597" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="294" y="597" font-size="12">order_item_id</text>
+  <text x="267" y="623" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="294" y="623" font-size="12">order_id</text>
+  <text x="267" y="649" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="294" y="649" font-size="12">listing_id</text>
+
+  <!-- reviews -->
+  <rect x="250" y="680" width="190" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="250" y="680" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="345" y="700" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">reviews</text>
+  <line x1="284" y1="710" x2="284" y2="788" stroke="#333" stroke-width="1"/>
+  <line x1="250" y1="736" x2="440" y2="736" stroke="#333" stroke-width="1"/>
+  <line x1="250" y1="762" x2="440" y2="762" stroke="#333" stroke-width="1"/>
+  <text x="267" y="727" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="294" y="727" font-size="12">review_id</text>
+  <text x="267" y="753" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="294" y="753" font-size="12">order_item_id</text>
+  <text x="267" y="779" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="294" y="779" font-size="12">customer_id</text>
+
+  <!-- ===================== Column 3 ===================== -->
+  <!-- delivery_partners -->
+  <rect x="500" y="20" width="190" height="56" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="500" y="20" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="595" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">delivery_partners</text>
+  <line x1="534" y1="50" x2="534" y2="76" stroke="#333" stroke-width="1"/>
+  <text x="517" y="67" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="544" y="67" font-size="12">partner_id</text>
+
+  <!-- shipments -->
+  <rect x="500" y="310" width="190" height="134" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="500" y="310" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="595" y="330" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">shipments</text>
+  <line x1="534" y1="340" x2="534" y2="444" stroke="#333" stroke-width="1"/>
+  <line x1="500" y1="366" x2="690" y2="366" stroke="#333" stroke-width="1"/>
+  <line x1="500" y1="392" x2="690" y2="392" stroke="#333" stroke-width="1"/>
+  <line x1="500" y1="418" x2="690" y2="418" stroke="#333" stroke-width="1"/>
+  <text x="517" y="357" text-anchor="middle" font-weight="bold" font-size="11">PK</text>
+  <text x="544" y="357" font-size="12">shipment_id</text>
+  <text x="517" y="383" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="544" y="383" font-size="12">order_id</text>
+  <text x="517" y="409" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="544" y="409" font-size="12">seller_id</text>
+  <text x="517" y="435" text-anchor="middle" font-weight="bold" font-size="11">FK</text>
+  <text x="544" y="435" font-size="12">delivery_partner_id</text>
+
+  <text x="105" y="806" text-anchor="middle" font-size="11" fill="#666">Supply side</text>
+  <text x="345" y="806" text-anchor="middle" font-size="11" fill="#666">Catalog &amp; transactions</text>
+  <text x="595" y="806" text-anchor="middle" font-size="11" fill="#666">Fulfillment</text>
 </svg>
-<figcaption>The full parch_and_posey schema — region → sales_reps → accounts → {orders, web_events}, every column shown, all one-to-many.</figcaption>
+<figcaption>The full rawaj schema — 14 tables, every column shown is a key. Left: who's selling, and
+where. Middle: the catalog and every transaction. Right: how orders get delivered.</figcaption>
 </figure>
-<p>You won't need JOINs to query any single table in this lesson (that's Day 03), but keep this
-shape in mind — it's exactly why <code class="inline">account_id</code> shows up as a column on
-both <code class="inline">orders</code> and <code class="inline">web_events</code>: both tables sit
-one level below <code class="inline">accounts</code> in the same chain.</p>
+<p>You won't need JOINs to query any single table in this lesson (that's Day 03) — today stays
+inside <code class="inline">customers</code>, <code class="inline">orders</code>, and
+<code class="inline">web_events</code>. But keep this shape in mind: it's exactly why
+<code class="inline">customer_id</code> shows up as a column on both <code class="inline">orders</code>
+and <code class="inline">web_events</code> — both tables sit one level below
+<code class="inline">customers</code> in the same chain.</p>
 
-<h2 class="section"><span class="num">2</span>Quick review: Day 01 on a new dataset</h2>
-<p class="section-intro">Same syntax, unfamiliar table names — a deliberate warm-up before anything new.</p>
+<h2 class="section"><span class="num">2</span>Same database, two new tables</h2>
+<p class="section-intro">Same syntax you already know, applied to richer columns — a deliberate warm-up before anything new.</p>
 <p>The walkthrough opens with <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>,
 <code class="inline">DISTINCT</code>, and <code class="inline">ORDER BY</code> again — now against
-<code class="inline">orders</code>, <code class="inline">web_events</code>, and
-<code class="inline">accounts</code> instead of <code class="inline">country</code>. If any of that
-feels shaky, this is the moment to revisit Day 01, because everything below assumes it's second
-nature.</p>
+<code class="inline">orders</code> and <code class="inline">web_events</code>, alongside the
+<code class="inline">customers</code> table from Day 01. If any of that feels shaky, this is the
+moment to revisit Day 01, because everything below assumes it's second nature.</p>
 
 <h2 class="section"><span class="num">3</span>WHERE — filtering rows</h2>
 <p>WHERE narrows which rows a query returns, evaluated <em>before</em>
 <code class="inline">SELECT</code>/<code class="inline">ORDER BY</code>/<code class="inline">LIMIT</code>
 get a chance to do anything — think of it as a gate that rows have to pass through first.</p>
-<p><strong>Business question:</strong> Finance wants to see every order worth more than $100,000 — the company's biggest deals, most valuable first.</p>
+<p><strong>Business question:</strong> Finance wants to see every order worth more than 10,000 EGP — the company's biggest single sales, most valuable first.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> *
 <span class="kw">FROM</span> orders
-<span class="kw">WHERE</span> total_amt_usd &gt; 100000
-<span class="kw">ORDER BY</span> total_amt_usd <span class="kw">DESC</span>;</div>
+<span class="kw">WHERE</span> total_amount &gt; 10000
+<span class="kw">ORDER BY</span> total_amount <span class="kw">DESC</span>;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Comparison operators</b><p><code class="inline">=</code>, <code class="inline">&gt;</code>, <code class="inline">&lt;</code>, <code class="inline">&gt;=</code>, <code class="inline">&lt;=</code> all work exactly as you'd expect from arithmetic.</p></div>
-  <div class="annotation"><b>Not-equal, three ways</b><p><code class="inline">!=</code>, <code class="inline">&lt;&gt;</code> (standard SQL), and <code class="inline">WHERE NOT account_id = 1001</code> all mean the same thing — <code class="inline">!=</code> is the one you'll see most in practice.</p></div>
+  <div class="annotation"><b>Not-equal, three ways</b><p><code class="inline">!=</code>, <code class="inline">&lt;&gt;</code> (standard SQL), and <code class="inline">WHERE NOT customer_id = 1</code> all mean the same thing — <code class="inline">!=</code> is the one you'll see most in practice.</p></div>
 </div>
 
 <h2 class="section"><span class="num">4</span>AND / OR — combining conditions</h2>
 <div class="compare">
-  <div class="col good"><h4>AND — narrows</h4><p>Both conditions must hold. <code class="inline">channel = 'facebook' AND account_id = 1001</code> returns only Facebook events, and only for that one account — the smallest of the four possible result sets.</p></div>
-  <div class="col bad"><h4>OR — widens</h4><p>Either can hold. Swap in <code class="inline">OR</code> and you get every Facebook event from <em>any</em> account, plus every event (any channel) from account 1001 — often a much bigger, looser result than intended.</p></div>
+  <div class="col good"><h4>AND — narrows</h4><p>Both conditions must hold. <code class="inline">channel = 'facebook' AND customer_id = 1</code> returns only Facebook events, and only for that one customer — the smallest of the four possible result sets.</p></div>
+  <div class="col bad"><h4>OR — widens</h4><p>Either can hold. Swap in <code class="inline">OR</code> and you get every Facebook event from <em>any</em> customer, plus every event (any channel) from customer 1 — often a much bigger, looser result than intended.</p></div>
 </div>
-<p><strong>Business question:</strong> did account 1001 specifically show up on Facebook — versus casting a much wider net for anything Facebook-related, plus everything from that account regardless of channel?</p>
+<p><strong>Business question:</strong> did customer 1 specifically show up on Facebook — versus casting a much wider net for anything Facebook-related, plus everything from that customer regardless of channel?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
-  <div class="code-body"><span class="com">-- AND: narrow — only Facebook events from account 1001</span>
+  <div class="code-body"><span class="com">-- AND: narrow — only Facebook events from customer 1</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> web_events
 <span class="kw">WHERE</span> channel = <span class="str">'facebook'</span>
-  <span class="kw">AND</span> account_id = 1001;
+  <span class="kw">AND</span> customer_id = 1;
 
-<span class="com">-- OR: wide — Facebook events from anyone, plus every event from account 1001</span>
+<span class="com">-- OR: wide — Facebook events from anyone, plus every event from customer 1</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> web_events
 <span class="kw">WHERE</span> channel = <span class="str">'facebook'</span>
-   <span class="kw">OR</span> account_id = 1001;</div>
+   <span class="kw">OR</span> customer_id = 1;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Same shape, different meaning</b><p>Only the keyword changed — the row counts these two return can differ by an order of magnitude on a real dataset.</p></div>
+  <div class="annotation"><b>Same shape, different meaning</b><p>Only the keyword changed — the row counts these two return can differ by an order of magnitude on a real dataset. (Run both — the AND version might come back empty for a given customer, while OR still returns thousands of Facebook rows alone. That's not a bug; it just means this particular customer's own activity doesn't happen to include a Facebook visit.)</p></div>
 </div>
 <div class="callout warn">
   <div class="ti">The most common real-world SQL bug</div>
@@ -328,45 +432,45 @@ get a chance to do anything — think of it as a gate that rows have to pass thr
   <line x1="180" y1="55" x2="440" y2="55" stroke="#1f6fb2" stroke-width="4"/>
   <circle cx="180" cy="55" r="6" fill="#1f6fb2" stroke="#333" stroke-width="1"/>
   <circle cx="440" cy="55" r="6" fill="#1f6fb2" stroke="#333" stroke-width="1"/>
-  <text x="180" y="35" text-anchor="middle" font-size="12" fill="#1f6fb2" font-weight="bold">500</text>
-  <text x="440" y="35" text-anchor="middle" font-size="12" fill="#1f6fb2" font-weight="bold">999</text>
-  <text x="310" y="80" text-anchor="middle" font-weight="bold" font-size="12.5" fill="#1f6fb2">BETWEEN 500 AND 999 — both ends included</text>
+  <text x="180" y="35" text-anchor="middle" font-size="12" fill="#1f6fb2" font-weight="bold">2000</text>
+  <text x="440" y="35" text-anchor="middle" font-size="12" fill="#1f6fb2" font-weight="bold">4999</text>
+  <text x="310" y="80" text-anchor="middle" font-weight="bold" font-size="12.5" fill="#1f6fb2">BETWEEN 2000 AND 4999 — both ends included</text>
 </svg>
-<figcaption>total_amt_usd BETWEEN 500 AND 999</figcaption>
+<figcaption>total_amount BETWEEN 2000 AND 4999</figcaption>
 </figure>
-<p><code class="inline">WHERE total_amt_usd BETWEEN 500 AND 999</code> is shorthand for
-<code class="inline">WHERE total_amt_usd &gt;= 500 AND total_amt_usd &lt;= 999</code> —
+<p><code class="inline">WHERE total_amount BETWEEN 2000 AND 4999</code> is shorthand for
+<code class="inline">WHERE total_amount &gt;= 2000 AND total_amount &lt;= 4999</code> —
 <strong>both endpoints inclusive</strong>. It works on dates too:
-<code class="inline">WHERE occurred_at BETWEEN '2014-12-30' AND '2015-01-01'</code> — a pattern you'll
+<code class="inline">WHERE order_date BETWEEN '2024-12-30' AND '2025-01-01'</code> — a pattern you'll
 use constantly once real reporting periods (last week, last quarter) enter the picture.</p>
-<p><strong>Business question:</strong> which orders fall in the $500–$999 mid-size range, and which orders came in during the final two days of 2014, for a year-end cutoff report?</p>
+<p><strong>Business question:</strong> which orders fall in the 2,000–4,999 EGP mid-size range, and which orders came in during the final two days of 2024, for a year-end cutoff report?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- numeric range</span>
-<span class="kw">SELECT</span> id, total_amt_usd
+<span class="kw">SELECT</span> order_id, total_amount
 <span class="kw">FROM</span> orders
-<span class="kw">WHERE</span> total_amt_usd <span class="kw">BETWEEN</span> 500 <span class="kw">AND</span> 999;
+<span class="kw">WHERE</span> total_amount <span class="kw">BETWEEN</span> 2000 <span class="kw">AND</span> 4999;
 
 <span class="com">-- date range — same keyword, no numeric/date distinction to remember</span>
-<span class="kw">SELECT</span> id, occurred_at
+<span class="kw">SELECT</span> order_id, order_date
 <span class="kw">FROM</span> orders
-<span class="kw">WHERE</span> occurred_at <span class="kw">BETWEEN</span> <span class="str">'2014-12-30'</span> <span class="kw">AND</span> <span class="str">'2015-01-01'</span>;</div>
+<span class="kw">WHERE</span> order_date <span class="kw">BETWEEN</span> <span class="str">'2024-12-30'</span> <span class="kw">AND</span> <span class="str">'2025-01-01'</span>;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Written out with AND/OR, this gets long fast</b><p><code class="inline">WHERE total_amt_usd &gt;= 500 AND total_amt_usd &lt;= 999</code> says exactly the same thing — <code class="inline">BETWEEN</code> is purely a shorter way to write a two-sided AND.</p></div>
+  <div class="annotation"><b>Written out with AND/OR, this gets long fast</b><p><code class="inline">WHERE total_amount &gt;= 2000 AND total_amount &lt;= 4999</code> says exactly the same thing — <code class="inline">BETWEEN</code> is purely a shorter way to write a two-sided AND.</p></div>
 </div>
 
 <h2 class="section"><span class="num">6</span>IN vs OR</h2>
-<p><strong>Business question:</strong> marketing wants every web event from Facebook, Twitter, or organic search — three channels at once.</p>
+<p><strong>Business question:</strong> marketing wants every web event from Facebook, Instagram, or organic search — three channels at once.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- gets unwieldy fast</span>
-<span class="kw">WHERE</span> channel = <span class="str">'facebook'</span> <span class="kw">OR</span> channel = <span class="str">'twitter'</span> <span class="kw">OR</span> channel = <span class="str">'organic'</span>
+<span class="kw">WHERE</span> channel = <span class="str">'facebook'</span> <span class="kw">OR</span> channel = <span class="str">'instagram'</span> <span class="kw">OR</span> channel = <span class="str">'organic'</span>
 
 <span class="com">-- identical result, one line</span>
-<span class="kw">WHERE</span> channel <span class="kw">IN</span> (<span class="str">'facebook'</span>, <span class="str">'twitter'</span>, <span class="str">'organic'</span>)</div>
+<span class="kw">WHERE</span> channel <span class="kw">IN</span> (<span class="str">'facebook'</span>, <span class="str">'instagram'</span>, <span class="str">'organic'</span>)</div>
 </div>
-<div class="annotations"><div class="annotation"><b>NOT IN works too</b><p>Excludes every value in the list instead of matching it — handy for "everything except these three legacy channels."</p></div></div>
+<div class="annotations"><div class="annotation"><b>NOT IN works too</b><p>Excludes every value in the list instead of matching it — handy for "everything except these legacy channels."</p></div></div>
 
 <h2 class="section"><span class="num">7</span>NULL checks</h2>
 <p><code class="inline">NULL</code> means "no value was ever recorded here" — it is not
@@ -375,11 +479,12 @@ use constantly once real reporting periods (last week, last quarter) enter the p
 matches nothing, with no error). Use <code class="inline">IS NULL</code> /
 <code class="inline">IS NOT NULL</code> instead.</p>
 <div class="callout insight">
-  <div class="ti">Why this dataset won't show it</div>
-  <p>Parch &amp; Posey happens to have no <code class="inline">NULL</code>s anywhere, so
-  <code class="inline">WHERE primary_poc IS NULL</code> returns 0 rows here. The syntax is exactly
-  what you'd reach for on a real, messier dataset — missing phone numbers, unfilled optional fields,
-  a join that didn't find a match (you'll see that scenario properly on Day 03).</p>
+  <div class="ti">Rawaj actually has these</div>
+  <p>About 1 in 10 customers checked out as a guest and never left an email on file, so
+  <code class="inline">WHERE email IS NULL</code> genuinely returns rows here — not a hypothetical.
+  This is the everyday reason you reach for <code class="inline">IS NULL</code>: missing optional
+  fields, unfilled form data, a join that didn't find a match (you'll see that scenario properly on
+  Day 03).</p>
 </div>
 
 <h2 class="section"><span class="num">8</span>LIKE — pattern matching</h2>
@@ -412,7 +517,7 @@ per group:</p>
     <rect x="210" y="22" width="90" height="34" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.6"/>
     <text x="255" y="43" text-anchor="middle" fill="#1f6fb2">direct</text>
     <rect x="310" y="22" width="90" height="34" fill="#ffffff" stroke="#2e7d32" stroke-width="1.6"/>
-    <text x="355" y="43" text-anchor="middle" fill="#2e7d32">twitter</text>
+    <text x="355" y="43" text-anchor="middle" fill="#2e7d32">organic</text>
     <rect x="410" y="22" width="90" height="34" fill="#ffffff" stroke="#b8860b" stroke-width="1.6"/>
     <text x="455" y="43" text-anchor="middle" fill="#b8860b">facebook</text>
     <rect x="510" y="22" width="90" height="34" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.6"/>
@@ -436,7 +541,7 @@ per group:</p>
   <text x="105" y="194" font-size="12">COUNT(*) = 3</text>
   <text x="305" y="174" text-anchor="middle" font-weight="bold" font-size="14" fill="#b8860b">facebook</text>
   <text x="305" y="194" font-size="12">COUNT(*) = 2</text>
-  <text x="505" y="174" text-anchor="middle" font-weight="bold" font-size="14" fill="#2e7d32">twitter</text>
+  <text x="505" y="174" text-anchor="middle" font-weight="bold" font-size="14" fill="#2e7d32">organic</text>
   <text x="505" y="194" font-size="12">COUNT(*) = 1</text>
 </svg>
 <figcaption>web_events rows, in original table order, sorted by GROUP BY channel into buckets by color — COUNT(*) then runs once per bucket.</figcaption>
@@ -451,7 +556,7 @@ per group:</p>
 </div>
 <div class="annotations">
   <div class="annotation"><b>The rule</b><p>Every column in <code class="inline">SELECT</code> that <em>isn't</em> wrapped in an aggregate function must appear in <code class="inline">GROUP BY</code>.</p></div>
-  <div class="annotation"><b>Multi-column groups</b><p><code class="inline">GROUP BY account_id, channel</code> gives one row per <em>combination</em> — this account, that channel.</p></div>
+  <div class="annotation"><b>Multi-column groups</b><p><code class="inline">GROUP BY customer_id, channel</code> gives one row per <em>combination</em> — this customer, that channel.</p></div>
 </div>
 
 <h2 class="section"><span class="num">10</span>HAVING — filtering grouped results</h2>
@@ -460,21 +565,21 @@ filters groups <em>after</em> aggregation runs. That distinction matters because
 <code class="inline">COUNT(*)</code> or <code class="inline">SUM(...)</code> doesn't exist yet at the
 point <code class="inline">WHERE</code> is evaluated — only <code class="inline">HAVING</code> can
 filter on it.</p>
-<p><strong>Business question:</strong> which marketing channels actually moved the needle — more than 500 web events?</p>
+<p><strong>Business question:</strong> which marketing channels actually moved the needle — more than 2,000 web events?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> Cnt
 <span class="kw">FROM</span> web_events
 <span class="kw">GROUP BY</span> channel
-<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; 500
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; 2000
 <span class="kw">ORDER BY</span> Cnt <span class="kw">DESC</span>;
 
-<span class="com">-- WHERE COUNT(*) > 500 here would be a syntax error —</span>
+<span class="com">-- WHERE COUNT(*) > 2000 here would be a syntax error —</span>
 <span class="com">-- COUNT(*) doesn't exist yet at the point WHERE runs</span></div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Accounts with more than 10 orders</b><p><code class="inline">GROUP BY account_id HAVING COUNT(*) &gt; 10</code> — same shape, a different single table.</p></div>
-  <div class="annotation"><b>Accounts that spent under $500 total</b><p><code class="inline">HAVING SUM(total_amt_usd) &lt; 500</code> — <code class="inline">HAVING</code> works with any aggregate, not just <code class="inline">COUNT</code>.</p></div>
+  <div class="annotation"><b>Customers with more than 10 orders</b><p><code class="inline">GROUP BY customer_id HAVING COUNT(*) &gt; 10</code> — same shape, a different single table.</p></div>
+  <div class="annotation"><b>Customers that spent under 2,000 EGP total</b><p><code class="inline">HAVING SUM(total_amount) &lt; 2000</code> — <code class="inline">HAVING</code> works with any aggregate, not just <code class="inline">COUNT</code>.</p></div>
   <div class="annotation"><b>Stacks with WHERE</b><p>Filter rows first with <code class="inline">WHERE</code>, then filter the resulting groups with <code class="inline">HAVING</code> — the two run at different stages, so a query can use both at once.</p></div>
 </div>
 
@@ -488,9 +593,9 @@ filter on it.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- three equivalent ways to get just the year</span>
-<span class="kw">SELECT</span> <span class="fn">YEAR</span>(occurred_at) <span class="kw">FROM</span> orders;
-<span class="kw">SELECT</span> <span class="fn">EXTRACT</span>(<span class="kw">YEAR FROM</span> occurred_at) <span class="kw">FROM</span> orders;
-<span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(occurred_at, <span class="str">'%Y'</span>) <span class="kw">FROM</span> orders;</div>
+<span class="kw">SELECT</span> <span class="fn">YEAR</span>(order_date) <span class="kw">FROM</span> orders;
+<span class="kw">SELECT</span> <span class="fn">EXTRACT</span>(<span class="kw">YEAR FROM</span> order_date) <span class="kw">FROM</span> orders;
+<span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(order_date, <span class="str">'%Y'</span>) <span class="kw">FROM</span> orders;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Pick one, be consistent</b><p>All three return the same value — <code class="inline">YEAR()</code> is usually the clearest to read back later.</p></div>
@@ -501,22 +606,22 @@ filter on it.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- expected delivery = order date + 7 days</span>
-<span class="kw">SELECT</span> occurred_at, <span class="fn">DATE_ADD</span>(occurred_at, <span class="kw">INTERVAL</span> 7 <span class="kw">DAY</span>) <span class="kw">AS</span> expected_delivery
+<span class="kw">SELECT</span> order_date, <span class="fn">DATE_ADD</span>(order_date, <span class="kw">INTERVAL</span> 7 <span class="kw">DAY</span>) <span class="kw">AS</span> expected_delivery
 <span class="kw">FROM</span> orders;
 
 <span class="com">-- how many days ago did this order happen?</span>
-<span class="kw">SELECT</span> occurred_at, <span class="fn">DATEDIFF</span>(<span class="fn">CURDATE</span>(), occurred_at) <span class="kw">AS</span> days_ago
+<span class="kw">SELECT</span> order_date, <span class="fn">DATEDIFF</span>(<span class="fn">CURDATE</span>(), order_date) <span class="kw">AS</span> days_ago
 <span class="kw">FROM</span> orders;
 
 <span class="com">-- bucket every order into the month it happened, ignoring the day/time</span>
-<span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(occurred_at, <span class="str">'%Y-%m'</span>) <span class="kw">AS</span> order_month, <span class="fn">COUNT</span>(*)
+<span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(order_date, <span class="str">'%Y-%m'</span>) <span class="kw">AS</span> order_month, <span class="fn">COUNT</span>(*)
 <span class="kw">FROM</span> orders
 <span class="kw">GROUP BY</span> order_month;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>DATE_ADD / DATE_SUB</b><p><code class="inline">DATE_ADD(date, INTERVAL n DAY)</code> shifts a date forward; swap in <code class="inline">DATE_SUB</code> — or a negative interval — to shift backward. <code class="inline">INTERVAL</code> also accepts <code class="inline">MONTH</code>, <code class="inline">YEAR</code>, <code class="inline">HOUR</code>, and more.</p></div>
   <div class="annotation"><b>DATEDIFF</b><p>Returns the number of days between two dates — handy for "how long ago," or for measuring the gap between an order date and a delivery date.</p></div>
-  <div class="annotation"><b>DATE_FORMAT + GROUP BY</b><p>This is how monthly/yearly reports get built: format every timestamp down to just <code class="inline">'YYYY-MM'</code>, then group on that string — every order in the same month collapses into one row.</p></div>
+  <div class="annotation"><b>DATE_FORMAT + GROUP BY</b><p>This is how monthly/yearly reports get built: format every timestamp down to just <code class="inline">'YYYY-MM'</code>, then group on that string — every order in the same month collapses into one row. Watch for this pattern with Rawaj's own data: order volume genuinely spikes every year during Ramadan/Eid — a real seasonal signal, not noise.</p></div>
 </div>
 
 <h3 class="sub">DATE_FORMAT specifiers</h3>
@@ -543,7 +648,7 @@ inside one format string, e.g. <code class="inline">'%W, %M %e %Y'</code> → <c
 
 <div class="callout recap">
   <div class="ti">Next: Day 03</div>
-  <p>JOINs + CASE — bringing sales_reps, accounts, orders, and web_events together, plus your first CASE statements.</p>
+  <p>JOINs + CASE — bringing sellers, products, categories, order_items, and the rest of Rawaj together, plus your first CASE statements.</p>
 </div>
 
 <footer>Day 02 · Filtering &amp; Aggregation · self-paced</footer>

@@ -22,6 +22,8 @@
 body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
 .page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
 .crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+.home-link{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray);text-decoration:none;margin-bottom:10px}
+.home-link:hover{color:var(--blue)}
 h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
 .subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
 .objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
@@ -99,9 +101,10 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
   </defs>
 </svg>
 
-<div class="crumb">Day 01 of 9 · SQL Foundations</div>
+<a class="home-link" href="../index.html">&larr; Course home</a>
+<div class="crumb">Day 01 of 10 · SQL Foundations</div>
 <h1 class="title">SQL Foundations</h1>
-<p class="subtitle">What SQL is, why it matters, and your first queries — against the <code class="inline">world</code> database.</p>
+<p class="subtitle">What SQL is, why it matters, and your first queries — against the <code class="inline">rawaj</code> database.</p>
 
 <div class="objectives">
   <h2>What you'll be able to do after this lesson</h2>
@@ -116,7 +119,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p>Run <code class="inline">Databases/world_db.sql</code> once against your local MySQL server — it creates the <code class="inline">world</code> database and loads it with data. Everything below queries that database. If you haven't installed MySQL yet, jump ahead to Section 8.</p>
+  <p>Run <code class="inline">Databases/rawaj_db.sql</code> once against your local MySQL server — it creates the <code class="inline">rawaj</code> database and loads it with data. Everything below queries that database. If you haven't installed MySQL yet, jump ahead to Section 8.</p>
 </div>
 
 <h2 class="section"><span class="num">1</span>What is SQL?</h2>
@@ -387,7 +390,7 @@ on either side.</p>
 worth knowing the names even though this course lives almost entirely in the first one:</p>
 <div class="card-grid">
   <div class="card"><h4>DML — Data Manipulation</h4><p><code class="inline">SELECT</code>, <code class="inline">INSERT</code>, <code class="inline">UPDATE</code>, <code class="inline">DELETE</code>. Working with the rows inside tables that already exist.</p></div>
-  <div class="card"><h4>DDL — Data Definition</h4><p><code class="inline">CREATE</code>, <code class="inline">ALTER</code>, <code class="inline">DROP</code>. Building and changing the tables themselves — you've already run one DDL statement if you set up <code class="inline">world_db.sql</code>.</p></div>
+  <div class="card"><h4>DDL — Data Definition</h4><p><code class="inline">CREATE</code>, <code class="inline">ALTER</code>, <code class="inline">DROP</code>. Building and changing the tables themselves — you've already run one DDL statement if you set up <code class="inline">rawaj_db.sql</code>.</p></div>
   <div class="card"><h4>DCL — Data Control</h4><p><code class="inline">GRANT</code>, <code class="inline">REVOKE</code>. Who's allowed to do what — relevant once a database has more than one user.</p></div>
   <div class="card"><h4>TCL — Transaction Control</h4><p><code class="inline">COMMIT</code>, <code class="inline">ROLLBACK</code>. Making a batch of changes permanent, or undoing them if something went wrong mid-way.</p></div>
 </div>
@@ -425,66 +428,54 @@ Every one of those is a small variation on the query above.</p>
 <div class="callout tip">
   <div class="ti">Installing MySQL</div>
   <p>Windows installer: <code class="inline">dev.mysql.com/downloads/installer</code>. Choose the "Full" setup type so MySQL Server and MySQL Workbench (the GUI you'll run queries from) both install together.</p>
-  <p>Once installed, run <code class="inline">world_db.sql</code> to load this lesson's database.</p>
+  <p>Once installed, run <code class="inline">rawaj_db.sql</code> to load this lesson's database.</p>
 </div>
 
-<h2 class="section"><span class="num">9</span>The <code class="inline">world</code> database</h2>
-<p class="section-intro">Everything from here on queries this database. Three tables, chained by a foreign key:</p>
+<h2 class="section"><span class="num">9</span>The <code class="inline">rawaj</code> database</h2>
+<p class="section-intro">Everything from here on queries this database — a fictional Egyptian e-commerce marketplace. Two tables to start, chained by a foreign key:</p>
 <figure>
-<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
-  <rect x="0" y="0" width="700" height="260" fill="#ffffff"/>
-  <rect x="0" y="0" width="700" height="260" fill="url(#erd-grid)"/>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
+  <rect x="0" y="0" width="700" height="240" fill="#ffffff"/>
+  <rect x="0" y="0" width="700" height="240" fill="url(#erd-grid)"/>
 
-  <g stroke="#333" stroke-width="1.4" fill="none">
-    <polyline points="220,117 260,117 260,67 440,67"/>
-    <polyline points="220,117 260,117 260,207 440,207"/>
-  </g>
-  <g stroke="#333" stroke-width="1.4" fill="none">
-    <path d="M232,111 L232,123"/>
-    <path d="M440,55 L428,67 L440,79"/>
-    <path d="M440,195 L428,207 L440,219"/>
-  </g>
+  <line x1="210" y1="131" x2="440" y2="131" stroke="#333" stroke-width="1.4"/>
+  <path d="M222,125 L222,137" stroke="#333" stroke-width="1.4" fill="none"/>
+  <path d="M440,119 L428,131 L440,143" stroke="#333" stroke-width="1.4" fill="none"/>
 
-  <rect x="20" y="70" width="200" height="134" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="20" y="70" width="200" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="120" y="90" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">country</text>
-  <line x1="54" y1="100" x2="54" y2="204" stroke="#333" stroke-width="1"/>
-  <line x1="20" y1="126" x2="220" y2="126" stroke="#333" stroke-width="1"/>
-  <line x1="20" y1="152" x2="220" y2="152" stroke="#333" stroke-width="1"/>
-  <line x1="20" y1="178" x2="220" y2="178" stroke="#333" stroke-width="1"/>
-  <text x="37" y="117" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
-  <text x="66" y="117" font-size="13">Code</text>
-  <text x="66" y="143" font-size="13">Name</text>
-  <text x="66" y="169" font-size="13">Continent</text>
-  <text x="66" y="195" font-size="13">Population</text>
+  <rect x="20" y="90" width="190" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="20" y="90" width="190" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="115" y="110" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">governorates</text>
+  <line x1="54" y1="120" x2="54" y2="172" stroke="#333" stroke-width="1"/>
+  <line x1="20" y1="146" x2="210" y2="146" stroke="#333" stroke-width="1"/>
+  <text x="37" y="137" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
+  <text x="66" y="137" font-size="13">governorate_id</text>
+  <text x="66" y="163" font-size="13">governorate_name</text>
 
-  <rect x="440" y="20" width="220" height="108" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="440" y="20" width="220" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="550" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">city</text>
-  <line x1="474" y1="50" x2="474" y2="128" stroke="#333" stroke-width="1"/>
-  <line x1="440" y1="76" x2="660" y2="76" stroke="#333" stroke-width="1"/>
-  <line x1="440" y1="102" x2="660" y2="102" stroke="#333" stroke-width="1"/>
-  <text x="457" y="67" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
-  <text x="486" y="67" font-size="13">ID</text>
-  <text x="486" y="93" font-size="13">Name</text>
-  <text x="457" y="119" text-anchor="middle" font-weight="bold" font-size="12">FK</text>
-  <text x="486" y="119" font-size="13">CountryCode</text>
-
-  <rect x="440" y="160" width="220" height="82" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <rect x="440" y="160" width="220" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="550" y="180" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">countrylanguage</text>
-  <line x1="474" y1="190" x2="474" y2="242" stroke="#333" stroke-width="1"/>
-  <line x1="440" y1="216" x2="660" y2="216" stroke="#333" stroke-width="1"/>
-  <text x="457" y="207" text-anchor="middle" font-weight="bold" font-size="12">FK</text>
-  <text x="486" y="207" font-size="13">CountryCode</text>
-  <text x="486" y="233" font-size="13">Language</text>
+  <rect x="440" y="38" width="230" height="186" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="440" y="38" width="230" height="30" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="555" y="58" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="15">customers</text>
+  <line x1="474" y1="68" x2="474" y2="224" stroke="#333" stroke-width="1"/>
+  <line x1="440" y1="94" x2="670" y2="94" stroke="#333" stroke-width="1"/>
+  <line x1="440" y1="120" x2="670" y2="120" stroke="#333" stroke-width="1"/>
+  <line x1="440" y1="146" x2="670" y2="146" stroke="#333" stroke-width="1"/>
+  <line x1="440" y1="172" x2="670" y2="172" stroke="#333" stroke-width="1"/>
+  <line x1="440" y1="198" x2="670" y2="198" stroke="#333" stroke-width="1"/>
+  <text x="457" y="85" text-anchor="middle" font-weight="bold" font-size="12">PK</text>
+  <text x="486" y="85" font-size="13">customer_id</text>
+  <text x="486" y="111" font-size="13">first_name</text>
+  <text x="486" y="137" font-size="13">last_name</text>
+  <text x="486" y="163" font-size="13">email</text>
+  <text x="457" y="189" text-anchor="middle" font-weight="bold" font-size="12">FK</text>
+  <text x="486" y="189" font-size="13">governorate_id</text>
+  <text x="486" y="215" font-size="13">signup_date</text>
 </svg>
-<figcaption>country → city and country → countrylanguage, both one-to-many.</figcaption>
+<figcaption>governorates → customers, one-to-many — every customer belongs to exactly one governorate, and a governorate can have many customers.</figcaption>
 </figure>
-<p>This lesson stays inside <code class="inline">country</code> — a single table is plenty to
-practice on. You'll bring in <code class="inline">city</code> and
-<code class="inline">countrylanguage</code> once JOINs are introduced on Day 03, at which point this
-diagram becomes directly useful again: every JOIN you write is just "follow one of these arrows."</p>
+<p>This lesson stays inside <code class="inline">customers</code> — a single table is plenty to
+practice on. Day 02 brings in <code class="inline">orders</code> and
+<code class="inline">web_events</code>, and the rest of Rawaj's tables (sellers, products,
+reviews, and more) show up once JOINs are introduced on Day 03 — at which point diagrams like this
+one become directly useful: every JOIN you write is just "follow one of these arrows."</p>
 
 <h2 class="section"><span class="num">10</span>Anatomy of a SELECT</h2>
 <p>Every query in this lesson has the same skeleton — learn this shape once and you can read (and
@@ -497,15 +488,15 @@ predict the structure of) almost any SELECT you'll ever encounter:</p>
 <span class="kw">ORDER BY</span> &lt;column&gt;
 <span class="kw">LIMIT</span> &lt;count&gt;;</div>
 </div>
-<p><strong>Business question:</strong> a travel-industry analyst wants a quick regional overview of every country — just region, continent, and name to start.</p>
+<p><strong>Business question:</strong> marketing wants a first look at every customer on file — just first name, last name, and email to start.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> Region, Continent, Name
-<span class="kw">FROM</span> country;
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> first_name, last_name, email
+<span class="kw">FROM</span> customers;
 
 <span class="com">-- SELECT * means "give me every column"</span>
 <span class="kw">SELECT</span> *
-<span class="kw">FROM</span> country;</div>
+<span class="kw">FROM</span> customers;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Name columns explicitly</b><p>Clearer what the query returns, and it won't silently break — or silently return an extra unwanted column — if someone adds a column to the table later.</p></div>
@@ -545,15 +536,15 @@ results" works on any website with a paginated table.</p>
 </svg>
 <figcaption>LIMIT 3 OFFSET 2 on an 8-row table — skip the first 2, return the next 3.</figcaption>
 </figure>
-<p><strong>Business question:</strong> the team only wants to review one slice of the country list at a time — show "page 2," 3 countries per page.</p>
+<p><strong>Business question:</strong> the team only wants to review one slice of the customer list at a time — show "page 2," 3 customers per page.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div>
   <div class="code-body"><span class="com">-- standard SQL</span>
-<span class="kw">SELECT</span> * <span class="kw">FROM</span> country
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> customers
 <span class="kw">LIMIT</span> 3 <span class="kw">OFFSET</span> 2;
 
 <span class="com">-- MySQL shortcut: LIMIT skip, count</span>
-<span class="kw">SELECT</span> * <span class="kw">FROM</span> country
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> customers
 <span class="kw">LIMIT</span> 2,3;</div>
 </div>
 <div class="annotations">
@@ -562,42 +553,42 @@ results" works on any website with a paginated table.</p>
 </div>
 
 <h2 class="section"><span class="num">12</span>DISTINCT</h2>
-<p><strong>Business question:</strong> before building a region filter for a dashboard, find out what regions actually exist in the data.</p>
+<p><strong>Business question:</strong> before building a governorate filter for a dashboard, find out which governorates actually have customers registered.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT DISTINCT</span> Region
-<span class="kw">FROM</span> country;</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT DISTINCT</span> governorate_id
+<span class="kw">FROM</span> customers;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Collapses duplicates</b><p>Down to one row per unique value — without it, you'd get one row <em>per country</em>, with <code class="inline">'Asia'</code> repeated for every Asian country.</p></div>
+  <div class="annotation"><b>Collapses duplicates</b><p>Down to one row per unique value — without it, you'd get one row <em>per customer</em>, with each governorate's ID repeated for every customer registered there.</p></div>
   <div class="annotation"><b>Answers a different question</b><p><code class="inline">DISTINCT</code> asks "what are the possible values?" — not "what's the value for each row?"</p></div>
-  <div class="annotation"><b>Combine with COUNT</b><p><code class="inline">COUNT(DISTINCT Region)</code> collapses both ideas into a single number — how many unique values exist.</p></div>
+  <div class="annotation"><b>Combine with COUNT</b><p><code class="inline">COUNT(DISTINCT governorate_id)</code> collapses both ideas into a single number — how many unique values exist.</p></div>
 </div>
 
 <h2 class="section"><span class="num">13</span>Aggregation: COUNT</h2>
 <p><code class="inline">COUNT</code> is your first <strong>aggregate function</strong> — instead of
 returning one row per input row, it collapses many rows into a single summary number.</p>
-<p><strong>Business question:</strong> a stakeholder asks three things at once — how many countries are in this dataset, how many actually have a code on file, and how many distinct regions are represented?</p>
+<p><strong>Business question:</strong> a stakeholder asks three things at once — how many customers are in this dataset, how many actually have an email on file, and how many distinct governorates are represented?</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT COUNT</span>(*) <span class="kw">AS</span> CNTRY_CNT <span class="kw">FROM</span> country;
-<span class="kw">SELECT COUNT</span>(Code) no_of_countries <span class="kw">FROM</span> country;
-<span class="kw">SELECT COUNT</span>(<span class="kw">DISTINCT</span> Region) <span class="kw">AS</span> Regions_CNT <span class="kw">FROM</span> country;</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT COUNT</span>(*) <span class="kw">AS</span> customer_cnt <span class="kw">FROM</span> customers;
+<span class="kw">SELECT COUNT</span>(email) customers_with_email <span class="kw">FROM</span> customers;
+<span class="kw">SELECT COUNT</span>(<span class="kw">DISTINCT</span> governorate_id) <span class="kw">AS</span> governorate_cnt <span class="kw">FROM</span> customers;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>COUNT(*)</b><p>Counts every row, full stop — doesn't care what's inside any particular column.</p></div>
-  <div class="annotation"><b>COUNT(col)</b><p>Counts only rows where that column is <em>not</em> <code class="inline">NULL</code> — with a fully-populated column this rarely differs from <code class="inline">COUNT(*)</code>, but the distinction matters a lot once a column can be missing.</p></div>
-  <div class="annotation"><b>AS is optional</b><p><code class="inline">COUNT(*) CNTRY_CNT</code> works identically to writing <code class="inline">AS</code> — but spelling it out is usually clearer to read back later.</p></div>
+  <div class="annotation"><b>COUNT(col)</b><p>Counts only rows where that column is <em>not</em> <code class="inline">NULL</code> — some customers checked out as a guest and never left an email, so <code class="inline">COUNT(email)</code> comes back lower than <code class="inline">COUNT(*)</code>.</p></div>
+  <div class="annotation"><b>AS is optional</b><p><code class="inline">COUNT(*) customer_cnt</code> works identically to writing <code class="inline">AS</code> — but spelling it out is usually clearer to read back later.</p></div>
 </div>
 
 <h2 class="section"><span class="num">14</span>ORDER BY</h2>
-<p><strong>Business question:</strong> an expansion team wants a shortlist — the 5 largest countries by population, most promising markets first.</p>
+<p><strong>Business question:</strong> the growth team wants a shortlist — the 5 customers who signed up earliest, Rawaj's very first adopters.</p>
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sql_basics.sql</span></div>
-  <div class="code-body"><span class="com">-- Top 5 countries by population</span>
-<span class="kw">SELECT</span> Name, Population
-<span class="kw">FROM</span> country
-<span class="kw">ORDER BY</span> Population <span class="kw">DESC</span>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div>
+  <div class="code-body"><span class="com">-- 5 earliest customer signups</span>
+<span class="kw">SELECT</span> first_name, last_name
+<span class="kw">FROM</span> customers
+<span class="kw">ORDER BY</span> last_name <span class="kw">ASC</span>
 <span class="kw">LIMIT</span> 5;</div>
 </div>
 <div class="annotations">
@@ -610,12 +601,12 @@ returning one row per input row, it collapses many rows into a single summary nu
   <div class="ti">Before you move on — common first-week mistakes</div>
   <p><strong>Forgetting the semicolon:</strong> MySQL clients often wait silently for more input instead of running your query if the trailing <code class="inline">;</code> is missing — end every statement with it, always.</p>
   <p><strong>Assuming <code class="inline">LIMIT 5</code> means "the first 5 rows":</strong> without <code class="inline">ORDER BY</code>, a table has no guaranteed row order — say so explicitly if order matters.</p>
-  <p><strong>Reusing an alias in <code class="inline">WHERE</code>:</strong> <code class="inline">SELECT Population AS pop FROM country WHERE pop > 1000000</code> fails — the alias doesn't exist yet when <code class="inline">WHERE</code> runs. Use the real column name there; aliases are safe in <code class="inline">ORDER BY</code>.</p>
+  <p><strong>Reusing an alias in <code class="inline">WHERE</code>:</strong> <code class="inline">SELECT signup_date AS joined FROM customers WHERE joined > '2024-01-01'</code> fails — the alias doesn't exist yet when <code class="inline">WHERE</code> runs. Use the real column name there; aliases are safe in <code class="inline">ORDER BY</code>.</p>
 </div>
 
 <div class="callout recap">
   <div class="ti">Next: Day 02</div>
-  <p>Filtering &amp; Aggregation — WHERE conditions, GROUP BY, and DATE functions, on a new dataset: <code class="inline">parch_and_posey</code>.</p>
+  <p>Filtering &amp; Aggregation — WHERE conditions, GROUP BY, and DATE functions, digging deeper into Rawaj's <code class="inline">orders</code> and <code class="inline">web_events</code>.</p>
 </div>
 
 <footer>Day 01 · SQL Foundations · self-paced</footer>

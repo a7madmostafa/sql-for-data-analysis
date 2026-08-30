@@ -1,12 +1,12 @@
 -- ============================================================
--- SQL PRACTICE EXERCISES — SOLUTIONS — Parch & Posey Database
+-- SQL PRACTICE EXERCISES — SOLUTIONS — Rawaj Database
 -- ============================================================
 -- Answer key for day05_exercises.sql. Some questions have more than one
 -- valid way to write them — these are the reference solutions, not the
 -- only correct answers.
 -- ============================================================
 
-USE parch_and_posey;
+USE rawaj;
 
 
 -- ======================================
@@ -14,17 +14,17 @@ USE parch_and_posey;
 -- ======================================
 
 -- 1.1
-SELECT occurred_at, poster_qty,
-       SUM(poster_qty) OVER (ORDER BY occurred_at) AS running_total
+SELECT order_date, discount_amount,
+       SUM(discount_amount) OVER (ORDER BY order_date) AS running_total
 FROM orders
-ORDER BY occurred_at
+ORDER BY order_date
 LIMIT 10;
 
 -- 1.2
-SELECT account_id, occurred_at, gloss_qty,
-       SUM(gloss_qty) OVER (PARTITION BY account_id ORDER BY occurred_at) AS account_running_total
+SELECT customer_id, order_date, subtotal,
+       SUM(subtotal) OVER (PARTITION BY customer_id ORDER BY order_date) AS customer_running_total
 FROM orders
-ORDER BY account_id, occurred_at
+ORDER BY customer_id, order_date
 LIMIT 20;
 
 
@@ -33,38 +33,39 @@ LIMIT 20;
 -- ======================================
 
 -- 2.1
-WITH account_totals AS (
-    SELECT a.id, a.name, SUM(o.total_amt_usd) AS total_spend
+WITH customer_totals AS (
+    SELECT c.customer_id, c.first_name, c.last_name, SUM(o.total_amount) AS total_spend
     FROM orders o
-    JOIN accounts a ON o.account_id = a.id
-    GROUP BY a.id, a.name
+    JOIN customers c ON o.customer_id = c.customer_id
+    GROUP BY c.customer_id, c.first_name, c.last_name
 )
-SELECT name, total_spend,
+SELECT first_name, last_name, total_spend,
        RANK()       OVER (ORDER BY total_spend DESC) AS rank_with_gaps,
        DENSE_RANK() OVER (ORDER BY total_spend DESC) AS dense_rank_no_gaps,
        ROW_NUMBER() OVER (ORDER BY total_spend DESC) AS row_num
-FROM account_totals
+FROM customer_totals
 ORDER BY total_spend DESC
 LIMIT 10;
 
 -- 2.2
-WITH account_totals AS (
-    SELECT a.id, a.name AS account_name, s.name AS rep_name,
-           SUM(o.total_amt_usd) AS total_spend
+WITH customer_totals AS (
+    SELECT am.manager_name, c.customer_id, c.first_name, c.last_name,
+           SUM(o.total_amount) AS total_spend
     FROM orders o
-    JOIN accounts a ON o.account_id = a.id
-    JOIN sales_reps s ON a.sales_rep_id = s.id
-    GROUP BY a.id, a.name, s.name
+    JOIN customers c ON o.customer_id = c.customer_id
+    JOIN governorates g ON c.governorate_id = g.governorate_id
+    JOIN account_managers am ON g.manager_id = am.manager_id
+    GROUP BY am.manager_name, c.customer_id, c.first_name, c.last_name
 ),
 ranked AS (
-    SELECT rep_name, account_name, total_spend,
-           ROW_NUMBER() OVER (PARTITION BY rep_name ORDER BY total_spend DESC) AS acct_rank
-    FROM account_totals
+    SELECT manager_name, first_name, last_name, total_spend,
+           ROW_NUMBER() OVER (PARTITION BY manager_name ORDER BY total_spend DESC) AS cust_rank
+    FROM customer_totals
 )
-SELECT rep_name, account_name, total_spend
+SELECT manager_name, first_name, last_name, total_spend
 FROM ranked
-WHERE acct_rank = 1
-ORDER BY rep_name;
+WHERE cust_rank = 1
+ORDER BY manager_name;
 
 
 -- ======================================
@@ -89,41 +90,40 @@ ORDER BY month;
 -- ======================================
 
 -- 4.1
-DROP PROCEDURE IF EXISTS region_sales_report;
+DROP PROCEDURE IF EXISTS governorate_sales_report;
 
 DELIMITER $$
 
-CREATE PROCEDURE region_sales_report(IN reg_id INT)
+CREATE PROCEDURE governorate_sales_report(IN gov_id INT)
 BEGIN
-    SELECT r.name AS region_name,
-           COUNT(o.id) AS num_orders,
-           SUM(o.total_amt_usd) AS total_revenue
-    FROM region r
-    JOIN sales_reps s ON s.region_id = r.id
-    JOIN accounts a ON a.sales_rep_id = s.id
-    JOIN orders o ON o.account_id = a.id
-    WHERE r.id = reg_id
-    GROUP BY r.name;
+    SELECT g.governorate_name,
+           COUNT(o.order_id) AS num_orders,
+           SUM(o.total_amount) AS total_revenue
+    FROM governorates g
+    JOIN customers c ON c.governorate_id = g.governorate_id
+    JOIN orders o ON o.customer_id = c.customer_id
+    WHERE g.governorate_id = gov_id
+    GROUP BY g.governorate_name;
 END$$
 
 DELIMITER ;
 
-CALL region_sales_report(1);
+CALL governorate_sales_report(1);
 
 -- 4.2
-DROP PROCEDURE IF EXISTS get_account_count;
+DROP PROCEDURE IF EXISTS get_customer_count;
 
 DELIMITER $$
 
-CREATE PROCEDURE get_account_count(OUT cnt INT)
+CREATE PROCEDURE get_customer_count(OUT cnt INT)
 BEGIN
-    SELECT COUNT(*) INTO cnt FROM accounts;
+    SELECT COUNT(*) INTO cnt FROM customers;
 END$$
 
 DELIMITER ;
 
-CALL get_account_count(@n);
-SELECT @n AS account_count;
+CALL get_customer_count(@n);
+SELECT @n AS customer_count;
 
 
 -- ======================================
@@ -131,14 +131,15 @@ SELECT @n AS account_count;
 -- ======================================
 
 -- C1
-WITH rep_totals AS (
-    SELECT s.id, s.name, SUM(o.total_amt_usd) AS total_sales
+WITH manager_totals AS (
+    SELECT am.manager_id, am.manager_name, SUM(o.total_amount) AS total_sales
     FROM orders o
-    JOIN accounts a ON o.account_id = a.id
-    JOIN sales_reps s ON a.sales_rep_id = s.id
-    GROUP BY s.id, s.name
+    JOIN customers c ON o.customer_id = c.customer_id
+    JOIN governorates g ON c.governorate_id = g.governorate_id
+    JOIN account_managers am ON g.manager_id = am.manager_id
+    GROUP BY am.manager_id, am.manager_name
 )
-SELECT name, total_sales,
+SELECT manager_name, total_sales,
        NTILE(4) OVER (ORDER BY total_sales DESC) AS sales_tier
-FROM rep_totals
+FROM manager_totals
 ORDER BY total_sales DESC;

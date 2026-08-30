@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 04 Walkthrough &mdash; Subqueries, CTEs &amp; Views</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
+.page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
+.crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+.home-link{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray);text-decoration:none;margin-bottom:10px}
+.home-link:hover{color:var(--blue)}
+h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:38px;line-height:1.15;color:var(--ink);margin:0 0 12px;font-weight:800}
+.subtitle{font-size:17px;color:var(--gray);margin:0 0 30px}
+h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:24px;color:var(--ink);margin:48px 0 8px;padding-bottom:9px;border-bottom:2px solid var(--ink);font-weight:700}
+h2.section .num{color:var(--blue);margin-right:10px}
+p{margin:0 0 12px}
+p.explain{font-size:15.5px;color:var(--gray);margin:22px 0 8px}
+strong{color:var(--ink);font-weight:700}
+code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
+
+.code-block{margin:8px 0 0;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}
+.code-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#161616}
+.code-header .dot{width:10px;height:10px;border-radius:50%}
+.code-header .dot.r{background:#FF5F56}.code-header .dot.y{background:#FFBD2E}.code-header .dot.g{background:#27C93F}
+.code-header .fname{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}
+.code-body{background:var(--code-bg);color:var(--code-default);padding:14px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.7;overflow-x:auto;white-space:pre}
+.code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
+.code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
+
+.result-wrap{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:14px 18px 10px;margin-bottom:26px;overflow-x:auto}
+table.result-table{width:auto;min-width:100%;border-collapse:collapse;margin:0;background:white;font-size:13.5px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.result-table th,table.result-table td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;white-space:nowrap}
+table.result-table thead th{background:var(--panel);color:var(--ink);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+table.result-table tbody tr:last-child td{border-bottom:none}
+.row-note{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray-muted);margin:8px 0 0}
+.row-note.status{color:var(--insight-ti)}
+
+.callout{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid var(--blue);background:var(--panel)}
+.callout .ti{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px;color:var(--blue-dark)}
+.callout p{font-size:14.5px;margin:0}
+
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
+@media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:28px}}
+</style>
+</head>
+<body><div class="page">
+
+<a class="home-link" href="../index.html">&larr; Course home</a>
+<div class="crumb">Day 04 of 10 &middot; Walkthrough</div>
+<h1 class="title">Subqueries, CTEs &amp; Views</h1>
+<p class="subtitle">Every statement from <code class="inline">day04_subqueries_ctes_and_views.sql</code>, executed live against <code class="inline">rawaj</code> &mdash; SQL and real output, side by side.</p>
+
+<div class="callout">
+  <div class="ti">Generated page</div>
+  <p>This page is generated from <code class="inline">day04_subqueries_ctes_and_views.sql</code> by running it statement-by-statement
+  against a local MySQL server and capturing the real output &mdash; it is not hand-written. If the walkthrough
+  file changes, regenerate this page rather than editing it directly.</p>
+</div>
+
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">USE</span> rawaj;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
+<h2 class="section"><span class="num">1</span>SCALAR SUBQUERIES (a subquery that returns one value)</h2>
+<p class="explain">Leadership wants total sales for the single most recent day orders were placed</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">MAX</span>(<span class="fn">DATE</span>(order_date)) <span class="kw">AS</span> last_day
+<span class="kw">FROM</span> orders;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>last_day</th></tr></thead><tbody><tr><td>2025-05-31</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<p class="explain">hardcoding that date works once, but breaks the moment new orders come in</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amount) <span class="kw">AS</span> total_sales
+<span class="kw">FROM</span> orders
+<span class="kw">WHERE</span> <span class="fn">DATE</span>(order_date) = <span class="str">&#x27;2024-03-18&#x27;</span>;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>total_sales</th></tr></thead><tbody><tr><td>163794.05</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<p class="explain">a scalar subquery keeps it correct automatically, no matter when this runs</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amount) <span class="kw">AS</span> total_sales
+<span class="kw">FROM</span> orders
+<span class="kw">WHERE</span> <span class="fn">DATE</span>(order_date) = (<span class="kw">SELECT</span> <span class="fn">MAX</span>(<span class="fn">DATE</span>(order_date)) <span class="kw">FROM</span> orders);</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>total_sales</th></tr></thead><tbody><tr><td>7948.50</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<p class="explain">Finance wants every order that sold for more than the company-wide average</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">AVG</span>(total_amount) <span class="kw">AS</span> avg_order
+<span class="kw">FROM</span> orders;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>avg_order</th></tr></thead><tbody><tr><td>3848.321060</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> *
+<span class="kw">FROM</span> orders
+<span class="kw">WHERE</span> total_amount &gt; (<span class="kw">SELECT</span> <span class="fn">AVG</span>(total_amount) <span class="kw">FROM</span> orders);</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>order_id</th><th>customer_id</th><th>order_date</th><th>status</th><th>payment_method</th><th>payment_status</th><th>subtotal</th><th>shipping_fee</th><th>discount_amount</th><th>total_amount</th></tr></thead><tbody><tr><td>5</td><td>1109</td><td>2023-08-12 12:42:08</td><td>cancelled</td><td>cash_on_delivery</td><td>pending</td><td>4162.70</td><td>32.93</td><td>0.00</td><td>4195.63</td></tr><tr><td>9</td><td>261</td><td>2024-11-03 21:41:55</td><td>processing</td><td>cash_on_delivery</td><td>pending</td><td>4471.32</td><td>56.68</td><td>0.00</td><td>4528.00</td></tr><tr><td>10</td><td>1068</td><td>2024-04-01 08:26:04</td><td>delivered</td><td>credit_card</td><td>paid</td><td>7428.21</td><td>40.28</td><td>0.00</td><td>7468.49</td></tr><tr><td>13</td><td>1148</td><td>2025-02-09 12:30:21</td><td>delivered</td><td>cash_on_delivery</td><td>paid</td><td>7521.83</td><td>32.66</td><td>549.63</td><td>7004.86</td></tr><tr><td>14</td><td>702</td><td>2025-02-21 10:16:40</td><td>delivered</td><td>cash_on_delivery</td><td>paid</td><td>8907.08</td><td>28.99</td><td>149.17</td><td>8786.90</td></tr><tr><td>15</td><td>592</td><td>2024-01-20 18:59:57</td><td>delivered</td><td>cash_on_delivery</td><td>paid</td><td>4746.78</td><td>29.16</td><td>0.00</td><td>4775.94</td></tr><tr><td>16</td><td>392</td><td>2024-04-09 14:52:21</td><td>delivered</td><td>cash_on_delivery</td><td>paid</td><td>6701.62</td><td>38.66</td><td>0.00</td><td>6740.28</td></tr><tr><td>19</td><td>241</td><td>2024-03-25 15:13:38</td><td>pending</td><td>mobile_wallet</td><td>paid</td><td>5245.90</td><td>31.02</td><td>729.48</td><td>4547.44</td></tr><tr><td>20</td><td>1018</td><td>2024-07-06 23:45:17</td><td>returned</td><td>cash_on_delivery</td><td>pending</td><td>7364.48</td><td>30.64</td><td>0.00</td><td>7395.12</td></tr><tr><td>21</td><td>700</td><td>2024-03-21 11:24:52</td><td>delivered</td><td>cash_on_delivery</td><td>paid</td><td>5615.26</td><td>37.67</td><td>0.00</td><td>5652.93</td></tr><tr><td>23</td><td>1163</td><td>2024-02-28 09:27:40</td><td>returned</td><td>cash_on_delivery</td><td>pending</td><td>4890.66</td><td>56.55</td><td>97.24</td><td>4849.97</td></tr><tr><td>24</td><td>976</td><td>2024-04-16 11:08:11</td><td>delivered</td><td>credit_card</td><td>refunded</td><td>7087.35</td><td>34.82</td><td>0.00</td><td>7122.17</td></tr><tr><td>26</td><td>867</td><td>2024-03-05 11:21:39</td><td>processing</td><td>cash_on_delivery</td><td>pending</td><td>6516.79</td><td>44.88</td><td>724.93</td><td>5836.74</td></tr><tr><td>29</td><td>553</td><td>2023-10-06 11:15:54</td><td>delivered</td><td>cash_on_delivery</td><td>paid</td><td>6880.15</td><td>23.46</td><td>0.00</td><td>6903.61</td></tr><tr><td>30</td><td>340</td><td>2024-01-12 16:06:00</td><td>delivered</td><td>cash_on_delivery</td><td>paid</td><td>7520.86</td><td>30.96</td><td>668.37</td><td>6883.45</td></tr></tbody></table><p class="row-note">showing 15 of 2398 rows</p></div>
+<h2 class="section"><span class="num">2</span>ROW SUBQUERIES (matching a tuple of values)</h2>
+<p class="explain">The web team wants each customer&#x27;s single most recent web event — comparing (customer_id, occurred_at) as a pair is what makes this &quot;most recent PER customer&quot;</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> customer_id, occurred_at, channel
+<span class="kw">FROM</span> web_events
+<span class="kw">WHERE</span> (customer_id, occurred_at) <span class="kw"><span class="kw">IN</span></span> (
+    <span class="kw">SELECT</span> customer_id, <span class="fn">MAX</span>(occurred_at)
+    <span class="kw">FROM</span> web_events
+    <span class="kw">GROUP BY</span> customer_id
+)
+<span class="kw">ORDER BY</span> customer_id;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>customer_id</th><th>occurred_at</th><th>channel</th></tr></thead><tbody><tr><td>1</td><td>2025-04-15 09:21:55</td><td>instagram</td></tr><tr><td>2</td><td>2025-03-19 13:13:29</td><td>organic</td></tr><tr><td>3</td><td>2025-03-19 09:49:18</td><td>instagram</td></tr><tr><td>4</td><td>2025-03-17 14:51:58</td><td>google</td></tr><tr><td>5</td><td>2025-04-02 15:30:17</td><td>direct</td></tr><tr><td>6</td><td>2025-04-26 21:16:24</td><td>facebook</td></tr><tr><td>7</td><td>2025-05-25 19:27:36</td><td>google</td></tr><tr><td>8</td><td>2025-03-29 13:33:48</td><td>organic</td></tr><tr><td>9</td><td>2025-03-08 15:59:57</td><td>instagram</td></tr><tr><td>10</td><td>2025-04-28 23:34:32</td><td>facebook</td></tr><tr><td>11</td><td>2025-04-17 13:47:01</td><td>google</td></tr><tr><td>12</td><td>2025-04-03 12:43:34</td><td>instagram</td></tr><tr><td>13</td><td>2025-05-07 11:47:48</td><td>facebook</td></tr><tr><td>14</td><td>2025-03-22 22:58:32</td><td>google</td></tr><tr><td>15</td><td>2025-01-22 20:56:15</td><td>organic</td></tr></tbody></table><p class="row-note">showing 15 of 1200 rows</p></div>
+<h2 class="section"><span class="num">3</span>DERIVED TABLES (a subquery standing in for a table, in FROM)</h2>
+<p class="explain">Marketing wants the average number of daily events per channel, across the whole dataset — that needs two passes of aggregation, so one becomes a derived table the outer query then aggregates again</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> channel, <span class="fn">DATE</span>(occurred_at) <span class="kw">AS</span> day, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> events
+<span class="kw">FROM</span> web_events
+<span class="kw">GROUP BY</span> day, channel;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>channel</th><th>day</th><th>events</th></tr></thead><tbody><tr><td>organic</td><td>2024-02-09</td><td>5</td></tr><tr><td>facebook</td><td>2024-03-28</td><td>8</td></tr><tr><td>organic</td><td>2025-01-01</td><td>3</td></tr><tr><td>instagram</td><td>2024-01-16</td><td>1</td></tr><tr><td>organic</td><td>2025-03-03</td><td>13</td></tr><tr><td>instagram</td><td>2024-04-13</td><td>8</td></tr><tr><td>facebook</td><td>2024-09-10</td><td>3</td></tr><tr><td>google</td><td>2024-10-23</td><td>1</td></tr><tr><td>facebook</td><td>2025-01-10</td><td>2</td></tr><tr><td>organic</td><td>2024-12-15</td><td>2</td></tr><tr><td>organic</td><td>2024-03-28</td><td>15</td></tr><tr><td>facebook</td><td>2025-03-31</td><td>9</td></tr><tr><td>instagram</td><td>2024-11-17</td><td>1</td></tr><tr><td>direct</td><td>2025-04-17</td><td>2</td></tr><tr><td>google</td><td>2024-03-12</td><td>11</td></tr></tbody></table><p class="row-note">showing 15 of 2978 rows</p></div>
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> channel, <span class="fn">AVG</span>(events) <span class="kw">AS</span> avg_events_per_day
+<span class="kw">FROM</span> (
+    <span class="kw">SELECT</span> channel, <span class="fn">DATE</span>(occurred_at) <span class="kw">AS</span> day, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> events
+    <span class="kw">FROM</span> web_events
+    <span class="kw">GROUP BY</span> day, channel
+) <span class="kw">AS</span> daily_channel_events
+<span class="kw">GROUP BY</span> channel;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>channel</th><th>avg_events_per_day</th></tr></thead><tbody><tr><td>organic</td><td>3.4656</td></tr><tr><td>facebook</td><td>3.4969</td></tr><tr><td>instagram</td><td>2.9488</td></tr><tr><td>google</td><td>2.9211</td></tr><tr><td>direct</td><td>1.8952</td></tr></tbody></table><p class="row-note">5 rows</p></div>
+<h2 class="section"><span class="num">4</span>CTEs (WITH ... AS)</h2>
+<p class="explain">Same question as Section 3, rewritten with a CTE — the derived table gets a name up front instead of being buried inside FROM</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">WITH</span> daily_channel_events <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> <span class="fn">DATE</span>(occurred_at) <span class="kw">AS</span> day, channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> events
+    <span class="kw">FROM</span> web_events
+    <span class="kw">GROUP BY</span> day, channel
+)
+<span class="kw">SELECT</span> channel, <span class="fn">AVG</span>(events) <span class="kw">AS</span> avg_events_per_day
+<span class="kw">FROM</span> daily_channel_events
+<span class="kw">GROUP BY</span> channel;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>channel</th><th>avg_events_per_day</th></tr></thead><tbody><tr><td>organic</td><td>3.4656</td></tr><tr><td>facebook</td><td>3.4969</td></tr><tr><td>instagram</td><td>2.9488</td></tr><tr><td>google</td><td>2.9211</td></tr><tr><td>direct</td><td>1.8952</td></tr></tbody></table><p class="row-note">5 rows</p></div>
+<p class="explain">Who is Rawaj&#x27;s single highest lifetime-spend customer?</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">WITH</span> top_customer <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> orders o
+    <span class="kw">JOIN</span> customers c
+        <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
+    <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
+    <span class="kw">LIMIT</span> 1
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> top_customer;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>customer_id</th><th>first_name</th><th>last_name</th><th>total_sales</th></tr></thead><tbody><tr><td>971</td><td>Amr</td><td>Younis</td><td>61063.45</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<h2 class="section"><span class="num">5</span>CHAINED CTEs (one CTE referencing another)</h2>
+<p class="explain">For that same top customer, how many web events came through each channel?</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">WITH</span> top_customer <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> orders o
+    <span class="kw">JOIN</span> customers c
+        <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
+    <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
+    <span class="kw">LIMIT</span> 1
+)
+<span class="kw">SELECT</span> c.first_name, c.last_name, w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_events
+<span class="kw">FROM</span> customers c
+<span class="kw">JOIN</span> web_events w
+    <span class="kw">ON</span> c.customer_id = w.customer_id
+<span class="kw">JOIN</span> top_customer
+    <span class="kw">ON</span> c.customer_id = top_customer.customer_id
+<span class="kw">GROUP BY</span> c.first_name, c.last_name, w.channel
+<span class="kw">ORDER BY</span> num_events <span class="kw">DESC</span>;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>first_name</th><th>last_name</th><th>channel</th><th>num_events</th></tr></thead><tbody><tr><td>Amr</td><td>Younis</td><td>google</td><td>3</td></tr><tr><td>Amr</td><td>Younis</td><td>facebook</td><td>2</td></tr><tr><td>Amr</td><td>Younis</td><td>organic</td><td>1</td></tr></tbody></table><p class="row-note">3 rows</p></div>
+<p class="explain">A second CTE can reference the first one directly — is any customer&#x27;s total spend above the company-wide average customer spend?</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">WITH</span> customer_totals <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_spend
+    <span class="kw">FROM</span> orders o
+    <span class="kw">JOIN</span> customers c
+        <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
+),
+avg_total <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> <span class="fn">AVG</span>(total_spend) <span class="kw">AS</span> avg_total_spend
+    <span class="kw">FROM</span> customer_totals
+)
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> customer_totals
+<span class="kw">WHERE</span> total_spend &gt; (<span class="kw">SELECT</span> avg_total_spend <span class="kw">FROM</span> avg_total);</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>customer_id</th><th>first_name</th><th>last_name</th><th>total_spend</th></tr></thead><tbody><tr><td>1</td><td>Mohamed</td><td>Abdelrahman</td><td>21938.36</td></tr><tr><td>2</td><td>Nour</td><td>Fahmy</td><td>30095.39</td></tr><tr><td>3</td><td>Heba</td><td>El-Sayed</td><td>22837.25</td></tr><tr><td>6</td><td>Salma</td><td>El-Masry</td><td>26320.28</td></tr><tr><td>9</td><td>Omar</td><td>Zaki</td><td>22950.52</td></tr><tr><td>13</td><td>Sara</td><td>El-Bahnasy</td><td>31582.33</td></tr><tr><td>14</td><td>Khaled</td><td>Rashed</td><td>19563.55</td></tr><tr><td>15</td><td>Nour</td><td>Hegazy</td><td>45138.96</td></tr><tr><td>16</td><td>Heba</td><td>Mahmoud</td><td>23274.08</td></tr><tr><td>17</td><td>Radwa</td><td>Hassanein</td><td>57169.74</td></tr><tr><td>19</td><td>Ghada</td><td>Shokry</td><td>27762.10</td></tr><tr><td>21</td><td>Mohamed</td><td>Farouk</td><td>29162.60</td></tr><tr><td>22</td><td>Hala</td><td>Hegazy</td><td>20732.15</td></tr><tr><td>23</td><td>Youssef</td><td>El-Nabawy</td><td>36905.06</td></tr><tr><td>26</td><td>Ramy</td><td>Fahmy</td><td>38554.88</td></tr></tbody></table><p class="row-note">showing 15 of 530 rows</p></div>
+<h2 class="section"><span class="num">6</span>TEMPORARY TABLES</h2>
+<p class="explain">Same top-customer question as Section 4, but materialized as a real table — useful when several separate queries need to reuse the same intermediate result</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">CREATE</span> <span class="kw">TEMPORARY</span> <span class="kw">TABLE</span> top_customer
+<span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> customers c
+    <span class="kw">ON</span> o.customer_id = c.customer_id
+<span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
+<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 1;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; 1 row affected</p></div>
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> * <span class="kw">FROM</span> top_customer;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>customer_id</th><th>first_name</th><th>last_name</th><th>total_sales</th></tr></thead><tbody><tr><td>971</td><td>Amr</td><td>Younis</td><td>61063.45</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> c.first_name, c.last_name, w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_events
+<span class="kw">FROM</span> customers c
+<span class="kw">JOIN</span> web_events w
+    <span class="kw">ON</span> c.customer_id = w.customer_id
+<span class="kw">JOIN</span> top_customer
+    <span class="kw">ON</span> c.customer_id = top_customer.customer_id
+<span class="kw">GROUP BY</span> c.first_name, c.last_name, w.channel
+<span class="kw">ORDER BY</span> num_events <span class="kw">DESC</span>;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>first_name</th><th>last_name</th><th>channel</th><th>num_events</th></tr></thead><tbody><tr><td>Amr</td><td>Younis</td><td>google</td><td>3</td></tr><tr><td>Amr</td><td>Younis</td><td>facebook</td><td>2</td></tr><tr><td>Amr</td><td>Younis</td><td>organic</td><td>1</td></tr></tbody></table><p class="row-note">3 rows</p></div>
+<h2 class="section"><span class="num">7</span>VIEWS</h2>
+<p class="explain">Sales asks for a &quot;top 10 customers&quot; leaderboard they can query repeatedly, from any session, without re-writing the ranking logic every time</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">CREATE</span> <span class="kw">VIEW</span> top10_customers <span class="kw">AS</span>
+<span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> customers c
+    <span class="kw">ON</span> o.customer_id = c.customer_id
+<span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
+<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 10;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> * <span class="kw">FROM</span> top10_customers;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>customer_id</th><th>first_name</th><th>last_name</th><th>total_sales</th></tr></thead><tbody><tr><td>971</td><td>Amr</td><td>Younis</td><td>61063.45</td></tr><tr><td>909</td><td>Hossam</td><td>Mahmoud</td><td>60579.87</td></tr><tr><td>1101</td><td>Hala</td><td>Ragab</td><td>57437.90</td></tr><tr><td>17</td><td>Radwa</td><td>Hassanein</td><td>57169.74</td></tr><tr><td>523</td><td>Ibrahim</td><td>Rashed</td><td>56811.28</td></tr><tr><td>238</td><td>Ghada</td><td>Aziz</td><td>56593.50</td></tr><tr><td>822</td><td>Dina</td><td>Farouk</td><td>55885.63</td></tr><tr><td>573</td><td>Hany</td><td>El-Nabawy</td><td>54301.49</td></tr><tr><td>884</td><td>Wael</td><td>Hamdy</td><td>53011.70</td></tr><tr><td>910</td><td>Sara</td><td>Hegazy</td><td>52777.69</td></tr></tbody></table><p class="row-note">10 rows</p></div>
+<p class="explain">the view behaves exactly like a table in any query — join straight to it</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div><div class="code-body"><span class="kw">SELECT</span> w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_events
+<span class="kw">FROM</span> web_events w
+<span class="kw">JOIN</span> top10_customers t
+    <span class="kw">ON</span> w.customer_id = t.customer_id
+<span class="kw">GROUP BY</span> w.channel
+<span class="kw">ORDER BY</span> num_events <span class="kw">DESC</span>;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>channel</th><th>num_events</th></tr></thead><tbody><tr><td>google</td><td>20</td></tr><tr><td>facebook</td><td>19</td></tr><tr><td>organic</td><td>18</td></tr><tr><td>instagram</td><td>12</td></tr><tr><td>direct</td><td>5</td></tr></tbody></table><p class="row-note">5 rows</p></div>
+
+<footer>Day 04 &middot; Subqueries, CTEs &amp; Views &middot; walkthrough &middot; self-paced</footer>
+</div>
+</body></html>

@@ -1,7 +1,8 @@
 # Day 03 — JOINs, CASE & String Functions
 
-Still on the **Parch & Posey** database from Day 02 (no new setup script here) — this is where all
-five tables come together instead of being queried one at a time, and where you start cleaning and
+Still on the **Rawaj** database from Days 01–02 (no new setup script here) — this is where the rest
+of the schema comes online: sellers, products, categories, order_items, and more, all joined
+together instead of being queried one at a time. This is also where you start cleaning and
 reshaping the text inside those rows.
 
 ## What you'll learn
@@ -24,6 +25,6 @@ reshaping the text inside those rows.
 | `day03_exercises.sql` | Practice questions, business-framed. Try these before looking at the solutions. |
 | `day03_exercises_solutions.sql` | Answer key, numbered to match the exercises. |
 
-**Before you start:** run `../Databases/Parch & Posey Database.sql` if you haven't already.
+**Before you start:** run `../Databases/rawaj_db.sql` if you haven't already.
 
 **Order:** `day03_reading.html` → `day03_joins_case_and_strings.sql` → `day03_exercises.sql`.

@@ -1,6 +1,6 @@
 # Day 04 — Subqueries, CTEs & Views
 
-Still on the **Parch & Posey** database from Days 02–03 (no new setup script here) — this is where
+Still on the **Rawaj** database from Days 01–03 (no new setup script here) — this is where
 you start reusing query results: nested (subqueries), named (CTEs), materialized (temp tables), or
 saved (views). Day 05 goes further with window functions and stored procedures.
 
@@ -21,6 +21,6 @@ saved (views). Day 05 goes further with window functions and stored procedures.
 | `day04_exercises.sql` | Practice questions, business-framed. Try these before looking at the solutions. |
 | `day04_exercises_solutions.sql` | Answer key, numbered to match the exercises. |
 
-**Before you start:** run `../Databases/Parch & Posey Database.sql` if you haven't already.
+**Before you start:** run `../Databases/rawaj_db.sql` if you haven't already.
 
 **Order:** `day04_reading.html` → `day04_subqueries_ctes_and_views.sql` → `day04_exercises.sql`.

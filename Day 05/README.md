@@ -1,6 +1,6 @@
 # Day 05 — Window Functions & Stored Procedures
 
-Still on the **Parch & Posey** database from Days 02–04 (no new setup script here) — this is where
+Still on the **Rawaj** database from Days 01–04 (no new setup script here) — this is where
 you rank and total rows without collapsing them (window functions), then save reusable logic inside
 the database itself (stored procedures). The last core-SQL day before Day 06 applies all of it from
 Python.
@@ -22,6 +22,6 @@ Python.
 | `day05_exercises.sql` | Practice questions, business-framed. Try these before looking at the solutions. |
 | `day05_exercises_solutions.sql` | Answer key, numbered to match the exercises. |
 
-**Before you start:** run `../Databases/Parch & Posey Database.sql` if you haven't already.
+**Before you start:** run `../Databases/rawaj_db.sql` if you haven't already.
 
 **Order:** `day05_reading.html` → `day05_window_functions_and_stored_procedures.sql` → `day05_exercises.sql`.

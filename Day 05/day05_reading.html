@@ -22,6 +22,8 @@
 body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
 .page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
 .crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+.home-link{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray);text-decoration:none;margin-bottom:10px}
+.home-link:hover{color:var(--blue)}
 h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
 .subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
 .objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
@@ -95,6 +97,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
   </defs>
 </svg>
 
+<a class="home-link" href="../index.html">&larr; Course home</a>
 <div class="crumb">Day 05 of 10 · Window Functions &amp; Stored Procedures</div>
 <h1 class="title">Window Functions &amp; Stored Procedures</h1>
 <p class="subtitle">Ranking and running totals without collapsing rows, then reusable logic saved inside the database itself.</p>
@@ -111,9 +114,9 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p>Continuing straight on from Day 04, still the same <code class="inline">parch_and_posey</code>
-  database — run <code class="inline">Databases/Parch &amp; Posey Database.sql</code> first if you
-  haven't already, then <code class="inline">USE parch_and_posey;</code>. No new setup script today.</p>
+  <p>Continuing straight on from Day 04, still the same <code class="inline">rawaj</code>
+  database — run <code class="inline">Databases/rawaj_db.sql</code> first if you
+  haven't already, then <code class="inline">USE rawaj;</code>. No new setup script today.</p>
 </div>
 
 <h2 class="section"><span class="num">1</span>Window functions — OVER, without collapsing rows</h2>
@@ -171,14 +174,14 @@ one just gains an extra column computed by looking through a "window" of other r
 </svg>
 <figcaption>Same 4 input rows, two different tools: GROUP BY collapses to one row per group; a window function keeps every row and just appends a computed value.</figcaption>
 </figure>
-<p><strong>Business question:</strong> finance wants to see paper-order volume build up over time — a
+<p><strong>Business question:</strong> finance wants to see revenue build up over time — a
 running total, not a single company-wide sum.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> occurred_at, standard_qty,
-       <span class="fn">SUM</span>(standard_qty) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> occurred_at) <span class="kw">AS</span> running_total
+  <div class="code-body"><span class="kw">SELECT</span> order_date, total_amount,
+       <span class="fn">SUM</span>(total_amount) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> order_date) <span class="kw">AS</span> running_total
 <span class="kw">FROM</span> orders
-<span class="kw">ORDER BY</span> occurred_at
+<span class="kw">ORDER BY</span> order_date
 <span class="kw">LIMIT</span> 10;</div>
 </div>
 <div class="annotations">
@@ -194,10 +197,10 @@ calculation every time the partition column's value changes, without collapsing 
 number mixing every customer together.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> account_id, occurred_at, total_amt_usd,
-       <span class="fn">SUM</span>(total_amt_usd) <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> account_id <span class="kw">ORDER BY</span> occurred_at) <span class="kw">AS</span> account_running_total
+  <div class="code-body"><span class="kw">SELECT</span> customer_id, order_date, total_amount,
+       <span class="fn">SUM</span>(total_amount) <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> customer_id <span class="kw">ORDER BY</span> order_date) <span class="kw">AS</span> customer_running_total
 <span class="kw">FROM</span> orders
-<span class="kw">ORDER BY</span> account_id, occurred_at;</div>
+<span class="kw">ORDER BY</span> customer_id, order_date;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Order inside OVER matters</b><p><code class="inline">PARTITION BY</code> always comes before <code class="inline">ORDER BY</code> inside the same <code class="inline">OVER(...)</code> — think "which group, then in what order within it."</p></div>
@@ -214,22 +217,23 @@ defines — they only disagree once two rows tie on that ordering column.</p>
     <tr><td><code class="inline">DENSE_RANK()</code></td><td>Tied rows share a number, but <strong>never skips</strong>: 1, 2, 2, 3.</td></tr>
   </tbody>
 </table>
-<p><strong>Business question:</strong> leadership wants sales reps ranked by total sales — and wants
-to know exactly how ties get handled, since two reps landing on the same revenue isn't rare.</p>
+<p><strong>Business question:</strong> leadership wants account managers ranked by total sales — and wants
+to know exactly how ties get handled, since two managers landing on the same revenue isn't rare.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
-  <div class="code-body"><span class="kw">WITH</span> rep_totals <span class="kw">AS</span> (
-    <span class="kw">SELECT</span> s.id, s.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+  <div class="code-body"><span class="kw">WITH</span> manager_totals <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> am.manager_id, am.manager_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
     <span class="kw">FROM</span> orders o
-    <span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-    <span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> a.sales_rep_id = s.id
-    <span class="kw">GROUP BY</span> s.id, s.name
+    <span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">JOIN</span> governorates g <span class="kw">ON</span> c.governorate_id = g.governorate_id
+    <span class="kw">JOIN</span> account_managers am <span class="kw">ON</span> g.manager_id = am.manager_id
+    <span class="kw">GROUP BY</span> am.manager_id, am.manager_name
 )
-<span class="kw">SELECT</span> name, total_sales,
+<span class="kw">SELECT</span> manager_name, total_sales,
        <span class="fn">RANK</span>()       <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> rank_with_gaps,
        <span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> dense_rank_no_gaps,
        <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> row_num
-<span class="kw">FROM</span> rep_totals
+<span class="kw">FROM</span> manager_totals
 <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>;</div>
 </div>
 <div class="annotations">
@@ -241,23 +245,23 @@ to know exactly how ties get handled, since two reps landing on the same revenue
 <p>A window function can't be filtered directly in <code class="inline">WHERE</code> — the same rule
 that blocks <code class="inline">WHERE COUNT(*) &gt; 5</code> (Day 03). Compute the rank in a CTE
 first, then filter the CTE's output.</p>
-<p><strong>Business question:</strong> for every account, what was their single largest order? (Same
+<p><strong>Business question:</strong> for every customer, what was their single largest order? (Same
 shape as Day 04's Section 1 subquery question — a window function reaches the same answer more
 directly.)</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
   <div class="code-body"><span class="kw">WITH</span> ranked_orders <span class="kw">AS</span> (
-    <span class="kw">SELECT</span> account_id, id <span class="kw">AS</span> order_id, total_amt_usd,
-           <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> account_id <span class="kw">ORDER BY</span> total_amt_usd <span class="kw">DESC</span>) <span class="kw">AS</span> order_rank
+    <span class="kw">SELECT</span> customer_id, order_id, total_amount,
+           <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> customer_id <span class="kw">ORDER BY</span> total_amount <span class="kw">DESC</span>) <span class="kw">AS</span> order_rank
     <span class="kw">FROM</span> orders
 )
-<span class="kw">SELECT</span> account_id, order_id, total_amt_usd
+<span class="kw">SELECT</span> customer_id, order_id, total_amount
 <span class="kw">FROM</span> ranked_orders
 <span class="kw">WHERE</span> order_rank = 1
-<span class="kw">ORDER BY</span> account_id;</div>
+<span class="kw">ORDER BY</span> customer_id;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>PARTITION BY here means "per account"</b><p>Without it, this would rank every order in the whole table against each other — <code class="inline">PARTITION BY account_id</code> is what makes rank 1 mean "this account's biggest order," restarting for each account.</p></div>
+  <div class="annotation"><b>PARTITION BY here means "per customer"</b><p>Without it, this would rank every order in the whole table against each other — <code class="inline">PARTITION BY customer_id</code> is what makes rank 1 mean "this customer's biggest order," restarting for each customer.</p></div>
 </div>
 
 <h2 class="section"><span class="num">5</span>LAG / LEAD — comparing a row to a neighbor</h2>
@@ -269,7 +273,7 @@ looks one row <em>forward</em>. Both default to an offset of 1 — <code class="
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
   <div class="code-body"><span class="kw">WITH</span> monthly_sales <span class="kw">AS</span> (
-    <span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(occurred_at, <span class="str">'%Y-%m'</span>) <span class="kw">AS</span> month, <span class="fn">SUM</span>(total_amt_usd) <span class="kw">AS</span> total_sales
+    <span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(order_date, <span class="str">'%Y-%m'</span>) <span class="kw">AS</span> month, <span class="fn">SUM</span>(total_amount) <span class="kw">AS</span> total_sales
     <span class="kw">FROM</span> orders
     <span class="kw">GROUP BY</span> month
 )
@@ -314,29 +318,29 @@ argument would in any programming language.</p>
   a Python driver sends the whole block as one request, with no client-side statement-splitting
   involved at all.</p>
 </div>
-<p><strong>Business question:</strong> sales reps constantly ask for the same report — order count and
-total revenue for one account. Save it once as a procedure everyone can call.</p>
+<p><strong>Business question:</strong> account managers constantly ask for the same report — order
+count and total revenue for one customer. Save it once as a procedure everyone can call.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
   <div class="code-body"><span class="kw">DELIMITER</span> $$
 
-<span class="kw">CREATE PROCEDURE</span> account_sales_report(<span class="kw">IN</span> acct_id <span class="kw">INT</span>)
+<span class="kw">CREATE PROCEDURE</span> customer_sales_report(<span class="kw">IN</span> cust_id <span class="kw">INT</span>)
 <span class="kw">BEGIN</span>
-    <span class="kw">SELECT</span> a.name <span class="kw">AS</span> account_name,
-           <span class="fn">COUNT</span>(o.id) <span class="kw">AS</span> num_orders,
-           <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
-    <span class="kw">FROM</span> accounts a
-    <span class="kw">JOIN</span> orders o <span class="kw">ON</span> o.account_id = a.id
-    <span class="kw">WHERE</span> a.id = acct_id
-    <span class="kw">GROUP BY</span> a.name;
+    <span class="kw">SELECT</span> c.first_name, c.last_name,
+           <span class="fn">COUNT</span>(o.order_id) <span class="kw">AS</span> num_orders,
+           <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> customers c
+    <span class="kw">JOIN</span> orders o <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">WHERE</span> c.customer_id = cust_id
+    <span class="kw">GROUP BY</span> c.first_name, c.last_name;
 <span class="kw">END</span>$$
 
 <span class="kw">DELIMITER</span> ;
 
-<span class="kw">CALL</span> account_sales_report(1001);</div>
+<span class="kw">CALL</span> customer_sales_report(1);</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>The parameter, used inside the body</b><p><code class="inline">acct_id</code> works exactly like a variable inside <code class="inline">BEGIN...END</code> — whatever value <code class="inline">CALL</code> passes in gets substituted wherever <code class="inline">acct_id</code> appears.</p></div>
+  <div class="annotation"><b>The parameter, used inside the body</b><p><code class="inline">cust_id</code> works exactly like a variable inside <code class="inline">BEGIN...END</code> — whatever value <code class="inline">CALL</code> passes in gets substituted wherever <code class="inline">cust_id</code> appears.</p></div>
 </div>
 
 <h2 class="section"><span class="num">7</span>Stored procedures (OUT parameters)</h2>
@@ -352,7 +356,7 @@ company-wide revenue — captured into a variable it can act on.</p>
 
 <span class="kw">CREATE PROCEDURE</span> get_total_revenue(<span class="kw">OUT</span> total_revenue <span class="kw">DECIMAL</span>(14,2))
 <span class="kw">BEGIN</span>
-    <span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amt_usd) <span class="kw">INTO</span> total_revenue <span class="kw">FROM</span> orders;
+    <span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amount) <span class="kw">INTO</span> total_revenue <span class="kw">FROM</span> orders;
 <span class="kw">END</span>$$
 
 <span class="kw">DELIMITER</span> ;

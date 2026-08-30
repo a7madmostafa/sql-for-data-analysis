@@ -231,6 +231,8 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 body{{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}}
 .page{{max-width:920px;margin:0 auto;padding:56px 48px 90px}}
 .crumb{{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}}
+.home-link{{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray);text-decoration:none;margin-bottom:10px}}
+.home-link:hover{{color:var(--blue)}}
 h1.title{{font-family:'Bricolage Grotesque',Georgia,serif;font-size:38px;line-height:1.15;color:var(--ink);margin:0 0 12px;font-weight:800}}
 .subtitle{{font-size:17px;color:var(--gray);margin:0 0 30px}}
 h2.section{{font-family:'Bricolage Grotesque',Georgia,serif;font-size:24px;color:var(--ink);margin:48px 0 8px;padding-bottom:9px;border-bottom:2px solid var(--ink);font-weight:700}}
@@ -267,7 +269,8 @@ footer{{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);colo
 </head>
 <body><div class="page">
 
-<div class="crumb">Day {day:02d} of 9 &middot; Walkthrough</div>
+<a class="home-link" href="../index.html">&larr; Course home</a>
+<div class="crumb">Day {day:02d} of 10 &middot; Walkthrough</div>
 <h1 class="title">{title}</h1>
 <p class="subtitle">Every statement from <code class="inline">{sql_filename}</code>, executed live against <code class="inline">{database}</code> &mdash; SQL and real output, side by side.</p>
 

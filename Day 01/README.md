@@ -1,7 +1,7 @@
 # Day 01 — SQL Foundations
 
-Intro module using the sample **`world`** database (`country`, `city`, `countrylanguage` — cities,
-countries, and languages spoken per country).
+Intro module using the **`rawaj`** database (a fictional Egyptian e-commerce marketplace) — this
+day stays inside just two tables, `customers` and `governorates`.
 
 ## What you'll learn
 
@@ -21,6 +21,6 @@ countries, and languages spoken per country).
 | `day01_exercises.sql` | Practice questions, business-framed. Try these before looking at the solutions. |
 | `day01_exercises_solutions.sql` | Answer key, numbered to match the exercises. |
 
-**Before you start:** run `../Databases/world_db.sql` once — creates and loads the `world` database.
+**Before you start:** run `../Databases/rawaj_db.sql` once — creates and loads the `rawaj` database.
 
-**Order:** `Databases/world_db.sql` → `day01_reading.html` → `day01_sql_foundations.sql` → `day01_exercises.sql`.
+**Order:** `Databases/rawaj_db.sql` → `day01_reading.html` → `day01_sql_foundations.sql` → `day01_exercises.sql`.

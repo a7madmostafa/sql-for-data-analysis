@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 05 Walkthrough &mdash; Window Functions &amp; Stored Procedures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC;
+  --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
+  --code-str:#CE9178; --code-com:#6A9955;
+  --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
+.page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
+.crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+.home-link{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray);text-decoration:none;margin-bottom:10px}
+.home-link:hover{color:var(--blue)}
+h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:38px;line-height:1.15;color:var(--ink);margin:0 0 12px;font-weight:800}
+.subtitle{font-size:17px;color:var(--gray);margin:0 0 30px}
+h2.section{font-family:'Bricolage Grotesque',Georgia,serif;font-size:24px;color:var(--ink);margin:48px 0 8px;padding-bottom:9px;border-bottom:2px solid var(--ink);font-weight:700}
+h2.section .num{color:var(--blue);margin-right:10px}
+p{margin:0 0 12px}
+p.explain{font-size:15.5px;color:var(--gray);margin:22px 0 8px}
+strong{color:var(--ink);font-weight:700}
+code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
+
+.code-block{margin:8px 0 0;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,30,.12)}
+.code-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#161616}
+.code-header .dot{width:10px;height:10px;border-radius:50%}
+.code-header .dot.r{background:#FF5F56}.code-header .dot.y{background:#FFBD2E}.code-header .dot.g{background:#27C93F}
+.code-header .fname{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C9C;margin-left:6px}
+.code-body{background:var(--code-bg);color:var(--code-default);padding:14px 20px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.7;overflow-x:auto;white-space:pre}
+.code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
+.code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
+
+.result-wrap{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:14px 18px 10px;margin-bottom:26px;overflow-x:auto}
+table.result-table{width:auto;min-width:100%;border-collapse:collapse;margin:0;background:white;font-size:13.5px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.result-table th,table.result-table td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;white-space:nowrap}
+table.result-table thead th{background:var(--panel);color:var(--ink);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+table.result-table tbody tr:last-child td{border-bottom:none}
+.row-note{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray-muted);margin:8px 0 0}
+.row-note.status{color:var(--insight-ti)}
+
+.callout{margin:22px 0 26px;border-radius:6px;padding:15px 20px 17px;border-left:4px solid var(--blue);background:var(--panel)}
+.callout .ti{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px;color:var(--blue-dark)}
+.callout p{font-size:14.5px;margin:0}
+
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
+@media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:28px}}
+</style>
+</head>
+<body><div class="page">
+
+<a class="home-link" href="../index.html">&larr; Course home</a>
+<div class="crumb">Day 05 of 10 &middot; Walkthrough</div>
+<h1 class="title">Window Functions &amp; Stored Procedures</h1>
+<p class="subtitle">Every statement from <code class="inline">day05_window_functions_and_stored_procedures.sql</code>, executed live against <code class="inline">rawaj</code> &mdash; SQL and real output, side by side.</p>
+
+<div class="callout">
+  <div class="ti">Generated page</div>
+  <p>This page is generated from <code class="inline">day05_window_functions_and_stored_procedures.sql</code> by running it statement-by-statement
+  against a local MySQL server and capturing the real output &mdash; it is not hand-written. If the walkthrough
+  file changes, regenerate this page rather than editing it directly.</p>
+</div>
+
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">USE</span> rawaj;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
+<h2 class="section"><span class="num">1</span>WINDOW FUNCTIONS: OVER, AND A RUNNING TOTAL</h2>
+<p class="explain">Finance wants to see revenue build up over time — a running total of total_amount, ordered chronologically</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">SELECT</span> order_date, total_amount,
+       <span class="fn">SUM</span>(total_amount) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> order_date) <span class="kw">AS</span> running_total
+<span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> order_date
+<span class="kw">LIMIT</span> 10;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>order_date</th><th>total_amount</th><th>running_total</th></tr></thead><tbody><tr><td>2023-06-01 10:42:08</td><td>7526.67</td><td>7526.67</td></tr><tr><td>2023-06-01 15:33:21</td><td>2791.58</td><td>10318.25</td></tr><tr><td>2023-06-01 17:11:31</td><td>2542.46</td><td>12860.71</td></tr><tr><td>2023-06-01 20:07:14</td><td>6676.42</td><td>19537.13</td></tr><tr><td>2023-06-01 20:41:11</td><td>4718.59</td><td>24255.72</td></tr><tr><td>2023-06-01 21:19:52</td><td>4162.07</td><td>28417.79</td></tr><tr><td>2023-06-01 22:18:37</td><td>1278.49</td><td>29696.28</td></tr><tr><td>2023-06-01 22:27:04</td><td>3901.86</td><td>33598.14</td></tr><tr><td>2023-06-02 08:11:33</td><td>3006.37</td><td>36604.51</td></tr><tr><td>2023-06-02 13:54:29</td><td>5924.77</td><td>42529.28</td></tr></tbody></table><p class="row-note">10 rows</p></div>
+<h2 class="section"><span class="num">2</span>PARTITION BY (resetting the window per group)</h2>
+<p class="explain">Now do the same running total, but per customer — not one company-wide total that mixes every customer together</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">SELECT</span> customer_id, order_date, total_amount,
+       <span class="fn">SUM</span>(total_amount) <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> customer_id <span class="kw">ORDER BY</span> order_date) <span class="kw">AS</span> customer_running_total
+<span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> customer_id, order_date;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>customer_id</th><th>order_date</th><th>total_amount</th><th>customer_running_total</th></tr></thead><tbody><tr><td>1</td><td>2023-06-23 17:07:32</td><td>8176.84</td><td>8176.84</td></tr><tr><td>1</td><td>2024-07-02 22:08:38</td><td>2231.18</td><td>10408.02</td></tr><tr><td>1</td><td>2024-10-18 21:01:28</td><td>2368.28</td><td>12776.30</td></tr><tr><td>1</td><td>2025-03-06 13:01:40</td><td>1452.92</td><td>14229.22</td></tr><tr><td>1</td><td>2025-03-23 23:02:43</td><td>7709.14</td><td>21938.36</td></tr><tr><td>2</td><td>2023-11-07 22:36:45</td><td>4358.30</td><td>4358.30</td></tr><tr><td>2</td><td>2024-05-06 12:43:43</td><td>2577.50</td><td>6935.80</td></tr><tr><td>2</td><td>2024-05-31 22:58:02</td><td>4686.66</td><td>11622.46</td></tr><tr><td>2</td><td>2025-01-01 09:56:07</td><td>10728.94</td><td>22351.40</td></tr><tr><td>2</td><td>2025-03-06 13:01:19</td><td>3034.17</td><td>25385.57</td></tr><tr><td>2</td><td>2025-03-13 20:07:30</td><td>4709.82</td><td>30095.39</td></tr><tr><td>3</td><td>2023-12-24 18:33:18</td><td>7044.26</td><td>7044.26</td></tr><tr><td>3</td><td>2024-03-31 19:14:25</td><td>13663.84</td><td>20708.10</td></tr><tr><td>3</td><td>2025-03-29 16:24:19</td><td>2129.15</td><td>22837.25</td></tr><tr><td>4</td><td>2023-09-22 14:09:15</td><td>163.87</td><td>163.87</td></tr></tbody></table><p class="row-note">showing 15 of 6000 rows</p></div>
+<h2 class="section"><span class="num">3</span>RANK, DENSE_RANK, ROW_NUMBER</h2>
+<p class="explain">Leadership wants account managers ranked by total sales, and wants to know exactly how ties get handled. The CTE here is the same pattern from Day 04&#x27;s Section 4 — window functions build on top of it.</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">WITH</span> manager_totals <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> am.manager_id, am.manager_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> orders o
+    <span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">JOIN</span> governorates g <span class="kw">ON</span> c.governorate_id = g.governorate_id
+    <span class="kw">JOIN</span> account_managers am <span class="kw">ON</span> g.manager_id = am.manager_id
+    <span class="kw">GROUP BY</span> am.manager_id, am.manager_name
+)
+<span class="kw">SELECT</span> manager_name, total_sales,
+       <span class="fn">RANK</span>()       <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> rank_with_gaps,
+       <span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> dense_rank_no_gaps,
+       <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>) <span class="kw">AS</span> row_num
+<span class="kw">FROM</span> manager_totals
+<span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>manager_name</th><th>total_sales</th><th>rank_with_gaps</th><th>dense_rank_no_gaps</th><th>row_num</th></tr></thead><tbody><tr><td>Samar Salah</td><td>8469795.93</td><td>1</td><td>1</td><td>1</td></tr><tr><td>Ayman Zaki</td><td>5172425.08</td><td>2</td><td>2</td><td>2</td></tr><tr><td>Karim El-Nabawy</td><td>3189545.44</td><td>3</td><td>3</td><td>3</td></tr><tr><td>Dina Rashed</td><td>2565805.79</td><td>4</td><td>4</td><td>4</td></tr><tr><td>Yara Soliman</td><td>2371351.83</td><td>5</td><td>5</td><td>5</td></tr></tbody></table><p class="row-note">5 rows</p></div>
+<h2 class="section"><span class="num">4</span>RANKING WITHIN A PARTITION, THEN FILTERING TO ONE PER GROUP</h2>
+<p class="explain">For every customer, what was their single largest order? (Same shape as Day 04&#x27;s Section 1/4 subquery/CTE question — a window function reaches the same answer more directly)</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">WITH</span> ranked_orders <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> customer_id, order_id, total_amount,
+           <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> customer_id <span class="kw">ORDER BY</span> total_amount <span class="kw">DESC</span>) <span class="kw">AS</span> order_rank
+    <span class="kw">FROM</span> orders
+)
+<span class="kw">SELECT</span> customer_id, order_id, total_amount
+<span class="kw">FROM</span> ranked_orders
+<span class="kw">WHERE</span> order_rank = 1
+<span class="kw">ORDER BY</span> customer_id;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>customer_id</th><th>order_id</th><th>total_amount</th></tr></thead><tbody><tr><td>1</td><td>5116</td><td>8176.84</td></tr><tr><td>2</td><td>5232</td><td>10728.94</td></tr><tr><td>3</td><td>5171</td><td>13663.84</td></tr><tr><td>4</td><td>3059</td><td>9426.22</td></tr><tr><td>5</td><td>2434</td><td>4882.00</td></tr><tr><td>6</td><td>316</td><td>6179.61</td></tr><tr><td>7</td><td>4144</td><td>6485.70</td></tr><tr><td>8</td><td>1424</td><td>4458.35</td></tr><tr><td>9</td><td>1266</td><td>13400.95</td></tr><tr><td>10</td><td>3990</td><td>2153.87</td></tr><tr><td>11</td><td>2251</td><td>11615.09</td></tr><tr><td>12</td><td>2800</td><td>9946.28</td></tr><tr><td>13</td><td>295</td><td>9992.63</td></tr><tr><td>14</td><td>154</td><td>7029.13</td></tr><tr><td>15</td><td>5617</td><td>9173.16</td></tr></tbody></table><p class="row-note">showing 15 of 1196 rows</p></div>
+<h2 class="section"><span class="num">5</span>LAG / LEAD (comparing a row to a neighbor)</h2>
+<p class="explain">Is month-over-month revenue growing or shrinking?</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">WITH</span> monthly_sales <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(order_date, <span class="str">&#x27;%Y-%m&#x27;</span>) <span class="kw">AS</span> month, <span class="fn">SUM</span>(total_amount) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> orders
+    <span class="kw">GROUP BY</span> month
+)
+<span class="kw">SELECT</span> month, total_sales,
+       <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> prev_month_sales,
+       total_sales - <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> change_from_prev_month
+<span class="kw">FROM</span> monthly_sales
+<span class="kw">ORDER BY</span> month;</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>month</th><th>total_sales</th><th>prev_month_sales</th><th>change_from_prev_month</th></tr></thead><tbody><tr><td>2023-06</td><td>647034.32</td><td></td><td></td></tr><tr><td>2023-07</td><td>741561.99</td><td>647034.32</td><td>94527.67</td></tr><tr><td>2023-08</td><td>655664.68</td><td>741561.99</td><td>-85897.31</td></tr><tr><td>2023-09</td><td>703923.25</td><td>655664.68</td><td>48258.57</td></tr><tr><td>2023-10</td><td>707834.26</td><td>703923.25</td><td>3911.01</td></tr><tr><td>2023-11</td><td>649264.43</td><td>707834.26</td><td>-58569.83</td></tr><tr><td>2023-12</td><td>704169.11</td><td>649264.43</td><td>54904.68</td></tr><tr><td>2024-01</td><td>763311.86</td><td>704169.11</td><td>59142.75</td></tr><tr><td>2024-02</td><td>666832.47</td><td>763311.86</td><td>-96479.39</td></tr><tr><td>2024-03</td><td>2937664.69</td><td>666832.47</td><td>2270832.22</td></tr><tr><td>2024-04</td><td>1936906.62</td><td>2937664.69</td><td>-1000758.07</td></tr><tr><td>2024-05</td><td>652697.27</td><td>1936906.62</td><td>-1284209.35</td></tr><tr><td>2024-06</td><td>780341.61</td><td>652697.27</td><td>127644.34</td></tr><tr><td>2024-07</td><td>717291.59</td><td>780341.61</td><td>-63050.02</td></tr><tr><td>2024-08</td><td>673522.10</td><td>717291.59</td><td>-43769.49</td></tr></tbody></table><p class="row-note">showing 15 of 24 rows</p></div>
+<h2 class="section"><span class="num">6</span>STORED PROCEDURES (IN parameters)</h2>
+<p class="explain">Account managers constantly ask for the same report — order count and total revenue for one customer. Save it once as a procedure everyone can call.  DELIMITER is required here: running this file as a script (the mysql CLI, `source`, or Workbench&#x27;s &quot;execute script&quot;) splits statements on every plain semicolon — without switching the delimiter first, it would try to run &quot;BEGIN ... SELECT ...;&quot; as a complete statement and choke on the very first semicolon inside the procedure body. (This becomes unnecessary in Day 06, once you&#x27;re sending SQL through a Python driver instead — a Python driver sends the whole block as one request, no client-side statement-splitting involved.)</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">DROP</span> <span class="kw">PROCEDURE</span> <span class="kw">IF</span> <span class="kw">EXISTS</span> customer_sales_report;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> customer_sales_report(<span class="kw"><span class="kw">IN</span></span> cust_id INT)
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> c.first_name, c.last_name,
+           <span class="fn">COUNT</span>(o.order_id) <span class="kw">AS</span> num_orders,
+           <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
+    <span class="kw">FROM</span> customers c
+    <span class="kw">JOIN</span> orders o <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">WHERE</span> c.customer_id = cust_id
+    <span class="kw">GROUP BY</span> c.first_name, c.last_name;
+<span class="kw">END</span>;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">CALL</span> customer_sales_report(1);</div></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>first_name</th><th>last_name</th><th>num_orders</th><th>total_sales</th></tr></thead><tbody><tr><td>Mohamed</td><td>Abdelrahman</td><td>5</td><td>21938.36</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<h2 class="section"><span class="num">7</span>STORED PROCEDURES (OUT parameters)</h2>
+<p class="explain">A nightly batch job needs just the single number — total company-wide revenue — captured into a variable it can act on, not a result set</p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">DROP</span> <span class="kw">PROCEDURE</span> <span class="kw">IF</span> <span class="kw">EXISTS</span> get_total_revenue;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> get_total_revenue(<span class="kw">OUT</span> total_revenue DECIMAL(14,2))
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amount) <span class="kw">INTO</span> total_revenue <span class="kw">FROM</span> orders;
+<span class="kw">END</span>;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
+<p class="explain"></p>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">CALL</span> get_total_revenue(@rev);
+
+<span class="kw">SELECT</span> @rev <span class="kw">AS</span> total_revenue;</div></div>
+<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
+<div class="result-wrap"><p class="row-note status">&#10003; 1 row affected</p></div>
+
+<footer>Day 05 &middot; Window Functions &amp; Stored Procedures &middot; walkthrough &middot; self-paced</footer>
+</div>
+</body></html>

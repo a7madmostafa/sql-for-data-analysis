@@ -1,12 +1,12 @@
 -- ============================================================
--- SQL PRACTICE EXERCISES — SOLUTIONS — world database
+-- SQL PRACTICE EXERCISES — SOLUTIONS — rawaj database
 -- ============================================================
 -- Answer key for day01_exercises.sql. Some questions have more than one valid
 -- way to write them — these are the reference solutions, not the only
 -- correct answers.
 -- ============================================================
 
-USE world;
+USE rawaj;
 
 
 -- ======================================
@@ -17,7 +17,7 @@ USE world;
 SHOW TABLES;
 
 -- 1.2
-DESCRIBE city;
+DESCRIBE governorates;
 
 
 -- ======================================
@@ -26,15 +26,15 @@ DESCRIBE city;
 
 -- 2.1
 SELECT *
-FROM country;
+FROM customers;
 
 -- 2.2
-SELECT Name, Continent, Region
-FROM country;
+SELECT first_name, last_name, email
+FROM customers;
 
 -- 2.3
-SELECT Name, Population
-FROM city;
+SELECT governorate_name
+FROM governorates;
 
 
 -- ======================================
@@ -43,17 +43,17 @@ FROM city;
 
 -- 3.1
 SELECT *
-FROM city
+FROM customers
 LIMIT 10;
 
 -- 3.2
 SELECT *
-FROM country
+FROM customers
 LIMIT 10 OFFSET 20;
 
 -- 3.3
 SELECT *
-FROM countrylanguage
+FROM customers
 LIMIT 5, 5;
 
 
@@ -62,16 +62,12 @@ LIMIT 5, 5;
 -- ======================================
 
 -- 4.1
-SELECT DISTINCT Continent
-FROM country;
+SELECT DISTINCT governorate_id
+FROM customers;
 
 -- 4.2
-SELECT DISTINCT GovernmentForm
-FROM country;
-
--- 4.3
-SELECT DISTINCT District
-FROM city;
+SELECT DISTINCT manager_id
+FROM governorates;
 
 
 -- ======================================
@@ -79,23 +75,22 @@ FROM city;
 -- ======================================
 
 -- 5.1
-SELECT COUNT(*) AS country_count
-FROM country;
+SELECT COUNT(*) AS customer_count
+FROM customers;
 
 -- 5.2
-SELECT COUNT(IndepYear) AS countries_with_indep_year
-FROM country;
+SELECT COUNT(email) AS customers_with_email
+FROM customers;
 
 -- 5.3
-SELECT COUNT(DISTINCT Language) AS distinct_languages
-FROM countrylanguage;
+SELECT COUNT(DISTINCT governorate_id) AS governorate_count
+FROM customers;
 
 -- 5.4
 SELECT
-    COUNT(*) AS country_count,
-    COUNT(DISTINCT Continent) AS continent_count,
-    COUNT(DISTINCT Region) AS region_count
-FROM country;
+    COUNT(*) AS customer_count,
+    COUNT(DISTINCT governorate_id) AS governorate_count
+FROM customers;
 
 
 -- ======================================
@@ -103,26 +98,26 @@ FROM country;
 -- ======================================
 
 -- 6.1
-SELECT Name, Population
-FROM city
-ORDER BY Population DESC
+SELECT first_name, last_name, signup_date
+FROM customers
+ORDER BY signup_date ASC
 LIMIT 5;
 
 -- 6.2
-SELECT Name, LifeExpectancy
-FROM country
-ORDER BY LifeExpectancy ASC
+SELECT first_name, last_name, signup_date
+FROM customers
+ORDER BY signup_date DESC
 LIMIT 5;
 
 -- 6.3
-SELECT Name, LocalName
-FROM country
-ORDER BY LocalName;
+SELECT first_name, last_name
+FROM customers
+ORDER BY last_name;
 
 -- 6.4
-SELECT Name, SurfaceArea
-FROM country
-ORDER BY SurfaceArea DESC
+SELECT first_name, last_name, signup_date
+FROM customers
+ORDER BY signup_date ASC
 LIMIT 5 OFFSET 3;
 
 
@@ -131,11 +126,11 @@ LIMIT 5 OFFSET 3;
 -- ======================================
 
 -- C1
-SELECT Name, Region, Population
-FROM country
-ORDER BY Population DESC
+SELECT first_name, last_name, governorate_id, signup_date
+FROM customers
+ORDER BY signup_date ASC
 LIMIT 10;
 
 -- C2
-SELECT COUNT(*) - COUNT(LifeExpectancy) AS missing_life_expectancy
-FROM country;
+SELECT COUNT(*) - COUNT(email) AS missing_email
+FROM customers;

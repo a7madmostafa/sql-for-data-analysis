@@ -22,6 +22,8 @@
 body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
 .page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
 .crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+.home-link{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray);text-decoration:none;margin-bottom:10px}
+.home-link:hover{color:var(--blue)}
 h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
 .subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
 .objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
@@ -95,6 +97,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
   </defs>
 </svg>
 
+<a class="home-link" href="../index.html">&larr; Course home</a>
 <div class="crumb">Day 04 of 10 · Subqueries, CTEs &amp; Views</div>
 <h1 class="title">Subqueries, CTEs &amp; Views</h1>
 <p class="subtitle">Four ways to reuse a query's result — nested, named, materialized, or saved.</p>
@@ -111,9 +114,9 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p>Still the same <code class="inline">parch_and_posey</code> database from Days 02–03 — run
-  <code class="inline">Databases/Parch &amp; Posey Database.sql</code> first if you haven't already,
-  then <code class="inline">USE parch_and_posey;</code>. No new setup script today.</p>
+  <p>Still the same <code class="inline">rawaj</code> database from Days 01–03 — run
+  <code class="inline">Databases/rawaj_db.sql</code> first if you haven't already, then
+  <code class="inline">USE rawaj;</code>. No new setup script today.</p>
 </div>
 
 <h2 class="section"><span class="num">1</span>Scalar subqueries</h2>
@@ -131,36 +134,36 @@ or <code class="inline">&gt;</code>.</p>
   <text x="300" y="40" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="14">OUTER QUERY — evaluated 2nd, using the subquery's result</text>
 
   <text x="55" y="80" font-size="13.5" font-family="IBM Plex Mono, monospace">SELECT * FROM orders</text>
-  <text x="55" y="100" font-size="13.5" font-family="IBM Plex Mono, monospace">WHERE total_amt_usd &gt; (</text>
+  <text x="55" y="100" font-size="13.5" font-family="IBM Plex Mono, monospace">WHERE total_amount &gt; (</text>
 
   <rect x="90" y="112" width="330" height="76" fill="#eef6ff" stroke="#2e6fb5" stroke-width="1.6"/>
   <rect x="90" y="112" width="330" height="26" fill="#dbeafe" stroke="#2e6fb5" stroke-width="1.6"/>
   <text x="255" y="130" text-anchor="middle" fill="#1f4e82" font-weight="bold" font-size="13">SUBQUERY — evaluated 1st</text>
-  <text x="106" y="160" font-size="13.5" font-family="IBM Plex Mono, monospace" fill="#1f4e82">SELECT AVG(total_amt_usd)</text>
+  <text x="106" y="160" font-size="13.5" font-family="IBM Plex Mono, monospace" fill="#1f4e82">SELECT AVG(total_amount)</text>
   <text x="106" y="178" font-size="13.5" font-family="IBM Plex Mono, monospace" fill="#1f4e82">FROM orders</text>
 
   <text x="55" y="210" font-size="13.5" font-family="IBM Plex Mono, monospace">);</text>
   <text x="300" y="210" text-anchor="middle" font-size="12" fill="#666" font-style="italic">-- one number in, one number out — a scalar</text>
 </svg>
-<figcaption>MySQL runs the innermost query first — the subquery resolves to a single number, which the outer query then compares every row's total_amt_usd against.</figcaption>
+<figcaption>MySQL runs the innermost query first — the subquery resolves to a single number, which the outer query then compares every row's total_amount against.</figcaption>
 </figure>
 <p><strong>Business question:</strong> leadership wants total sales for the single most recent day
 orders were placed, and finance wants every order that sold for more than the company-wide average.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
   <div class="code-body"><span class="com">-- hardcoding the date works once, but breaks the moment new orders arrive</span>
-<span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amt_usd) <span class="kw">AS</span> total_sales
+<span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amount) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders
-<span class="kw">WHERE</span> <span class="fn">DATE</span>(occurred_at) = <span class="str">'2017-01-02'</span>;
+<span class="kw">WHERE</span> <span class="fn">DATE</span>(order_date) = <span class="str">'2024-03-18'</span>;
 
 <span class="com">-- a scalar subquery keeps it correct automatically, no matter when this runs</span>
-<span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amt_usd) <span class="kw">AS</span> total_sales
+<span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amount) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders
-<span class="kw">WHERE</span> <span class="fn">DATE</span>(occurred_at) = (<span class="kw">SELECT</span> <span class="fn">MAX</span>(<span class="fn">DATE</span>(occurred_at)) <span class="kw">FROM</span> orders);
+<span class="kw">WHERE</span> <span class="fn">DATE</span>(order_date) = (<span class="kw">SELECT</span> <span class="fn">MAX</span>(<span class="fn">DATE</span>(order_date)) <span class="kw">FROM</span> orders);
 
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> orders
-<span class="kw">WHERE</span> total_amt_usd &gt; (<span class="kw">SELECT</span> <span class="fn">AVG</span>(total_amt_usd) <span class="kw">FROM</span> orders);</div>
+<span class="kw">WHERE</span> total_amount &gt; (<span class="kw">SELECT</span> <span class="fn">AVG</span>(total_amount) <span class="kw">FROM</span> orders);</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Self-maintaining, not just shorter</b><p>The hardcoded-date version silently goes stale as soon as newer orders arrive — the subquery version always reflects the current data.</p></div>
@@ -168,25 +171,25 @@ orders were placed, and finance wants every order that sold for more than the co
 </div>
 
 <h2 class="section"><span class="num">2</span>Row subqueries — matching a tuple</h2>
-<p>When "one value" isn't enough to identify the right row — like needing <em>both</em> an account
+<p>When "one value" isn't enough to identify the right row — like needing <em>both</em> a customer
 and its latest timestamp together — compare a <strong>tuple</strong> of columns against a subquery
 that returns matching tuples, using <code class="inline">IN</code>.</p>
-<p><strong>Business question:</strong> the web team wants each account's single most recent web
+<p><strong>Business question:</strong> the web team wants each customer's single most recent web
 event.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> account_id, occurred_at, channel
+  <div class="code-body"><span class="kw">SELECT</span> customer_id, occurred_at, channel
 <span class="kw">FROM</span> web_events
-<span class="kw">WHERE</span> (account_id, occurred_at) <span class="kw">IN</span> (
-    <span class="kw">SELECT</span> account_id, <span class="fn">MAX</span>(occurred_at)
+<span class="kw">WHERE</span> (customer_id, occurred_at) <span class="kw">IN</span> (
+    <span class="kw">SELECT</span> customer_id, <span class="fn">MAX</span>(occurred_at)
     <span class="kw">FROM</span> web_events
-    <span class="kw">GROUP BY</span> account_id
+    <span class="kw">GROUP BY</span> customer_id
 )
-<span class="kw">ORDER BY</span> account_id;</div>
+<span class="kw">ORDER BY</span> customer_id;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Why not just MAX(occurred_at) alone</b><p><code class="inline">MAX(occurred_at)</code> by itself returns one timestamp — the single latest event across the <em>whole</em> table. Pairing it with <code class="inline">account_id</code> in <code class="inline">GROUP BY</code>, then matching both columns as a tuple, is what makes this "latest PER account" instead.</p></div>
-  <div class="annotation"><b>The subquery here returns many rows</b><p>Unlike Section 1, this subquery returns one row per account — that's fine, because <code class="inline">IN</code> (unlike <code class="inline">=</code>) accepts a list of matches, not just one.</p></div>
+  <div class="annotation"><b>Why not just MAX(occurred_at) alone</b><p><code class="inline">MAX(occurred_at)</code> by itself returns one timestamp — the single latest event across the <em>whole</em> table. Pairing it with <code class="inline">customer_id</code> in <code class="inline">GROUP BY</code>, then matching both columns as a tuple, is what makes this "latest PER customer" instead.</p></div>
+  <div class="annotation"><b>The subquery here returns many rows</b><p>Unlike Section 1, this subquery returns one row per customer — that's fine, because <code class="inline">IN</code> (unlike <code class="inline">=</code>) accepts a list of matches, not just one.</p></div>
 </div>
 
 <h2 class="section"><span class="num">3</span>Derived tables — a subquery in FROM</h2>
@@ -232,7 +235,7 @@ inside <code class="inline">FROM</code>. Once declared, a CTE reads like a real 
 the statement. Day 03 already previewed this syntax briefly for a string-building example — this
 section covers it properly.</p>
 <p><strong>Business question:</strong> re-solve Section 3's channel-average question more readably,
-and separately, find Parch &amp; Posey's single highest lifetime-spend customer.</p>
+and separately, find Rawaj's single highest lifetime-spend customer.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
   <div class="code-body"><span class="kw">WITH</span> daily_channel_events <span class="kw">AS</span> (
@@ -245,10 +248,10 @@ and separately, find Parch &amp; Posey's single highest lifetime-spend customer.
 <span class="kw">GROUP BY</span> channel;
 
 <span class="kw">WITH</span> top_customer <span class="kw">AS</span> (
-    <span class="kw">SELECT</span> a.id, a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+    <span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
     <span class="kw">FROM</span> orders o
-    <span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-    <span class="kw">GROUP BY</span> a.id, a.name
+    <span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
     <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
     <span class="kw">LIMIT</span> 1
 )
@@ -264,43 +267,43 @@ and separately, find Parch &amp; Posey's single highest lifetime-spend customer.
 clause — separated by a comma — letting you build a multi-step calculation as a readable sequence
 instead of one deeply nested query.</p>
 <p><strong>Business question:</strong> for that same top customer, how many web events came through
-each channel — and separately, is any account's total spend above the company-wide average account
+each channel — and separately, is any customer's total spend above the company-wide average customer
 spend?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
   <div class="code-body"><span class="kw">WITH</span> top_customer <span class="kw">AS</span> (
-    <span class="kw">SELECT</span> a.id, a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+    <span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
     <span class="kw">FROM</span> orders o
-    <span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-    <span class="kw">GROUP BY</span> a.id, a.name
+    <span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
     <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
     <span class="kw">LIMIT</span> 1
 )
-<span class="kw">SELECT</span> a.name, w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_events
-<span class="kw">FROM</span> accounts a
-<span class="kw">JOIN</span> web_events w <span class="kw">ON</span> a.id = w.account_id
-<span class="kw">JOIN</span> top_customer <span class="kw">ON</span> a.id = top_customer.id
-<span class="kw">GROUP BY</span> a.name, w.channel
+<span class="kw">SELECT</span> c.first_name, c.last_name, w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_events
+<span class="kw">FROM</span> customers c
+<span class="kw">JOIN</span> web_events w <span class="kw">ON</span> c.customer_id = w.customer_id
+<span class="kw">JOIN</span> top_customer <span class="kw">ON</span> c.customer_id = top_customer.customer_id
+<span class="kw">GROUP BY</span> c.first_name, c.last_name, w.channel
 <span class="kw">ORDER BY</span> num_events <span class="kw">DESC</span>;
 
 <span class="com">-- a second CTE, chained off the first with a comma</span>
-<span class="kw">WITH</span> account_totals <span class="kw">AS</span> (
-    <span class="kw">SELECT</span> a.id, a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_spend
+<span class="kw">WITH</span> customer_totals <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_spend
     <span class="kw">FROM</span> orders o
-    <span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-    <span class="kw">GROUP BY</span> a.id, a.name
+    <span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+    <span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
 ),
 avg_total <span class="kw">AS</span> (
     <span class="kw">SELECT</span> <span class="fn">AVG</span>(total_spend) <span class="kw">AS</span> avg_total_spend
-    <span class="kw">FROM</span> account_totals
+    <span class="kw">FROM</span> customer_totals
 )
 <span class="kw">SELECT</span> *
-<span class="kw">FROM</span> account_totals
+<span class="kw">FROM</span> customer_totals
 <span class="kw">WHERE</span> total_spend &gt; (<span class="kw">SELECT</span> avg_total_spend <span class="kw">FROM</span> avg_total);</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>top_customer joined like a real table</b><p>Once declared, a CTE is joined exactly like <code class="inline">accounts</code> or <code class="inline">orders</code> — no special syntax needed to bring it into the rest of the query.</p></div>
-  <div class="annotation"><b>Order matters in the chain</b><p><code class="inline">avg_total</code> references <code class="inline">account_totals</code>, so <code class="inline">account_totals</code> must be declared first — a CTE can only see CTEs that came before it, not after.</p></div>
+  <div class="annotation"><b>top_customer joined like a real table</b><p>Once declared, a CTE is joined exactly like <code class="inline">customers</code> or <code class="inline">orders</code> — no special syntax needed to bring it into the rest of the query.</p></div>
+  <div class="annotation"><b>Order matters in the chain</b><p><code class="inline">avg_total</code> references <code class="inline">customer_totals</code>, so <code class="inline">customer_totals</code> must be declared first — a CTE can only see CTEs that came before it, not after.</p></div>
 </div>
 
 <h2 class="section"><span class="num">6</span>Temporary tables</h2>
@@ -321,10 +324,10 @@ wants to run several different follow-up queries against it during one working s
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
   <div class="code-body"><span class="kw">CREATE TEMPORARY TABLE</span> top_customer
-<span class="kw">SELECT</span> a.id, a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+<span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders o
-<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-<span class="kw">GROUP BY</span> a.id, a.name
+<span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+<span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
 <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
 <span class="kw">LIMIT</span> 1;
 
@@ -332,11 +335,11 @@ wants to run several different follow-up queries against it during one working s
 <span class="kw">SELECT</span> * <span class="kw">FROM</span> top_customer;
 
 <span class="com">-- statement 2, also later, no recomputation needed</span>
-<span class="kw">SELECT</span> a.name, w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_events
-<span class="kw">FROM</span> accounts a
-<span class="kw">JOIN</span> web_events w <span class="kw">ON</span> a.id = w.account_id
-<span class="kw">JOIN</span> top_customer <span class="kw">ON</span> a.id = top_customer.id
-<span class="kw">GROUP BY</span> a.name, w.channel
+<span class="kw">SELECT</span> c.first_name, c.last_name, w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_events
+<span class="kw">FROM</span> customers c
+<span class="kw">JOIN</span> web_events w <span class="kw">ON</span> c.customer_id = w.customer_id
+<span class="kw">JOIN</span> top_customer <span class="kw">ON</span> c.customer_id = top_customer.customer_id
+<span class="kw">GROUP BY</span> c.first_name, c.last_name, w.channel
 <span class="kw">ORDER BY</span> num_events <span class="kw">DESC</span>;</div>
 </div>
 <div class="annotations">
@@ -361,10 +364,10 @@ repeatedly, from any session, without anyone re-writing the ranking logic each t
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
   <div class="code-body"><span class="kw">CREATE VIEW</span> top10_customers <span class="kw">AS</span>
-<span class="kw">SELECT</span> a.id, a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+<span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders o
-<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-<span class="kw">GROUP BY</span> a.id, a.name
+<span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+<span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
 <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
 <span class="kw">LIMIT</span> 10;
 
@@ -373,7 +376,7 @@ repeatedly, from any session, without anyone re-writing the ranking logic each t
 <span class="com">-- behaves exactly like a table in any query — join straight to it</span>
 <span class="kw">SELECT</span> w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_events
 <span class="kw">FROM</span> web_events w
-<span class="kw">JOIN</span> top10_customers t <span class="kw">ON</span> w.account_id = t.id
+<span class="kw">JOIN</span> top10_customers t <span class="kw">ON</span> w.customer_id = t.customer_id
 <span class="kw">GROUP BY</span> w.channel
 <span class="kw">ORDER BY</span> num_events <span class="kw">DESC</span>;</div>
 </div>

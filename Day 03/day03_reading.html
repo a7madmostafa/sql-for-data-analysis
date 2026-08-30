@@ -22,6 +22,8 @@
 body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
 .page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
 .crumb{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:14px}
+.home-link{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gray);text-decoration:none;margin-bottom:10px}
+.home-link:hover{color:var(--blue)}
 h1.title{font-family:'Bricolage Grotesque',Georgia,serif;font-size:42px;line-height:1.12;color:var(--ink);margin:0 0 12px;font-weight:800}
 .subtitle{font-size:19px;color:var(--gray);margin:0 0 30px}
 .objectives{background:var(--panel);border-left:4px solid var(--blue);border-radius:4px;padding:20px 24px;margin:24px 0 36px}
@@ -95,7 +97,8 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
   </defs>
 </svg>
 
-<div class="crumb">Day 03 of 9 · JOINs, CASE &amp; String Functions</div>
+<a class="home-link" href="../index.html">&larr; Course home</a>
+<div class="crumb">Day 03 of 10 · JOINs, CASE &amp; String Functions</div>
 <h1 class="title">JOINs, CASE &amp; String Functions</h1>
 <p class="subtitle">Bringing every table together and labeling what you find, then cleaning and reshaping the text inside it — INNER · LEFT/RIGHT · anti-joins · UNION · HAVING · CASE · string functions.</p>
 
@@ -114,19 +117,17 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p>This lesson reuses Day 02's <code class="inline">parch_and_posey</code> database — run <code class="inline">Databases/Parch &amp; Posey Database.sql</code> first if you haven't already, then <code class="inline">USE parch_and_posey;</code>. No new setup script this time; today is about bringing all five tables together instead of querying one at a time.</p>
+  <p>This lesson reuses Days 01–02's <code class="inline">rawaj</code> database — run <code class="inline">Databases/rawaj_db.sql</code> first if you haven't already, then <code class="inline">USE rawaj;</code>. No new setup script this time; today is about bringing the rest of the schema together instead of querying one table at a time.</p>
 </div>
 
 <h2 class="section"><span class="num">1</span>From relationships to JOINs</h2>
 <p class="section-intro">Day 01 introduced three relationship types. Today, they become real SQL.</p>
 <p>Day 01 introduced 1:1, 1:N, and N:N using a primary key/foreign key pair. Here's the idea that
 connects that lesson to this one: <strong>JOIN is the SQL operation that follows a foreign key back
-to the row it points to.</strong> Every relationship type is just a different pattern of JOINs —
-and every table in <code class="inline">parch_and_posey</code> is chained together by exactly one
-of these two shapes.</p>
+to the row it points to.</strong> Every relationship type is just a different pattern of JOINs.</p>
 <div class="card-grid">
-  <div class="card"><h4>1:N — one JOIN</h4><p><code class="inline">region → sales_reps</code>, <code class="inline">sales_reps → accounts</code>, <code class="inline">accounts → orders/web_events</code>. Every relationship in this dataset, and everything in today's lesson, is this shape.</p></div>
-  <div class="card"><h4>N:N — two JOINs</h4><p>Needs a junction table in the middle — Day 01's book↔author via <code class="inline">book_author</code>. Not present in this dataset, but recognize the shape when you see it elsewhere.</p></div>
+  <div class="card"><h4>1:N — one JOIN</h4><p><code class="inline">account_managers → governorates</code>, <code class="inline">governorates → sellers/customers</code>, <code class="inline">customers → orders/web_events</code>. Most of Rawaj's relationships are this shape.</p></div>
+  <div class="card"><h4>N:N — two JOINs</h4><p>Needs a junction table in the middle — Day 01's book↔author via <code class="inline">book_author</code>. Rawaj actually has a real one: <code class="inline">product_listings</code> bridges <code class="inline">products</code> and <code class="inline">sellers</code> — the same product can be listed by several sellers, and one seller lists several products.</p></div>
 </div>
 <figure>
 <svg viewBox="0 0 780 130" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
@@ -172,13 +173,13 @@ of these two shapes.</p>
   <text x="626" y="67" font-size="13">id</text>
   <text x="626" y="93" font-size="13">name</text>
 </svg>
-<figcaption>book ↔ book_author ↔ author — the same N:N shape from Day 01, now reached with two JOINs.</figcaption>
+<figcaption>book ↔ book_author ↔ author — the same N:N shape from Day 01. Swap in product_listings for book_author, products for book, and sellers for author, and it's exactly Rawaj's own marketplace structure.</figcaption>
 </figure>
-<p>An N:N JOIN reaches the far side in two hops: <code class="inline">book JOIN book_author ON
-... JOIN author ON ...</code> — one JOIN to get from <code class="inline">book</code> to the
-junction row, a second to get from the junction row to <code class="inline">author</code>. Today's
-lesson never needs this — <code class="inline">parch_and_posey</code> is 1:N end to end — but the
-technique is exactly this diagram, chained.</p>
+<p>An N:N JOIN reaches the far side in two hops: <code class="inline">products JOIN
+product_listings ON ... JOIN sellers ON ...</code> — one JOIN to get from
+<code class="inline">products</code> to the listing row, a second to get from the listing row to
+<code class="inline">sellers</code>. Today's lesson mostly stays 1:N — the true N:N join is Day 04
+territory once views and window functions want to rank listings — but recognize the shape now.</p>
 
 <h2 class="section"><span class="num">2</span>Anatomy of a JOIN</h2>
 <div class="code-block">
@@ -190,109 +191,112 @@ technique is exactly this diagram, chained.</p>
 </div>
 <p><code class="inline">ON</code> is the join condition — it tells MySQL which rows from each table
 belong together, by matching a foreign key on one side to the primary key it points to on the
-other. Table aliases (<code class="inline">FROM orders o JOIN accounts a</code>) exist because real
-queries reference the same table names repeatedly — <code class="inline">o.account_id = a.id</code>
-is a lot less noisy than spelling out <code class="inline">orders.account_id = accounts.id</code>
+other. Table aliases (<code class="inline">FROM orders o JOIN customers c</code>) exist because real
+queries reference the same table names repeatedly — <code class="inline">o.customer_id = c.customer_id</code>
+is a lot less noisy than spelling out <code class="inline">orders.customer_id = customers.customer_id</code>
 every time, especially once you're joining three or four tables.</p>
 <div class="callout warn">
   <div class="ti">Get ON wrong and you get a cross join</div>
   <p>Omit <code class="inline">ON</code>, or write a condition that doesn't actually relate the two
   tables, and MySQL pairs <em>every</em> row of the left table with <em>every</em> row of the right
-  table. For <code class="inline">orders</code> × <code class="inline">accounts</code> in this
-  dataset, that's tens of thousands of nonsense rows — not an error, just silently wrong data.</p>
+  table. For <code class="inline">orders</code> × <code class="inline">customers</code> in this
+  dataset, that's millions of nonsense rows — not an error, just silently wrong data.</p>
 </div>
 
 <h2 class="section"><span class="num">3</span>INNER JOIN basics</h2>
 <p>Plain <code class="inline">JOIN</code> is shorthand for <code class="inline">INNER JOIN</code> —
 it returns only the rows that find a match on <em>both</em> sides.</p>
-<p><strong>Business question:</strong> Finance wants order and account details together in one view — combine every order with the account that placed it.</p>
+<p><strong>Business question:</strong> Finance wants order and customer details together in one view — combine every order with the customer who placed it.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> orders.id, accounts.name, orders.occurred_at
+  <div class="code-body"><span class="kw">SELECT</span> orders.order_id, customers.first_name, customers.last_name, orders.order_date
 <span class="kw">FROM</span> orders
-<span class="kw">JOIN</span> accounts
-    <span class="kw">ON</span> orders.account_id = accounts.id;
+<span class="kw">JOIN</span> customers
+    <span class="kw">ON</span> orders.customer_id = customers.customer_id;
 
 <span class="com">-- same thing, with aliases</span>
-<span class="kw">SELECT</span> o.id, a.name, o.occurred_at
+<span class="kw">SELECT</span> o.order_id, c.first_name, c.last_name, o.order_date
 <span class="kw">FROM</span> orders <span class="kw">AS</span> o
-<span class="kw">JOIN</span> accounts <span class="kw">AS</span> a
-    <span class="kw">ON</span> o.account_id = a.id;</div>
+<span class="kw">JOIN</span> customers <span class="kw">AS</span> c
+    <span class="kw">ON</span> o.customer_id = c.customer_id;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>AS is optional</b><p><code class="inline">FROM orders o</code> works identically to <code class="inline">FROM orders AS o</code> — most people drop the <code class="inline">AS</code> for table aliases even while keeping it for column aliases.</p></div>
-  <div class="annotation"><b>Columns from both sides</b><p>Once tables are joined, you pick columns from either one in the same <code class="inline">SELECT</code> list — <code class="inline">o.occurred_at</code> and <code class="inline">a.name</code> live in different tables but read like one combined row.</p></div>
+  <div class="annotation"><b>Columns from both sides</b><p>Once tables are joined, you pick columns from either one in the same <code class="inline">SELECT</code> list — <code class="inline">o.order_date</code> and <code class="inline">c.first_name</code> live in different tables but read like one combined row.</p></div>
 </div>
 
 <h2 class="section"><span class="num">4</span>Multi-table JOINs</h2>
 <p>Each additional <code class="inline">JOIN</code> follows one more foreign key — chaining three or
 four tables together is just repeating the pattern from Section 2.</p>
-<p><strong>Business question:</strong> leadership wants to trace every order back to the sales rep who owns that account, and regional management wants a per-order unit price broken out by region.</p>
+<p><strong>Business question:</strong> leadership wants to trace every order back to the account manager responsible for that customer's governorate, and regional leadership wants average order value broken out by manager.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="com">-- 3 tables: orders -> accounts -> sales_reps</span>
+  <div class="code-body"><span class="com">-- 4 tables: orders -> customers -> governorates -> account_managers</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> orders o
-<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> a.sales_rep_id = s.id;
+<span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+<span class="kw">JOIN</span> governorates g <span class="kw">ON</span> c.governorate_id = g.governorate_id
+<span class="kw">JOIN</span> account_managers am <span class="kw">ON</span> g.manager_id = am.manager_id;
 
-<span class="com">-- 4 tables, computing a unit price per order</span>
-<span class="kw">SELECT</span> r.name <span class="kw">AS</span> region, a.name <span class="kw">AS</span> account,
-       o.total_amt_usd / (o.total + 0.01) <span class="kw">AS</span> unit_price
+<span class="com">-- same 4 tables, computing average order value per manager</span>
+<span class="kw">SELECT</span> am.manager_name, g.governorate_name,
+       <span class="fn">AVG</span>(o.total_amount) <span class="kw">AS</span> avg_order_value
 <span class="kw">FROM</span> orders o
-<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> a.sales_rep_id = s.id
-<span class="kw">JOIN</span> region r <span class="kw">ON</span> s.region_id = r.id;</div>
+<span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+<span class="kw">JOIN</span> governorates g <span class="kw">ON</span> c.governorate_id = g.governorate_id
+<span class="kw">JOIN</span> account_managers am <span class="kw">ON</span> g.manager_id = am.manager_id
+<span class="kw">GROUP BY</span> am.manager_name, g.governorate_name;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Order rarely matters</b><p>MySQL works out the join order internally — write the JOINs in whatever sequence reads clearest, usually following the FK chain from the table you care about most.</p></div>
-  <div class="annotation"><b>+ 0.01 trick</b><p>A cheap guard against dividing by zero on the handful of orders where <code class="inline">total</code> happens to be <code class="inline">0</code> — shifts the denominator just enough to avoid an error without meaningfully changing the result.</p></div>
-  <div class="annotation"><b>Each JOIN = one more hop</b><p><code class="inline">region → sales_reps → accounts → orders</code> — four tables, three JOINs, following the same chain diagrammed back in Day 02.</p></div>
+  <div class="annotation"><b>Each JOIN = one more hop</b><p><code class="inline">account_managers → governorates → customers → orders</code> — four tables, three JOINs, following the same chain diagrammed back in Day 02.</p></div>
 </div>
 
 <h2 class="section"><span class="num">5</span>JOIN + GROUP BY</h2>
 <p>Nothing new syntactically — the JOIN happens first, combining rows from multiple tables, and
 <code class="inline">GROUP BY</code> then works on the result exactly as it did in Day 02.</p>
-<p><strong>Business question:</strong> which accounts generate the most total revenue, and how often does each sales rep's accounts use each marketing channel?</p>
+<p><strong>Business question:</strong> which customers generate the most total revenue, and how often does each account manager's customer base use each marketing channel?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> a.name <span class="kw">AS</span> account_name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales
+  <div class="code-body"><span class="kw">SELECT</span> c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders o
-<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-<span class="kw">GROUP BY</span> a.name
+<span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+<span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
 <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>;
 
-<span class="kw">SELECT</span> s.name, w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> occurrences
+<span class="kw">SELECT</span> am.manager_name, w.channel, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> occurrences
 <span class="kw">FROM</span> web_events w
-<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> w.account_id = a.id
-<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> s.id = a.sales_rep_id
-<span class="kw">GROUP BY</span> s.name, w.channel
+<span class="kw">JOIN</span> customers c <span class="kw">ON</span> w.customer_id = c.customer_id
+<span class="kw">JOIN</span> governorates g <span class="kw">ON</span> c.governorate_id = g.governorate_id
+<span class="kw">JOIN</span> account_managers am <span class="kw">ON</span> g.manager_id = am.manager_id
+<span class="kw">GROUP BY</span> am.manager_name, w.channel
 <span class="kw">ORDER BY</span> occurrences <span class="kw">DESC</span>;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Same GROUP BY rule as Day 02</b><p>Every non-aggregated column in <code class="inline">SELECT</code> — <code class="inline">s.name</code>, <code class="inline">w.channel</code> — still has to appear in <code class="inline">GROUP BY</code>, whether it came from a JOIN or not.</p></div>
+  <div class="annotation"><b>Same GROUP BY rule as Day 02</b><p>Every non-aggregated column in <code class="inline">SELECT</code> — <code class="inline">am.manager_name</code>, <code class="inline">w.channel</code> — still has to appear in <code class="inline">GROUP BY</code>, whether it came from a JOIN or not.</p></div>
 </div>
 
 <h2 class="section"><span class="num">6</span>JOIN + HAVING</h2>
 <p><code class="inline">HAVING</code> was introduced back in Day 02 for filtering aggregates on a
 single table. Nothing about it changes here — the JOIN just means the group being filtered can now
 span multiple tables.</p>
-<p><strong>Business question:</strong> which sales reps manage more than 5 accounts — are any of them overloaded?</p>
+<p><strong>Business question:</strong> which account managers are responsible for more than 200 customers — are any of them overloaded?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="com">-- sales reps who manage more than 5 accounts</span>
-<span class="kw">SELECT</span> s.id, s.name, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_accounts
-<span class="kw">FROM</span> accounts a
-<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> s.id = a.sales_rep_id
-<span class="kw">GROUP BY</span> s.id, s.name
-<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; 5;
+  <div class="code-body"><span class="com">-- account managers responsible for more than 200 customers</span>
+<span class="kw">SELECT</span> am.manager_id, am.manager_name, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> num_customers
+<span class="kw">FROM</span> customers c
+<span class="kw">JOIN</span> governorates g <span class="kw">ON</span> c.governorate_id = g.governorate_id
+<span class="kw">JOIN</span> account_managers am <span class="kw">ON</span> g.manager_id = am.manager_id
+<span class="kw">GROUP BY</span> am.manager_id, am.manager_name
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; 200;
 
-<span class="com">-- WHERE COUNT(*) > 5 here would be a syntax error —</span>
+<span class="com">-- WHERE COUNT(*) > 200 here would be a syntax error —</span>
 <span class="com">-- COUNT(*) doesn't exist yet at the point WHERE runs</span></div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Accounts with more than 20 orders</b><p><code class="inline">GROUP BY a.id, a.name HAVING COUNT(*) &gt; 20</code> — same shape, different table pair.</p></div>
-  <div class="annotation"><b>Accounts that spent under $1,000 total</b><p><code class="inline">HAVING SUM(o.total_amt_usd) &lt; 1000</code> — <code class="inline">HAVING</code> works with any aggregate, not just <code class="inline">COUNT</code>.</p></div>
+  <div class="annotation"><b>Customers with more than 8 orders</b><p><code class="inline">GROUP BY c.customer_id HAVING COUNT(*) &gt; 8</code> — same shape, different table pair.</p></div>
+  <div class="annotation"><b>Customers that spent under 2,000 EGP total</b><p><code class="inline">HAVING SUM(o.total_amount) &lt; 2000</code> — <code class="inline">HAVING</code> works with any aggregate, not just <code class="inline">COUNT</code>.</p></div>
 </div>
 
 <h2 class="section"><span class="num">7</span>LEFT / RIGHT JOIN</h2>
@@ -304,17 +308,17 @@ is the mirror image: keep everything on the right, matched or not.</p>
 <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" style="max-width:100%">
   <rect x="0" y="0" width="640" height="270" fill="#ffffff"/>
   <rect x="0" y="0" width="640" height="270" fill="url(#erd-grid)"/>
-  <text x="105" y="18" text-anchor="middle" font-size="12" font-weight="bold" fill="#666">accounts</text>
+  <text x="105" y="18" text-anchor="middle" font-size="12" font-weight="bold" fill="#666">customers</text>
   <text x="535" y="18" text-anchor="middle" font-size="12" font-weight="bold" fill="#666">orders</text>
 
   <rect x="20" y="30" width="170" height="40" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <text x="105" y="55" text-anchor="middle" font-weight="bold" font-size="13">Acme</text>
+  <text x="105" y="55" text-anchor="middle" font-weight="bold" font-size="13">Mohamed A.</text>
   <rect x="20" y="90" width="170" height="40" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <text x="105" y="115" text-anchor="middle" font-weight="bold" font-size="13">Boaz Co</text>
+  <text x="105" y="115" text-anchor="middle" font-weight="bold" font-size="13">Nour F.</text>
   <rect x="20" y="150" width="170" height="40" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <text x="105" y="175" text-anchor="middle" font-weight="bold" font-size="13">Cursor Inc</text>
+  <text x="105" y="175" text-anchor="middle" font-weight="bold" font-size="13">Heba E.</text>
   <rect x="20" y="210" width="170" height="40" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
-  <text x="105" y="235" text-anchor="middle" font-weight="bold" font-size="13">Delta LLC</text>
+  <text x="105" y="235" text-anchor="middle" font-weight="bold" font-size="13">Sameh N.</text>
 
   <rect x="450" y="30" width="170" height="40" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
   <text x="535" y="55" text-anchor="middle" font-weight="bold" font-size="13">Order #1</text>
@@ -333,22 +337,22 @@ is the mirror image: keep everything on the right, matched or not.</p>
   <text x="340" y="226" font-size="12.5" fill="#666">no match on orders —</text>
   <text x="340" y="242" font-size="12.5" fill="#666">LEFT JOIN keeps the row anyway, order columns come back NULL</text>
 </svg>
-<figcaption>LEFT JOIN from accounts to orders — Delta LLC has no orders, but LEFT JOIN keeps it in the result with NULLs where order columns would be.</figcaption>
+<figcaption>LEFT JOIN from customers to orders — Sameh N. has no orders, but LEFT JOIN keeps them in the result with NULLs where order columns would be.</figcaption>
 </figure>
-<p><strong>Business question:</strong> which accounts exist, whether or not they've ever placed an order — and, mirrored, which orders exist even if their account record can no longer be resolved?</p>
+<p><strong>Business question:</strong> which customers exist, whether or not they've ever placed an order — and, mirrored, which orders exist even if their customer record can no longer be resolved?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="com">-- every account, whether or not it has orders</span>
+  <div class="code-body"><span class="com">-- every customer, whether or not they have orders</span>
 <span class="kw">SELECT</span> *
-<span class="kw">FROM</span> accounts
+<span class="kw">FROM</span> customers
 <span class="kw">LEFT JOIN</span> orders
-    <span class="kw">ON</span> orders.account_id = accounts.id;
+    <span class="kw">ON</span> orders.customer_id = customers.customer_id;
 
-<span class="com">-- every order, even if its account can't be resolved</span>
+<span class="com">-- every order, even if its customer can't be resolved</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> orders
-<span class="kw">RIGHT JOIN</span> accounts
-    <span class="kw">ON</span> orders.account_id = accounts.id;
+<span class="kw">RIGHT JOIN</span> customers
+    <span class="kw">ON</span> orders.customer_id = customers.customer_id;
 
 <span class="com">-- OUTER is optional noise: LEFT OUTER JOIN == LEFT JOIN</span></div>
 </div>
@@ -360,19 +364,19 @@ is the mirror image: keep everything on the right, matched or not.</p>
 <p>A <code class="inline">LEFT JOIN</code> plus <code class="inline">WHERE ... IS NULL</code> isolates
 exactly the rows that found <em>no</em> match — this pattern is called an
 <strong>anti-join</strong>.</p>
-<p><strong>Business question:</strong> which accounts have NEVER placed a single order — a churn/onboarding red-flag list for the sales team?</p>
+<p><strong>Business question:</strong> which customers have NEVER placed a single order — a re-engagement red-flag list for marketing?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="com">-- accounts with NO orders at all</span>
+  <div class="code-body"><span class="com">-- customers with NO orders at all</span>
 <span class="kw">SELECT</span> *
-<span class="kw">FROM</span> accounts a
+<span class="kw">FROM</span> customers c
 <span class="kw">LEFT JOIN</span> orders o
-    <span class="kw">ON</span> a.id = o.account_id
-<span class="kw">WHERE</span> o.id <span class="kw">IS NULL</span>;</div>
+    <span class="kw">ON</span> c.customer_id = o.customer_id
+<span class="kw">WHERE</span> o.order_id <span class="kw">IS NULL</span>;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Why this works</b><p>Every unmatched row has <code class="inline">o.id</code> — and every other <code class="inline">orders</code> column — as <code class="inline">NULL</code>. Filtering on that isolates exactly the accounts the LEFT JOIN couldn't match, same Delta LLC row from the diagram above.</p></div>
-  <div class="annotation"><b>A very common real question</b><p>"Which customers/leads never converted" or "which accounts have never ordered" is almost always this exact pattern — LEFT JOIN toward the table you expect a match in, then filter for where it didn't happen.</p></div>
+  <div class="annotation"><b>Why this works</b><p>Every unmatched row has <code class="inline">o.order_id</code> — and every other <code class="inline">orders</code> column — as <code class="inline">NULL</code>. Filtering on that isolates exactly the customers the LEFT JOIN couldn't match, same Sameh N. row from the diagram above.</p></div>
+  <div class="annotation"><b>A very common real question</b><p>"Which customers/leads never converted" or "which customers have never ordered" is almost always this exact pattern — LEFT JOIN toward the table you expect a match in, then filter for where it didn't happen. Only 4 of Rawaj's 1,200 customers fall into this bucket — small, but real.</p></div>
 </div>
 
 <h2 class="section"><span class="num">9</span>FULL JOIN — MySQL has no such keyword</h2>
@@ -380,24 +384,25 @@ exactly the rows that found <em>no</em> match — this pattern is called an
 sides, matched or not). MySQL doesn't — you get the same result by taking the
 <code class="inline">UNION</code> of a <code class="inline">LEFT JOIN</code> and a
 <code class="inline">RIGHT JOIN</code>.</p>
-<p><strong>Business question:</strong> compliance wants a single report covering every order-account relationship — matched, order-only, and account-only rows, all at once.</p>
+<p><strong>Business question:</strong> compliance wants a single report: which customers have placed an order, which have generated a web event, and where these two lists diverge — matched, order-only, and browse-only rows, all at once.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> *
-<span class="kw">FROM</span> orders
-<span class="kw">LEFT JOIN</span> accounts
-    <span class="kw">ON</span> orders.account_id = accounts.id
+  <div class="code-body"><span class="kw">SELECT</span> o.customer_id <span class="kw">AS</span> ordered_customer, w.customer_id <span class="kw">AS</span> browsed_customer
+<span class="kw">FROM</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> orders) o
+<span class="kw">LEFT JOIN</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> web_events) w
+    <span class="kw">ON</span> o.customer_id = w.customer_id
 
 <span class="kw">UNION</span>
 
-<span class="kw">SELECT</span> *
-<span class="kw">FROM</span> orders
-<span class="kw">RIGHT JOIN</span> accounts
-    <span class="kw">ON</span> orders.account_id = accounts.id;</div>
+<span class="kw">SELECT</span> o.customer_id <span class="kw">AS</span> ordered_customer, w.customer_id <span class="kw">AS</span> browsed_customer
+<span class="kw">FROM</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> orders) o
+<span class="kw">RIGHT JOIN</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> web_events) w
+    <span class="kw">ON</span> o.customer_id = w.customer_id;</div>
 </div>
 <div class="annotations">
+  <div class="annotation"><b>Why the DISTINCT subqueries</b><p><code class="inline">orders</code> and <code class="inline">web_events</code> both have many rows per customer — joining the raw tables directly would multiply rows in a way that has nothing to do with the actual question ("did this customer ever order, ever browse, or both"). Reducing each side to one row per customer first keeps the FULL JOIN meaningful.</p></div>
   <div class="annotation"><b>UNION drops duplicates</b><p>Rows that matched appear in both halves (the LEFT JOIN result and the RIGHT JOIN result) but <code class="inline">UNION</code> only keeps one copy — <code class="inline">UNION ALL</code> would keep both if you ever wanted the duplicates.</p></div>
-  <div class="annotation"><b>Same column count required</b><p>Both <code class="inline">SELECT</code>s must return the same number of columns, in compatible types — MySQL matches them up positionally, not by name.</p></div>
+  <div class="annotation"><b>Read the NULLs</b><p>A row with <code class="inline">browsed_customer</code> NULL placed an order but generated no tracked web event; a row with <code class="inline">ordered_customer</code> NULL browsed but never converted — that second group is the more common one in this dataset.</p></div>
 </div>
 
 <h2 class="section"><span class="num">10</span>CASE — conditional logic inside a query</h2>
@@ -413,22 +418,22 @@ sides, matched or not). MySQL doesn't — you get the same result by taking the
 so order matters whenever ranges could overlap. <code class="inline">ELSE</code> is optional;
 without it, rows that hit no <code class="inline">WHEN</code> come back <code class="inline">NULL</code>
 instead of a fallback value.</p>
-<p><strong>Business question:</strong> flag every order "Large" or "Small" for a dashboard, and compute a safe per-unit price that won't crash on zero-quantity orders.</p>
+<p><strong>Business question:</strong> flag every order "Large" or "Small" for a dashboard, and compute a safe discount percentage that won't crash if a subtotal were ever 0.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> id, account_id, total_amt_usd,
+  <div class="code-body"><span class="kw">SELECT</span> order_id, customer_id, total_amount,
     <span class="kw">CASE</span>
-        <span class="kw">WHEN</span> total_amt_usd &gt; 2000 <span class="kw">THEN</span> <span class="str">'Large'</span>
+        <span class="kw">WHEN</span> total_amount &gt; 5000 <span class="kw">THEN</span> <span class="str">'Large'</span>
         <span class="kw">ELSE</span> <span class="str">'Small'</span>
     <span class="kw">END</span> <span class="kw">AS</span> order_level
 <span class="kw">FROM</span> orders;
 
 <span class="com">-- CASE can guard against bad math, too</span>
-<span class="kw">SELECT</span> account_id,
+<span class="kw">SELECT</span> order_id,
     <span class="kw">CASE</span>
-        <span class="kw">WHEN</span> standard_qty = 0 <span class="kw">OR</span> standard_qty <span class="kw">IS NULL</span> <span class="kw">THEN</span> 0
-        <span class="kw">ELSE</span> standard_amt_usd / standard_qty
-    <span class="kw">END</span> <span class="kw">AS</span> unit_price
+        <span class="kw">WHEN</span> subtotal = 0 <span class="kw">OR</span> subtotal <span class="kw">IS NULL</span> <span class="kw">THEN</span> 0
+        <span class="kw">ELSE</span> <span class="fn">ROUND</span>(discount_amount / subtotal * 100, 2)
+    <span class="kw">END</span> <span class="kw">AS</span> discount_pct
 <span class="kw">FROM</span> orders;</div>
 </div>
 <div class="annotations">
@@ -437,32 +442,32 @@ instead of a fallback value.</p>
 
 <h2 class="section"><span class="num">11</span>CASE + GROUP BY — bucketing into tiers</h2>
 <p>A <code class="inline">CASE</code> inside — or alongside — an aggregate is how you bucket
-continuous values (order totals, account lifetime spend) into discrete tiers for reporting, with no
+continuous values (order totals, customer lifetime spend) into discrete tiers for reporting, with no
 separate lookup table required.</p>
-<p><strong>Business question:</strong> bucket every order into a size category for reporting, and rank every account into top/middle/low lifetime-value tiers based on total spend.</p>
+<p><strong>Business question:</strong> bucket every order into a size category for reporting, and rank every customer into top/middle/low lifetime-value tiers based on total spend.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="com">-- bucket every order into a size category, then count each bucket</span>
 <span class="kw">SELECT</span>
     <span class="kw">CASE</span>
-        <span class="kw">WHEN</span> total &gt;= 2000 <span class="kw">THEN</span> <span class="str">'At Least 2000'</span>
-        <span class="kw">WHEN</span> total <span class="kw">BETWEEN</span> 1000 <span class="kw">AND</span> 2000 <span class="kw">THEN</span> <span class="str">'Between 1000 and 2000'</span>
-        <span class="kw">ELSE</span> <span class="str">'Less than 1000'</span>
+        <span class="kw">WHEN</span> total_amount &gt;= 8000 <span class="kw">THEN</span> <span class="str">'At Least 8000'</span>
+        <span class="kw">WHEN</span> total_amount <span class="kw">BETWEEN</span> 3000 <span class="kw">AND</span> 7999 <span class="kw">THEN</span> <span class="str">'Between 3000 and 7999'</span>
+        <span class="kw">ELSE</span> <span class="str">'Less than 3000'</span>
     <span class="kw">END</span> <span class="kw">AS</span> order_category,
     <span class="fn">COUNT</span>(*) <span class="kw">AS</span> order_count
 <span class="kw">FROM</span> orders
 <span class="kw">GROUP BY</span> 1;
 
-<span class="com">-- customer lifetime value tiers, based on total spend per account</span>
-<span class="kw">SELECT</span> a.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_spent,
+<span class="com">-- customer lifetime value tiers, based on total spend per customer</span>
+<span class="kw">SELECT</span> c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_spent,
     <span class="kw">CASE</span>
-        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amt_usd) &gt; 200000 <span class="kw">THEN</span> <span class="str">'top'</span>
-        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amt_usd) &gt; 100000 <span class="kw">THEN</span> <span class="str">'middle'</span>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amount) &gt; 40000 <span class="kw">THEN</span> <span class="str">'top'</span>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amount) &gt; 20000 <span class="kw">THEN</span> <span class="str">'middle'</span>
         <span class="kw">ELSE</span> <span class="str">'low'</span>
     <span class="kw">END</span> <span class="kw">AS</span> customer_level
 <span class="kw">FROM</span> orders o
-<span class="kw">JOIN</span> accounts a <span class="kw">ON</span> o.account_id = a.id
-<span class="kw">GROUP BY</span> a.name
+<span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+<span class="kw">GROUP BY</span> c.customer_id, c.first_name, c.last_name
 <span class="kw">ORDER BY</span> total_spent <span class="kw">DESC</span>;</div>
 </div>
 <div class="annotations">
@@ -475,32 +480,33 @@ separate lookup table required.</p>
 <p><code class="inline">HAVING</code> treats a <code class="inline">CASE</code>-derived value like any
 other aggregate result — you can filter on the same expression a <code class="inline">CASE</code>
 uses to decide its label.</p>
-<p><strong>Business question:</strong> which sales reps fall specifically in the "under $5k total sales" category — reps who might need extra support?</p>
+<p><strong>Business question:</strong> which account managers fall specifically into the "2–3M EGP total revenue" band — a mid-tier group worth a closer look?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> s.name, <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">AS</span> total_sales,
+  <div class="code-body"><span class="kw">SELECT</span> am.manager_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_revenue,
     <span class="kw">CASE</span>
-        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">BETWEEN</span> 1 <span class="kw">AND</span> 5000 <span class="kw">THEN</span> <span class="str">'Under 5k'</span>
-        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">BETWEEN</span> 5001 <span class="kw">AND</span> 10000 <span class="kw">THEN</span> <span class="str">'5-10k'</span>
-        <span class="kw">ELSE</span> <span class="str">'+10k'</span>
-    <span class="kw">END</span> <span class="kw">AS</span> sales_category
-<span class="kw">FROM</span> accounts a
-<span class="kw">JOIN</span> orders o <span class="kw">ON</span> a.id = o.account_id
-<span class="kw">JOIN</span> sales_reps s <span class="kw">ON</span> s.id = a.sales_rep_id
-<span class="kw">GROUP BY</span> a.id, a.sales_rep_id, s.name
-<span class="kw">HAVING</span> <span class="fn">SUM</span>(o.total_amt_usd) <span class="kw">BETWEEN</span> 1 <span class="kw">AND</span> 5000;</div>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amount) <span class="kw">BETWEEN</span> 1 <span class="kw">AND</span> 2000000 <span class="kw">THEN</span> <span class="str">'Under 2M'</span>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amount) <span class="kw">BETWEEN</span> 2000001 <span class="kw">AND</span> 3000000 <span class="kw">THEN</span> <span class="str">'2-3M'</span>
+        <span class="kw">ELSE</span> <span class="str">'+3M'</span>
+    <span class="kw">END</span> <span class="kw">AS</span> revenue_band
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
+<span class="kw">JOIN</span> governorates g <span class="kw">ON</span> c.governorate_id = g.governorate_id
+<span class="kw">JOIN</span> account_managers am <span class="kw">ON</span> g.manager_id = am.manager_id
+<span class="kw">GROUP BY</span> am.manager_id, am.manager_name
+<span class="kw">HAVING</span> <span class="fn">SUM</span>(o.total_amount) <span class="kw">BETWEEN</span> 2000001 <span class="kw">AND</span> 3000000;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>HAVING re-checks the condition directly</b><p>It re-evaluates <code class="inline">SUM(o.total_amt_usd)</code> itself here — MySQL doesn't let <code class="inline">HAVING</code> reuse the <code class="inline">CASE</code> expression's own alias for filtering, only for display.</p></div>
+  <div class="annotation"><b>HAVING re-checks the condition directly</b><p>It re-evaluates <code class="inline">SUM(o.total_amount)</code> itself here — MySQL doesn't let <code class="inline">HAVING</code> reuse the <code class="inline">CASE</code> expression's own alias for filtering, only for display.</p></div>
 </div>
 
 <div class="callout recap">
   <div class="ti">Halfway point</div>
-  <p>Sections 1–10 covered combining and labeling rows across tables. The rest of this lesson is
+  <p>Sections 1–12 covered combining and labeling rows across tables. The rest of this lesson is
   about cleaning and reshaping the text inside those rows.</p>
 </div>
 
-<h2 class="section"><span class="num">11</span>Trimming whitespace</h2>
+<h2 class="section"><span class="num">13</span>Trimming whitespace</h2>
 <p class="section-intro">Real data is rarely clean — exports and manual entry leave stray spaces around text.</p>
 <table class="api">
   <thead><tr><th>Function</th><th>Removes</th></tr></thead>
@@ -510,19 +516,19 @@ uses to decide its label.</p>
     <tr><td><code class="inline">TRIM(str)</code></td><td>Both sides at once.</td></tr>
   </tbody>
 </table>
-<p><strong>Business question:</strong> a CSV export from a legacy CRM padded every point-of-contact
-name with stray spaces — clean it up before the data gets loaded anywhere else.</p>
+<p><strong>Business question:</strong> a CSV export from a legacy CRM padded every seller name with
+stray spaces — clean it up before the data gets loaded anywhere else.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> <span class="fn">LTRIM</span>(<span class="str">'     Alexander Freberg'</span>) <span class="kw">AS</span> left_trim;
-<span class="kw">SELECT</span> <span class="fn">RTRIM</span>(<span class="str">'Alexander Freberg          '</span>) <span class="kw">AS</span> right_trim;
-<span class="kw">SELECT</span> <span class="fn">TRIM</span>(<span class="str">'     Alexander Freberg          '</span>) <span class="kw">AS</span> trim_both;</div>
+  <div class="code-body"><span class="kw">SELECT</span> <span class="fn">LTRIM</span>(<span class="str">'     Cairo Electronics'</span>) <span class="kw">AS</span> left_trim;
+<span class="kw">SELECT</span> <span class="fn">RTRIM</span>(<span class="str">'Cairo Electronics          '</span>) <span class="kw">AS</span> right_trim;
+<span class="kw">SELECT</span> <span class="fn">TRIM</span>(<span class="str">'     Cairo Electronics          '</span>) <span class="kw">AS</span> trim_both;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Only whitespace, by default</b><p>Plain <code class="inline">TRIM(str)</code> strips spaces. MySQL's fuller form, <code class="inline">TRIM(BOTH '.' FROM str)</code>, trims a specific character instead — rarely needed, but good to know it exists.</p></div>
 </div>
 
-<h2 class="section"><span class="num">12</span>Extracting parts of a string</h2>
+<h2 class="section"><span class="num">14</span>Extracting parts of a string</h2>
 <p><code class="inline">LEFT</code>/<code class="inline">RIGHT</code> grab a fixed number of
 characters from either end; <code class="inline">SUBSTRING</code> grabs a slice from any starting
 position; <code class="inline">LOCATE</code> finds <em>where</em> a character sits so the other three
@@ -574,76 +580,72 @@ don't have to hardcode a position.</p>
 </svg>
 <figcaption>str = 'zero-grad.com' — LEFT/RIGHT count from either end; LOCATE returns a 1-indexed position that SUBSTRING can then slice from.</figcaption>
 </figure>
-<p><strong>Business question:</strong> marketing wants a 4-letter account-code abbreviation for a
-print report, and a data-quality check that every account's <code class="inline">website</code>
-follows the expected <code class="inline">www.company.com</code> pattern.</p>
+<p><strong>Business question:</strong> marketing wants a 4-letter seller-code abbreviation for a
+print report, and needs to know where the first space falls in each seller's name for a later
+splitting step.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> name, <span class="fn">LEFT</span>(name, 4) <span class="kw">AS</span> account_code
-<span class="kw">FROM</span> accounts;
+  <div class="code-body"><span class="kw">SELECT</span> seller_name, <span class="fn">LEFT</span>(seller_name, 4) <span class="kw">AS</span> seller_code
+<span class="kw">FROM</span> sellers;
 
 <span class="com">-- SUBSTRING(str, start, length) — 1-indexed, same indexing LOCATE returns</span>
-<span class="com">-- every website looks like 'www.walmart.com' — this pulls out everything before the FIRST dot</span>
-<span class="kw">SELECT</span> website, <span class="fn">SUBSTRING</span>(website, 1, <span class="fn">LOCATE</span>(<span class="str">'.'</span>, website) - 1) <span class="kw">AS</span> website_prefix
-<span class="kw">FROM</span> accounts;
-
-<span class="kw">SELECT</span> primary_poc, <span class="fn">LOCATE</span>(<span class="str">' '</span>, primary_poc) <span class="kw">AS</span> space_position
-<span class="kw">FROM</span> accounts;</div>
+<span class="com">-- every seller name has at least one space — this finds where it falls</span>
+<span class="kw">SELECT</span> seller_name, <span class="fn">LOCATE</span>(<span class="str">' '</span>, seller_name) <span class="kw">AS</span> space_position
+<span class="kw">FROM</span> sellers;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>LOCATE is 1-indexed, and 0 means "not found"</b><p>Unlike most programming languages, position 1 is the first character — and if the search string never appears, <code class="inline">LOCATE</code> returns <code class="inline">0</code>, not <code class="inline">-1</code> or <code class="inline">NULL</code>.</p></div>
-  <div class="annotation"><b>Finds the FIRST match only</b><p><code class="inline">website</code> has two dots (<code class="inline">www.walmart.com</code>) — <code class="inline">LOCATE('.', website)</code> stops at the first one, so this extracts <code class="inline">'www'</code>, not the company name. Getting the middle segment would need a second <code class="inline">LOCATE</code> starting after the first match — not needed for today's lesson, but worth knowing the limit.</p></div>
-  <div class="annotation"><b>The -1 in this example</b><p><code class="inline">LOCATE('.', website) - 1</code> is the length of everything <em>before</em> the dot — feeding that as the length argument to <code class="inline">SUBSTRING</code> is how Section 13's email-builder finds a name split too.</p></div>
+  <div class="annotation"><b>Finds the FIRST match only</b><p>A seller name like <code class="inline">'Cairo Electronics Supply'</code> has two spaces — <code class="inline">LOCATE(' ', seller_name)</code> stops at the first one. Getting a later word would need a second <code class="inline">LOCATE</code> starting after the first match — not needed for today's lesson, but worth knowing the limit.</p></div>
+  <div class="annotation"><b>The -1 in the next section</b><p><code class="inline">LOCATE(' ', seller_name) - 1</code> is the length of everything <em>before</em> the space — feeding that as the length argument to <code class="inline">LEFT</code> is exactly how Section 15's contact-email builder isolates the first word.</p></div>
 </div>
 
-<h2 class="section"><span class="num">13</span>Building and cleaning strings</h2>
+<h2 class="section"><span class="num">15</span>Building and cleaning strings</h2>
 <p><code class="inline">CONCAT</code> glues pieces together; <code class="inline">REPLACE</code>
 swaps every occurrence of one substring for another; <code class="inline">LOWER</code>/
 <code class="inline">UPPER</code> normalize case; <code class="inline">LENGTH</code> counts
 characters.</p>
-<p><strong>Business question:</strong> sales wants a company email address auto-generated for every
-point of contact — <code class="inline">firstname.lastname@accountname.com</code>, all lowercase, no
-spaces.</p>
+<p><strong>Business question:</strong> sales wants a contact email auto-generated for every seller,
+from just the first word of their shop name — <code class="inline">firstword@rawaj-marketplace.com</code>,
+all lowercase.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="kw">WITH</span> name_split <span class="kw">AS</span> (
+  <div class="code-body"><span class="kw">WITH</span> first_word <span class="kw">AS</span> (
     <span class="kw">SELECT</span>
-        <span class="fn">REPLACE</span>(name, <span class="str">' '</span>, <span class="str">''</span>) <span class="kw">AS</span> clean_account_name,
-        <span class="fn">LEFT</span>(primary_poc, <span class="fn">LOCATE</span>(<span class="str">' '</span>, primary_poc) - 1) <span class="kw">AS</span> first_name,
-        <span class="fn">RIGHT</span>(primary_poc, <span class="fn">LENGTH</span>(primary_poc) - <span class="fn">LOCATE</span>(<span class="str">' '</span>, primary_poc)) <span class="kw">AS</span> last_name
-    <span class="kw">FROM</span> accounts
+        seller_name,
+        <span class="fn">LEFT</span>(seller_name, <span class="fn">LOCATE</span>(<span class="str">' '</span>, seller_name) - 1) <span class="kw">AS</span> first_word
+    <span class="kw">FROM</span> sellers
 )
-<span class="kw">SELECT</span> first_name, last_name,
-       <span class="fn">CONCAT</span>(<span class="fn">LOWER</span>(first_name), <span class="str">'.'</span>, <span class="fn">LOWER</span>(last_name), <span class="str">'@'</span>, <span class="fn">LOWER</span>(clean_account_name), <span class="str">'.com'</span>) <span class="kw">AS</span> email
-<span class="kw">FROM</span> name_split;</div>
+<span class="kw">SELECT</span> seller_name, first_word,
+       <span class="fn">CONCAT</span>(<span class="fn">LOWER</span>(first_word), <span class="str">'@rawaj-marketplace.com'</span>) <span class="kw">AS</span> contact_email
+<span class="kw">FROM</span> first_word;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Don't worry about WITH yet</b><p>This is a CTE (Day 04 covers the syntax properly) — it's used here only so the first/last-name split doesn't have to be repeated three times inside one long <code class="inline">SELECT</code>.</p></div>
-  <div class="annotation"><b>Each piece is one function, chained</b><p><code class="inline">LEFT</code> + <code class="inline">LOCATE</code> gets the first name, <code class="inline">RIGHT</code> + <code class="inline">LENGTH</code> + <code class="inline">LOCATE</code> gets the last name, <code class="inline">REPLACE</code> strips spaces from the account name — then <code class="inline">CONCAT</code> stitches all of it together.</p></div>
+  <div class="annotation"><b>Don't worry about WITH yet</b><p>This is a CTE (Day 04 covers the syntax properly) — it's used here only so the first-word split doesn't have to be repeated inside one long <code class="inline">SELECT</code>.</p></div>
+  <div class="annotation"><b>Each piece is one function, chained</b><p><code class="inline">LEFT</code> + <code class="inline">LOCATE</code> isolates the first word — then <code class="inline">LOWER</code> and <code class="inline">CONCAT</code> assemble the final address. Rawaj's <code class="inline">customers</code> table already stores <code class="inline">first_name</code>/<code class="inline">last_name</code> separately, so this kind of split is only needed for single-field text like a seller's shop name.</p></div>
 </div>
 
-<h2 class="section"><span class="num">14</span>COALESCE / IFNULL — filling in the gaps</h2>
+<h2 class="section"><span class="num">16</span>COALESCE / IFNULL — filling in the gaps</h2>
 <p>A <code class="inline">CASE</code> that doesn't cover every possibility leaves some rows
-<code class="inline">NULL</code> (Section 8 covered this with <code class="inline">ELSE</code>).
+<code class="inline">NULL</code> (Section 10 covered this with <code class="inline">ELSE</code>).
 <code class="inline">IFNULL(expr, fallback)</code> swaps in a fallback value wherever
 <code class="inline">expr</code> is <code class="inline">NULL</code> — a lighter-weight fix than adding
 another <code class="inline">WHEN</code>. <code class="inline">COALESCE</code> does the same thing
 but accepts any number of arguments, returning the first one that isn't <code class="inline">NULL</code>
 — <code class="inline">IFNULL</code> is really just MySQL's two-argument shortcut for it.</p>
-<p><strong>Business question:</strong> bucket every order by item count, but the defined buckets only
-cover 0–100 and 101–200 — anything bigger needs to read "200+" instead of a blank cell on the
-dashboard.</p>
+<p><strong>Business question:</strong> bucket every order by total amount, but the defined buckets
+only cover 0–2,000 and 2,001–5,000 EGP — anything bigger needs to read "5000+" instead of a blank
+cell on the dashboard.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="kw">WITH</span> total_range <span class="kw">AS</span> (
     <span class="kw">SELECT</span>
         <span class="kw">CASE</span>
-            <span class="kw">WHEN</span> total <span class="kw">BETWEEN</span> 0 <span class="kw">AND</span> 100 <span class="kw">THEN</span> <span class="str">'0-100'</span>
-            <span class="kw">WHEN</span> total <span class="kw">BETWEEN</span> 101 <span class="kw">AND</span> 200 <span class="kw">THEN</span> <span class="str">'101-200'</span>
+            <span class="kw">WHEN</span> total_amount <span class="kw">BETWEEN</span> 0 <span class="kw">AND</span> 2000 <span class="kw">THEN</span> <span class="str">'0-2000'</span>
+            <span class="kw">WHEN</span> total_amount <span class="kw">BETWEEN</span> 2001 <span class="kw">AND</span> 5000 <span class="kw">THEN</span> <span class="str">'2001-5000'</span>
         <span class="kw">END</span> <span class="kw">AS</span> total_range
     <span class="kw">FROM</span> orders
 )
-<span class="kw">SELECT</span> <span class="fn">IFNULL</span>(total_range, <span class="str">'200+'</span>) <span class="kw">AS</span> total_range
+<span class="kw">SELECT</span> <span class="fn">IFNULL</span>(total_range, <span class="str">'5000+'</span>) <span class="kw">AS</span> total_range
 <span class="kw">FROM</span> total_range;</div>
 </div>
 <div class="annotations">
@@ -652,8 +654,8 @@ dashboard.</p>
 
 <div class="callout recap">
   <div class="ti">Next: Day 04</div>
-  <p>Subqueries, CTEs, Temp Tables, Views, Window Functions, and Stored Procedures — a query inside
-  a query, cleaner ways to reuse one, and running totals/rankings without collapsing rows.</p>
+  <p>Subqueries, CTEs, Temp Tables &amp; Views — a query inside a query, and cleaner ways to reuse
+  one. Window functions and stored procedures follow on Day 05.</p>
 </div>
 
 <footer>Day 03 · JOINs, CASE &amp; String Functions · self-paced</footer>
