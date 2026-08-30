@@ -108,7 +108,7 @@ body{margin-left:0}
 
 <div class="crumb">Self-paced course</div>
 <h1 class="title">SQL for Data Analysis</h1>
-<p class="subtitle">A 10-day self-paced course: five days of core SQL syntax, one day of Python connectivity, followed by four applied projects on real datasets. Pick a day below to start reading.</p>
+<p class="subtitle">A 7-day self-paced course: five days of core SQL syntax, one day of Python connectivity, and one applied project on a real dataset. Pick a day below to start reading.</p>
 
 <h2 class="section">Lesson days</h2>
 <div class="day-grid">
@@ -298,48 +298,6 @@ body{margin-left:0}
     </div>
   </div>
 
-  <div class="day-card">
-    <div class="day-num">DAY 08</div>
-    <div class="day-body">
-      <div class="day-head"><span class="day-title">Project: European Soccer</span></div>
-      <p class="day-topics">20 questions on players, teams, and leagues — JOIN- and view-heavy, real 7-table dataset. No new SQL, no MySQL/.env needed.</p>
-      <details class="day-details">
-        <summary><span class="caret">▸</span>What you'll learn</summary>
-        <div class="day-details-body">
-          <ul>
-            <li>Build a <code class="inline">CREATE VIEW</code> around a window function so "current rating per player" is defined once and reused across a dozen questions — Day 04's Views and window functions, working together.</li>
-            <li>Recognize a SQLite-only convenience (the bare-column <code class="inline">MAX()</code> guarantee) and choose the portable pattern instead, since it's what actually works on MySQL too.</li>
-            <li>Chain a 3-4 table JOIN through two views without rewriting the join logic each time.</li>
-            <li>Combine a team's home and away results into one column with <code class="inline">UNION ALL</code> before aggregating.</li>
-            <li>Turn a correlation into an actual business caveat, not just a chart.</li>
-            <li>Spot a data-coverage gap with an anti-join before it becomes an unanswerable question from a stakeholder.</li>
-          </ul>
-          <p class="before-start"><strong>Before you start:</strong> the reading has the download link — grab <code class="inline">soccer.sqlite</code> from Kaggle (~299 MB, not committed to this repo) and place it at <code class="inline">Databases/soccer.sqlite</code>, alongside every other database this course uses. No MySQL server or <code class="inline">.env</code> needed — this day runs entirely on SQLite.</p>
-        </div>
-      </details>
-      <div class="day-links">
-        <a class="primary" href="Day%2008/day08_reading.html">Reading</a>
-        <a href="Day%2008/project_08.ipynb" download><svg class="dl-icon"><use href="#icon-download"/></svg>Notebook</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="day-card planned">
-    <div class="day-num">DAY 09</div>
-    <div class="day-body">
-      <div class="day-head"><span class="day-title">Project: FitBit / Bellabeat</span></div>
-      <p class="day-topics">CTE-heavy, date/string mechanics. Not built yet.</p>
-    </div>
-  </div>
-
-  <div class="day-card planned">
-    <div class="day-num">DAY 10</div>
-    <div class="day-body">
-      <div class="day-head"><span class="day-title">Project: World Development Indicators</span></div>
-      <p class="day-topics">Capstone, window functions. Not built yet.</p>
-    </div>
-  </div>
-
 </div>
 
 <h2 class="section">Databases</h2>
@@ -348,6 +306,15 @@ body{margin-left:0}
     <h4>rawaj_db.sql</h4>
     <p>Creates <code class="inline">rawaj</code> — a fictional Egyptian e-commerce marketplace (customers, sellers, products, orders, and more) — needed for Days 01–05.</p>
     <a href="Databases/rawaj_db.sql" download><svg class="dl-icon"><use href="#icon-download"/></svg>Download</a>
+  </div>
+  <div class="db-card">
+    <h4>rawaj.sqlite</h4>
+    <p>A SQLite copy of <code class="inline">rawaj</code>, migrated live by <code class="inline">day06_python_sqlite.ipynb</code> — needed for Day 06. Generated, not committed here; running that notebook creates it.</p>
+  </div>
+  <div class="db-card">
+    <h4>wasel.sqlite</h4>
+    <p>A fictional Egyptian ride-hailing app (cities, drivers, riders, vehicles, trips, ratings, and more) — needed for Day 07. Already included, ready to use.</p>
+    <a href="Databases/wasel.sqlite" download><svg class="dl-icon"><use href="#icon-download"/></svg>Download</a>
   </div>
 </div>
 

@@ -254,6 +254,25 @@ TOGGLE_JS = """<script>
 </script>"""
 
 
+DAY_LINKS_CSS = """.day-links{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 22px}
+.day-links a{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:700;text-decoration:none;color:var(--blue-dark);background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 11px;display:inline-flex;align-items:center}
+.day-links a:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.day-links a.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.day-links a.primary:hover{background:var(--blue-dark)}
+.dl-icon{width:11px;height:11px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}"""
+
+
+def render_day_links(day):
+    reading_file = f"day{day:02d}_reading.html"
+    gh_folder = f"Day%20{day:02d}"
+    return (
+        '<div class="day-links">\n'
+        f'  <a class="primary" href="{reading_file}">Reading</a>\n'
+        f'  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/{gh_folder}" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>Walkthrough &amp; Exercises</a>\n'
+        "</div>"
+    )
+
+
 def render_sidebar(active_day):
     parts = [
         '<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>',
@@ -323,15 +342,29 @@ table.result-table tbody tr:last-child td{{border-bottom:none}}
 
 footer{{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}}
 @media(max-width:760px){{.page{{padding:32px 22px}}h1.title{{font-size:28px}}}}
+{day_links_css}
 </style>
 </head>
 <body>
 {sidebar}
 <div class="page">
 
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="icon-download" viewBox="0 0 16 16">
+      <path d="M8 2v7M4.5 6.5L8 10l3.5-3.5M2.5 12.5h11"/>
+    </symbol>
+    <symbol id="icon-external" viewBox="0 0 16 16">
+      <path d="M6.5 2.5h7v7M13.5 2.5L6 10M4 4H2.5v9.5H12V12"/>
+    </symbol>
+  </defs>
+</svg>
+
 <div class="crumb">Day {day:02d} of 10 &middot; Walkthrough</div>
 <h1 class="title">{title}</h1>
 <p class="subtitle">Every statement from <code class="inline">{sql_filename}</code>, executed live against <code class="inline">{database}</code> &mdash; SQL and real output, side by side.</p>
+
+{day_links}
 
 <div class="callout">
   <div class="ti">Generated page</div>
@@ -369,7 +402,7 @@ def render_page(day, title, database, sql_filename, events):
         day=day, title=html.escape(title), database=html.escape(database),
         sql_filename=html.escape(sql_filename), body="\n".join(body_parts),
         sidebar_css=SIDEBAR_CSS, sidebar=render_sidebar(f"{day:02d}"),
-        toggle_js=TOGGLE_JS,
+        toggle_js=TOGGLE_JS, day_links_css=DAY_LINKS_CSS, day_links=render_day_links(day),
     )
 
 

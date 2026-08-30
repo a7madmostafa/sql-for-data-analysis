@@ -1,7 +1,7 @@
 """
 Generates Databases/rawaj_db.sql — the full schema + seed data for Rawaj, the fictional
-Egyptian e-commerce marketplace that replaces Parch & Posey (see Databases/rawaj_erd.md for the
-full design notes and business rules this script encodes).
+Egyptian e-commerce marketplace (see Databases/rawaj_schema.md for the full design notes and
+business rules this script encodes).
 
 Usage:
     python _tools/generate_rawaj_db.py

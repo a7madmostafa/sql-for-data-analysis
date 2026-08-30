@@ -1,6 +1,6 @@
 """
 Generates Databases/wasel.sqlite -- the full schema + seed data for Wasel, the fictional
-Egyptian ride-hailing app used for Day 07's project (see Databases/wasel_erd.md for the full
+Egyptian ride-hailing app used for Day 07's project (see Databases/wasel_schema.md for the full
 design notes and business rules this script encodes).
 
 Unlike Rawaj (a MySQL database for Days 01-05), Wasel is a project-day dataset: it's queried

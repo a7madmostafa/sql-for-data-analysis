@@ -1,12 +1,7 @@
-# Wasel — ERD (design draft)
+# Wasel — Schema
 
-A proposed project-day dataset (one of the four applied projects, alongside Airbnb, European
-Soccer, and World Development Indicators) — a fictional Egyptian ride-hailing app, "Wasel"
-(واصل — "arrived"), continuing the same fictional Egyptian/MENA world as Rawaj. Generated
-synthetic data, same reasoning as Rawaj: no licensing/scraping concerns (real Uber/Careem trip
-data isn't public anyway), full control over schema richness, and — unlike the other project
-days — no multi-GB Kaggle download step, since it can be generated and committed directly. Not
-yet built — no `.sql`/generation script exists for this yet.
+The database behind Day 07 — a fictional Egyptian ride-hailing app, "Wasel" (واصل — "arrived"),
+continuing the same fictional Egyptian/MENA world as Rawaj. See `wasel.sqlite`.
 
 ## Concept
 
@@ -30,6 +25,93 @@ yet built — no `.sql`/generation script exists for this yet.
 - **04** (subqueries/CTEs/views): top-earning drivers via CTE; a saved "active drivers" view.
 - **05** (window functions): rank drivers by earnings within city, running daily trip count,
   month-over-month growth, `LAG` for gap-between-a-driver's-trips.
+
+## Diagram
+
+```mermaid
+erDiagram
+    CITIES {
+        int city_id PK
+        varchar city_name
+    }
+    DRIVERS {
+        int driver_id PK
+        varchar driver_name
+        int home_city_id FK
+        date signup_date
+        varchar status
+    }
+    RIDERS {
+        int rider_id PK
+        varchar rider_name
+        int city_id FK
+        date signup_date
+    }
+    DRIVER_CITY_COVERAGE {
+        int driver_id FK
+        int city_id FK
+    }
+    VEHICLE_TYPES {
+        int type_id PK
+        varchar type_name
+        decimal base_fare
+        decimal per_km_rate
+    }
+    VEHICLES {
+        int vehicle_id PK
+        int driver_id FK
+        int type_id FK
+        varchar make
+        varchar model
+        int year
+        varchar plate_number
+    }
+    PROMOTIONS {
+        int promo_id PK
+        varchar code
+        varchar discount_type
+        decimal discount_value
+        date valid_from
+        date valid_to
+    }
+    TRIPS {
+        int trip_id PK
+        int rider_id FK
+        int driver_id FK
+        int vehicle_id FK
+        int pickup_city_id FK
+        int dropoff_city_id FK
+        int promo_id FK
+        datetime pickup_time
+        datetime dropoff_time
+        decimal distance_km
+        decimal fare_amount
+        decimal surge_multiplier
+        varchar payment_method
+        varchar status
+    }
+    RATINGS {
+        int rating_id PK
+        int trip_id FK
+        varchar rated_by
+        int rating
+        text comment
+    }
+
+    CITIES ||--o{ DRIVERS : "home city"
+    CITIES ||--o{ RIDERS : "home city"
+    DRIVERS ||--o{ DRIVER_CITY_COVERAGE : covers
+    CITIES ||--o{ DRIVER_CITY_COVERAGE : covered_by
+    VEHICLE_TYPES ||--o{ VEHICLES : classifies
+    DRIVERS ||--o{ VEHICLES : owns
+    DRIVERS ||--o{ TRIPS : drives
+    RIDERS ||--o{ TRIPS : rides
+    VEHICLES ||--o{ TRIPS : used_in
+    PROMOTIONS ||--o{ TRIPS : "applied to"
+    CITIES ||--o{ TRIPS : "pickup city"
+    CITIES ||--o{ TRIPS : "dropoff city"
+    TRIPS ||--o{ RATINGS : rated_by
+```
 
 ## Tables and columns
 
@@ -81,15 +163,3 @@ yet built — no `.sql`/generation script exists for this yet.
 | | `rated_by` | VARCHAR(10) | rider/driver — who left this rating |
 | | `rating` | TINYINT | 1–5 |
 | | `comment` | TEXT | nullable — some ratings have no comment |
-
-## Diagram
-
-See `wasel_erd_diagram.md`.
-
-## Open items (not yet decided)
-
-- Row counts / scale per table.
-- Data-generation approach (script vs. hand-authored seed data) — likely the same script-based
-  approach as Rawaj.
-- Whether this becomes Day 09 or Day 10 in the final project lineup, and which of Airbnb/Wasel/
-  Soccer/WDI goes where.
