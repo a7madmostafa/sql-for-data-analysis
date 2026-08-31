@@ -110,6 +110,13 @@ body{margin-left:0}
 .day-links a.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .day-links a.primary:hover{background:var(--blue-dark)}
 .dl-icon{width:11px;height:11px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.day-nav{display:flex;gap:16px;margin:40px 0 0;flex-wrap:wrap}
+.day-nav-link{flex:1 1 260px;max-width:340px;display:flex;flex-direction:column;gap:4px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:border-color .15s,background .15s}
+.day-nav-link:hover{background:#fff;border-color:var(--blue)}
+.day-nav-link.next{margin-left:auto;text-align:right;align-items:flex-end}
+.day-nav-link .dn-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:700}
+.day-nav-link .dn-title{font-size:14.5px;color:var(--ink);font-weight:600}
+@media(max-width:520px){.day-nav-link{flex:1 1 100%;max-width:none}.day-nav-link.next{text-align:left;align-items:flex-start;margin-left:0}}
 </style>
 </head>
 <body>
@@ -160,7 +167,9 @@ body{margin-left:0}
 
 <div class="day-links">
   <a class="primary" href="day01_sql_foundations.html">Worked Examples</a>
-  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2001" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>Walkthrough &amp; Exercises</a>
+  <a href="day01_exercises.sql">Exercises</a>
+  <a href="day01_exercises_solutions.sql">Solutions</a>
+  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2001" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>View on GitHub</a>
 </div>
 
 <div class="callout tip">
@@ -682,6 +691,17 @@ returning one row per input row, it collapses many rows into a single summary nu
 <div class="callout recap">
   <div class="ti">Next: Day 02</div>
   <p>Filtering &amp; Aggregation — WHERE conditions, GROUP BY, and DATE functions, digging deeper into Rawaj's <code class="inline">orders</code> and <code class="inline">web_events</code>.</p>
+</div>
+
+<div class="day-nav">
+  <a class="day-nav-link prev" href="../index.html">
+    <span class="dn-label">&larr; Back to</span>
+    <span class="dn-title">Course Home</span>
+  </a>
+  <a class="day-nav-link next" href="../Day%2002/day02_reading.html">
+    <span class="dn-label">Next &rarr;</span>
+    <span class="dn-title">Day 02 &middot; Filtering &amp; Aggregation</span>
+  </a>
 </div>
 
 <footer>Day 01 · SQL Foundations · self-paced</footer>

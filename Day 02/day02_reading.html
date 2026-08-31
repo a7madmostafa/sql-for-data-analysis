@@ -110,6 +110,13 @@ figure pre.mermaid{background:transparent;font-family:inherit;overflow-x:auto}
 .day-links a.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .day-links a.primary:hover{background:var(--blue-dark)}
 .dl-icon{width:11px;height:11px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.day-nav{display:flex;gap:16px;margin:40px 0 0;flex-wrap:wrap}
+.day-nav-link{flex:1 1 260px;max-width:340px;display:flex;flex-direction:column;gap:4px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:border-color .15s,background .15s}
+.day-nav-link:hover{background:#fff;border-color:var(--blue)}
+.day-nav-link.next{margin-left:auto;text-align:right;align-items:flex-end}
+.day-nav-link .dn-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:700}
+.day-nav-link .dn-title{font-size:14.5px;color:var(--ink);font-weight:600}
+@media(max-width:520px){.day-nav-link{flex:1 1 100%;max-width:none}.day-nav-link.next{text-align:left;align-items:flex-start;margin-left:0}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 </head>
@@ -160,7 +167,9 @@ figure pre.mermaid{background:transparent;font-family:inherit;overflow-x:auto}
 
 <div class="day-links">
   <a class="primary" href="day02_filtering_and_aggregation.html">Worked Examples</a>
-  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2002" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>Walkthrough &amp; Exercises</a>
+  <a href="day02_exercises.sql">Exercises</a>
+  <a href="day02_exercises_solutions.sql">Solutions</a>
+  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2002" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>View on GitHub</a>
 </div>
 
 <div class="callout tip">
@@ -663,6 +672,17 @@ inside one format string, e.g. <code class="inline">'%W, %M %e %Y'</code> → <c
 <div class="callout recap">
   <div class="ti">Next: Day 03</div>
   <p>JOINs + CASE — bringing sellers, products, categories, order_items, and the rest of Rawaj together, plus your first CASE statements.</p>
+</div>
+
+<div class="day-nav">
+  <a class="day-nav-link prev" href="../Day%2001/day01_reading.html">
+    <span class="dn-label">&larr; Previous</span>
+    <span class="dn-title">Day 01 &middot; SQL Foundations</span>
+  </a>
+  <a class="day-nav-link next" href="../Day%2003/day03_reading.html">
+    <span class="dn-label">Next &rarr;</span>
+    <span class="dn-title">Day 03 &middot; JOINs, CASE &amp; Strings</span>
+  </a>
 </div>
 
 <footer>Day 02 · Filtering &amp; Aggregation · self-paced</footer>

@@ -106,6 +106,13 @@ body{margin-left:0}
 .day-links a.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .day-links a.primary:hover{background:var(--blue-dark)}
 .dl-icon{width:11px;height:11px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.day-nav{display:flex;gap:16px;margin:40px 0 0;flex-wrap:wrap}
+.day-nav-link{flex:1 1 260px;max-width:340px;display:flex;flex-direction:column;gap:4px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:border-color .15s,background .15s}
+.day-nav-link:hover{background:#fff;border-color:var(--blue)}
+.day-nav-link.next{margin-left:auto;text-align:right;align-items:flex-end}
+.day-nav-link .dn-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:700}
+.day-nav-link .dn-title{font-size:14.5px;color:var(--ink);font-weight:600}
+@media(max-width:520px){.day-nav-link{flex:1 1 100%;max-width:none}.day-nav-link.next{text-align:left;align-items:flex-start;margin-left:0}}
 </style>
 </head>
 <body>
@@ -154,7 +161,9 @@ body{margin-left:0}
 
 <div class="day-links">
   <a class="primary" href="day05_window_functions_and_stored_procedures.html">Worked Examples</a>
-  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2005" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>Walkthrough &amp; Exercises</a>
+  <a href="day05_exercises.sql">Exercises</a>
+  <a href="day05_exercises_solutions.sql">Solutions</a>
+  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2005" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>View on GitHub</a>
 </div>
 
 <div class="callout tip">
@@ -504,6 +513,17 @@ company-wide revenue — captured into a variable it can act on.</p>
   <div class="ti">Next: Day 06</div>
   <p>This closes the core SQL curriculum. Day 06 applies everything from Days 01–05 from Python —
   connecting to both MySQL and SQLite, ahead of Day 07's real SQLite project.</p>
+</div>
+
+<div class="day-nav">
+  <a class="day-nav-link prev" href="../Day%2004/day04_reading.html">
+    <span class="dn-label">&larr; Previous</span>
+    <span class="dn-title">Day 04 &middot; Subqueries, CTEs &amp; Views</span>
+  </a>
+  <a class="day-nav-link next" href="../Day%2006/day06_reading.html">
+    <span class="dn-label">Next &rarr;</span>
+    <span class="dn-title">Day 06 &middot; Python Connectivity</span>
+  </a>
 </div>
 
 <footer>Day 05 · Window Functions &amp; Stored Procedures · self-paced</footer>

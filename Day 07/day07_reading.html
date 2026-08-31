@@ -105,6 +105,13 @@ figure pre.mermaid{background:transparent;font-family:inherit;overflow-x:auto}
 .day-links a.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .day-links a.primary:hover{background:var(--blue-dark)}
 .dl-icon{width:11px;height:11px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.day-nav{display:flex;gap:16px;margin:40px 0 0;flex-wrap:wrap}
+.day-nav-link{flex:1 1 260px;max-width:340px;display:flex;flex-direction:column;gap:4px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:border-color .15s,background .15s}
+.day-nav-link:hover{background:#fff;border-color:var(--blue)}
+.day-nav-link.next{margin-left:auto;text-align:right;align-items:flex-end}
+.day-nav-link .dn-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:700}
+.day-nav-link .dn-title{font-size:14.5px;color:var(--ink);font-weight:600}
+@media(max-width:520px){.day-nav-link{flex:1 1 100%;max-width:none}.day-nav-link.next{text-align:left;align-items:flex-start;margin-left:0}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 </head>
@@ -362,6 +369,17 @@ differently:</p>
   honest version for leadership. The promo codes barely anyone redeems (Q4) get retired. And the
   "coverage gap" flagged in the meeting (Q20) turns out to be a one-driver staffing problem in
   Suez, not a demand problem — a very different fix than the one leadership was about to approve.</p>
+</div>
+
+<div class="day-nav">
+  <a class="day-nav-link prev" href="../Day%2006/day06_reading.html">
+    <span class="dn-label">&larr; Previous</span>
+    <span class="dn-title">Day 06 &middot; Python Connectivity</span>
+  </a>
+  <a class="day-nav-link next" href="../index.html">
+    <span class="dn-label">Finished &rarr;</span>
+    <span class="dn-title">Back to Course Home</span>
+  </a>
 </div>
 
 <footer>Day 07 &middot; Project: Wasel &middot; self-paced</footer>

@@ -106,6 +106,13 @@ body{margin-left:0}
 .day-links a.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .day-links a.primary:hover{background:var(--blue-dark)}
 .dl-icon{width:11px;height:11px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.day-nav{display:flex;gap:16px;margin:40px 0 0;flex-wrap:wrap}
+.day-nav-link{flex:1 1 260px;max-width:340px;display:flex;flex-direction:column;gap:4px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:border-color .15s,background .15s}
+.day-nav-link:hover{background:#fff;border-color:var(--blue)}
+.day-nav-link.next{margin-left:auto;text-align:right;align-items:flex-end}
+.day-nav-link .dn-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:700}
+.day-nav-link .dn-title{font-size:14.5px;color:var(--ink);font-weight:600}
+@media(max-width:520px){.day-nav-link{flex:1 1 100%;max-width:none}.day-nav-link.next{text-align:left;align-items:flex-start;margin-left:0}}
 </style>
 </head>
 <body>
@@ -154,7 +161,9 @@ body{margin-left:0}
 
 <div class="day-links">
   <a class="primary" href="day04_subqueries_ctes_and_views.html">Worked Examples</a>
-  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2004" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>Walkthrough &amp; Exercises</a>
+  <a href="day04_exercises.sql">Exercises</a>
+  <a href="day04_exercises_solutions.sql">Solutions</a>
+  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2004" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>View on GitHub</a>
 </div>
 
 <div class="callout tip">
@@ -487,6 +496,17 @@ different tradeoffs on lifetime, visibility, and whether the data is actually st
   <p>Every technique here reuses an intermediate result without changing which rows come back.
   Day 05 covers two tools that change what each row looks like instead: window functions (rank and
   total without collapsing rows) and stored procedures (saved, callable logic).</p>
+</div>
+
+<div class="day-nav">
+  <a class="day-nav-link prev" href="../Day%2003/day03_reading.html">
+    <span class="dn-label">&larr; Previous</span>
+    <span class="dn-title">Day 03 &middot; JOINs, CASE &amp; Strings</span>
+  </a>
+  <a class="day-nav-link next" href="../Day%2005/day05_reading.html">
+    <span class="dn-label">Next &rarr;</span>
+    <span class="dn-title">Day 05 &middot; Window Functions &amp; Procedures</span>
+  </a>
 </div>
 
 <footer>Day 04 · Subqueries, CTEs &amp; Views · self-paced</footer>
