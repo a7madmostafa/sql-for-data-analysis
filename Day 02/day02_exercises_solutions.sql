@@ -223,9 +223,14 @@ FROM orders
 WHERE discount_amount BETWEEN 100 AND 500;
 
 -- 8.4
+-- order_date is a DATETIME, so BETWEEN '2024-12-25' AND '2025-01-01' would pad the
+-- upper bound to 2025-01-01 00:00:00 and silently drop every Jan 1 order placed
+-- later that day (4 of them here — 52 rows total vs. 48 with the BETWEEN version).
+-- Bound the end at the day AFTER the last day you want instead.
 SELECT *
 FROM orders
-WHERE order_date BETWEEN '2024-12-25' AND '2025-01-01';
+WHERE order_date >= '2024-12-25'
+AND order_date < '2025-01-02';
 
 
 -- ======================================
@@ -322,7 +327,7 @@ GROUP BY governorate_id;
 -- 12.3
 SELECT channel, COUNT(*) AS cnt
 FROM web_events
-WHERE customer_id = 1
+WHERE customer_id = 631
 GROUP BY channel;
 
 -- 12.4
@@ -385,7 +390,7 @@ ORDER BY total_spent DESC;
 -- 13.4
 SELECT customer_id, SUM(total_amount) AS total_spent_2023
 FROM orders
-WHERE order_date LIKE '2023%'
+WHERE YEAR(order_date) = 2023
 GROUP BY customer_id
 HAVING SUM(total_amount) > 10000
 ORDER BY total_spent_2023 DESC;
@@ -408,6 +413,11 @@ SELECT MIN(YEAR(order_date)) AS earliest_year,
 FROM orders;
 
 -- 14.3
+-- 2023: 4.81M, 2024: 11.63M, 2025: 6.65M — but check the coverage first: the
+-- dataset runs 2023-06 through 2025-05, so 2023 is 7 months and 2025 is 5
+-- months, only 2024 is a full year. Told to Finance as-is, this reads like
+-- 142% growth then a 43% collapse; the honest version is "2024 is the only
+-- year we can compare like-for-like, and even that's one year of data."
 SELECT YEAR(order_date) AS ord_year, SUM(total_amount) AS total_revenue
 FROM orders
 GROUP BY ord_year
@@ -420,23 +430,28 @@ GROUP BY ord_month
 ORDER BY total_revenue DESC;
 
 -- 14.5
-SELECT DATE_FORMAT(o.order_date, '%Y-%m') AS ord_month,
-       SUM(o.total_amount) AS total_spend
-FROM orders o
-JOIN customers c
-    ON c.customer_id = o.customer_id
-WHERE c.first_name = 'Nour' AND c.last_name = 'Fahmy'
-GROUP BY ord_month
-ORDER BY total_spend DESC
-LIMIT 1;
-
--- 14.6
 SELECT order_id,
        DATE(order_date) AS order_day,
        DATE_ADD(DATE(order_date), INTERVAL 7 DAY) AS expected_delivery
 FROM orders
 ORDER BY order_date DESC
 LIMIT 10;
+
+-- 14.6
+-- Step 1: who is it? (customer_id 971, 61,063.45 EGP lifetime)
+SELECT customer_id, SUM(total_amount) AS lifetime_spend
+FROM orders
+GROUP BY customer_id
+ORDER BY lifetime_spend DESC
+LIMIT 1;
+
+-- Step 2: their biggest month (April 2024, ~19,851.76 EGP)
+SELECT DATE_FORMAT(order_date, '%Y-%m') AS ord_month, SUM(total_amount) AS total_spend
+FROM orders
+WHERE customer_id = 971
+GROUP BY ord_month
+ORDER BY total_spend DESC
+LIMIT 1;
 
 
 -- ======================================
@@ -455,20 +470,3 @@ SELECT customer_id, total_amount
 FROM orders
 ORDER BY total_amount DESC
 LIMIT 1;
-
--- C3
-SELECT c.first_name, c.last_name, o.total_amount
-FROM orders o
-JOIN customers c
-    ON c.customer_id = o.customer_id
-ORDER BY o.total_amount DESC
-LIMIT 1;
-
--- C4
-SELECT c.first_name, c.last_name, SUM(o.total_amount) AS total_revenue
-FROM orders o
-JOIN customers c
-    ON c.customer_id = o.customer_id
-GROUP BY c.customer_id, c.first_name, c.last_name
-ORDER BY total_revenue DESC
-LIMIT 5;

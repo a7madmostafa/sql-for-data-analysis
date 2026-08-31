@@ -33,6 +33,10 @@ USE rawaj;
 --     amount (total_amount) — these are the "bargain" orders. Show the
 --     order id, customer id, and total_amount.
 
+-- 1.3 Merchandising wants every product listing priced ABOVE the
+--     marketplace-wide average listing price — candidates for a "premium"
+--     badge. Show listing_id, product_id, and price.
+
 
 
 -- ======================================
@@ -53,6 +57,10 @@ USE rawaj;
 --     find each customer's own average total_amount first, then average
 --     THOSE numbers together)? Use a subquery in FROM.
 
+-- 3.2 Operations wants to know the average number of line items per order
+--     (i.e. find each order's item count first, then average THOSE
+--     numbers). Use a derived table in FROM, same pattern as 3.1.
+
 
 
 -- ======================================
@@ -65,6 +73,11 @@ USE rawaj;
 -- 4.2 Using a CTE, find the single account manager with the highest total
 --     sales across every customer in their governorates. Show the
 --     manager's id, name, and total sales.
+
+-- 4.3 Using a CTE, find every seller whose average review rating (across
+--     all their sold products) is BELOW the marketplace-wide average
+--     rating — worth flagging for a quality check. Show seller_id and
+--     their average rating.
 
 
 
@@ -97,6 +110,11 @@ USE rawaj;
 --     total sales across their governorates' customers, top 5 only. Then,
 --     using that view, show how many web events came through each channel
 --     for customers belonging to those top 5 managers' governorates.
+
+-- 7.2 Create a view called active_listings, showing every product_listings
+--     row with status = 'active', joined out to the seller's name and the
+--     product's category name. Then query the view for a count of active
+--     listings per category.
 
 
 

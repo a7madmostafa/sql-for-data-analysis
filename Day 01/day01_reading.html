@@ -142,7 +142,7 @@ body{margin-left:0}
   </defs>
 </svg>
 
-<div class="crumb">Day 01 of 10 · SQL Foundations</div>
+<div class="crumb">Day 01 of 7 · SQL Foundations</div>
 <h1 class="title">SQL Foundations</h1>
 <p class="subtitle">What SQL is, why it matters, and your first queries — against the <code class="inline">rawaj</code> database.</p>
 
@@ -152,6 +152,7 @@ body{margin-left:0}
     <li>Explain what SQL, a database, and a DBMS are — and how they relate to each other.</li>
     <li>Tell relational and non-relational databases apart, and know why this course uses MySQL.</li>
     <li>Read an entity-relationship diagram: entities, attributes, and the three relationship types.</li>
+    <li>Explore an unfamiliar server: <code class="inline">SHOW DATABASES</code>, <code class="inline">USE</code>, <code class="inline">SHOW TABLES</code>, <code class="inline">DESCRIBE</code>.</li>
     <li>Write your first real queries: <code class="inline">SELECT</code>, <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>, <code class="inline">DISTINCT</code>, <code class="inline">COUNT</code>, <code class="inline">ORDER BY</code>.</li>
     <li>Recognize the mistakes almost every beginner makes in their first week, before you make them.</li>
   </ul>
@@ -255,7 +256,7 @@ responsible for:</p>
   <ellipse cx="610" cy="35" rx="46" ry="24" fill="#fff" stroke="#333" stroke-width="1.2"/>
   <text x="610" y="40" text-anchor="middle" font-size="12">2026-01-14</text>
   <ellipse cx="715" cy="35" rx="46" ry="24" fill="#fff" stroke="#333" stroke-width="1.2"/>
-  <text x="715" y="40" text-anchor="middle" font-size="12">$248.00</text>
+  <text x="715" y="40" text-anchor="middle" font-size="12">248.00 EGP</text>
   <line x1="620" y1="59" x2="620" y2="130" stroke="#333" stroke-width="1"/>
   <line x1="705" y1="59" x2="680" y2="130" stroke="#333" stroke-width="1"/>
 
@@ -516,13 +517,41 @@ Every one of those is a small variation on the query above.</p>
 </svg>
 <figcaption>governorates → customers, one-to-many — every customer belongs to exactly one governorate, and a governorate can have many customers.</figcaption>
 </figure>
-<p>This lesson stays inside <code class="inline">customers</code> — a single table is plenty to
-practice on. Day 02 brings in <code class="inline">orders</code> and
+<p>This lesson stays inside <code class="inline">customers</code> and
+<code class="inline">governorates</code> — no JOINs needed yet, since we never need columns from
+both at once. Day 02 brings in <code class="inline">orders</code> and
 <code class="inline">web_events</code>, and the rest of Rawaj's tables (sellers, products,
 reviews, and more) show up once JOINs are introduced on Day 03 — at which point diagrams like this
 one become directly useful: every JOIN you write is just "follow one of these arrows."</p>
 
-<h2 class="section"><span class="num">10</span>Anatomy of a SELECT</h2>
+<h2 class="section"><span class="num">10</span>Exploring the server</h2>
+<p class="section-intro">You've just been handed credentials to a MySQL server. Before you can query anything, you need to answer three questions: what databases are here, what tables are inside the one I want, and what columns does a given table hold?</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div>
+  <div class="code-body"><span class="com">-- 1. what databases live on this server?</span>
+<span class="kw">SHOW DATABASES</span>;
+
+<span class="com">-- 2. point this session at rawaj, so every later query runs against it</span>
+<span class="kw">USE</span> rawaj;
+
+<span class="com">-- 3. what tables are inside rawaj?</span>
+<span class="kw">SHOW TABLES</span>;
+
+<span class="com">-- 4. what columns (and types) does one of those tables have?</span>
+<span class="kw">DESCRIBE</span> customers;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>SHOW DATABASES</b><p>Lists every database on the server you're connected to. <code class="inline">SHOW SCHEMAS</code> does exactly the same thing — in MySQL, "schema" and "database" are interchangeable words.</p></div>
+  <div class="annotation"><b>USE rawaj;</b><p>Sets the <em>current</em> database for your session. Without it, you'd have to write <code class="inline">rawaj.customers</code> everywhere instead of just <code class="inline">customers</code>. Run it once at the top of every session.</p></div>
+  <div class="annotation"><b>SHOW TABLES</b><p>Lists the tables in the current database. This is your map — always worth a look before assuming a table exists under the name you expect.</p></div>
+  <div class="annotation"><b>DESCRIBE customers</b><p>Shows each column's name, data type, whether it accepts <code class="inline">NULL</code>, and its key role (<code class="inline">PRI</code> for primary key, <code class="inline">MUL</code> for a foreign key). <code class="inline">DESC customers</code> is the same command, abbreviated.</p></div>
+</div>
+<div class="callout tip">
+  <div class="ti">Habit worth forming</div>
+  <p>Run these four before writing your first real query against any unfamiliar database. Guessing a column name and getting <code class="inline">Unknown column</code> back costs more time than checking would have.</p>
+</div>
+
+<h2 class="section"><span class="num">11</span>Anatomy of a SELECT</h2>
 <p>Every query in this lesson has the same skeleton — learn this shape once and you can read (and
 predict the structure of) almost any SELECT you'll ever encounter:</p>
 <div class="code-block">
@@ -548,7 +577,7 @@ predict the structure of) almost any SELECT you'll ever encounter:</p>
   <div class="annotation"><b>SELECT *</b><p>Fine for a quick look at a table you don't know yet. Risky to leave in real, shared work.</p></div>
 </div>
 
-<h2 class="section"><span class="num">11</span>LIMIT &amp; OFFSET</h2>
+<h2 class="section"><span class="num">12</span>LIMIT &amp; OFFSET</h2>
 <p><code class="inline">LIMIT</code> caps how many rows come back. <code class="inline">OFFSET</code>
 skips a number of rows before it starts counting — together, this is exactly how "page 2 of
 results" works on any website with a paginated table.</p>
@@ -597,7 +626,7 @@ results" works on any website with a paginated table.</p>
   <div class="annotation"><b>Prefer OFFSET</b><p>The shortcut form is easy to misread — is the first number the skip or the count? Most people default to the explicit <code class="inline">OFFSET</code> form for anything they'll hand to someone else.</p></div>
 </div>
 
-<h2 class="section"><span class="num">12</span>DISTINCT</h2>
+<h2 class="section"><span class="num">13</span>DISTINCT</h2>
 <p><strong>Business question:</strong> before building a governorate filter for a dashboard, find out which governorates actually have customers registered.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div>
@@ -610,7 +639,7 @@ results" works on any website with a paginated table.</p>
   <div class="annotation"><b>Combine with COUNT</b><p><code class="inline">COUNT(DISTINCT governorate_id)</code> collapses both ideas into a single number — how many unique values exist.</p></div>
 </div>
 
-<h2 class="section"><span class="num">13</span>Aggregation: COUNT</h2>
+<h2 class="section"><span class="num">14</span>Aggregation: COUNT</h2>
 <p><code class="inline">COUNT</code> is your first <strong>aggregate function</strong> — instead of
 returning one row per input row, it collapses many rows into a single summary number.</p>
 <p><strong>Business question:</strong> a stakeholder asks three things at once — how many customers are in this dataset, how many actually have an email on file, and how many distinct governorates are represented?</p>
@@ -622,23 +651,24 @@ returning one row per input row, it collapses many rows into a single summary nu
 </div>
 <div class="annotations">
   <div class="annotation"><b>COUNT(*)</b><p>Counts every row, full stop — doesn't care what's inside any particular column.</p></div>
-  <div class="annotation"><b>COUNT(col)</b><p>Counts only rows where that column is <em>not</em> <code class="inline">NULL</code> — some customers checked out as a guest and never left an email, so <code class="inline">COUNT(email)</code> comes back lower than <code class="inline">COUNT(*)</code>.</p></div>
+  <div class="annotation"><b>COUNT(col)</b><p><code class="inline">NULL</code> is SQL's marker for "no value recorded here" — not zero, not an empty string, just <em>missing</em>. It can appear in any column that allows it (<code class="inline">DESCRIBE</code> shows you which do), and you'll meet it wherever a fact simply wasn't captured. <code class="inline">COUNT(col)</code> counts only rows where that column is <em>not</em> <code class="inline">NULL</code> — some customers checked out as a guest and never left an email, so <code class="inline">COUNT(email)</code> returns 1,081 against <code class="inline">COUNT(*)</code>'s 1,200.</p></div>
   <div class="annotation"><b>AS is optional</b><p><code class="inline">COUNT(*) customer_cnt</code> works identically to writing <code class="inline">AS</code> — but spelling it out is usually clearer to read back later.</p></div>
 </div>
 
-<h2 class="section"><span class="num">14</span>ORDER BY</h2>
+<h2 class="section"><span class="num">15</span>ORDER BY</h2>
 <p><strong>Business question:</strong> the growth team wants a shortlist — the 5 customers who signed up earliest, Rawaj's very first adopters.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day01_sql_foundations.sql</span></div>
   <div class="code-body"><span class="com">-- 5 earliest customer signups</span>
-<span class="kw">SELECT</span> first_name, last_name
+<span class="kw">SELECT</span> first_name, last_name, signup_date
 <span class="kw">FROM</span> customers
-<span class="kw">ORDER BY</span> last_name <span class="kw">ASC</span>
+<span class="kw">ORDER BY</span> signup_date <span class="kw">ASC</span>
 <span class="kw">LIMIT</span> 5;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>ASC is the default</b><p>Ascending order happens automatically — rarely written out. <code class="inline">DESC</code> (descending) is the one you'll see explicitly.</p></div>
-  <div class="annotation"><b>Sort by anything</b><p>You can sort by a column that isn't even in your <code class="inline">SELECT</code> list.</p></div>
+  <div class="annotation"><b>Earliest = ascending dates</b><p>Sorting <code class="inline">signup_date</code> ascending puts the oldest date first, so the first 5 rows are the first 5 people who ever signed up — Ghada Abdel-Latif and Youssef Kamal both on 2021-06-02, then Yara Mahmoud, Nour Ragab, and Amr Younis over the following week.</p></div>
+  <div class="annotation"><b>ASC is the default</b><p>Ascending order happens automatically — rarely written out. <code class="inline">DESC</code> (descending) is the one you'll see explicitly, and swapping it in here would give you the 5 <em>newest</em> signups instead.</p></div>
+  <div class="annotation"><b>Sort by anything</b><p>You can sort by a column that isn't even in your <code class="inline">SELECT</code> list — though when the sort order <em>is</em> the answer, as here, selecting the column too lets the reader check it.</p></div>
   <div class="annotation"><b>ORDER BY + LIMIT = "top N"</b><p>Together, these two clauses are how you answer almost any "top N" or "bottom N" business question.</p></div>
 </div>
 

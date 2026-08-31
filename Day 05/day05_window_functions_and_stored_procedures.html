@@ -103,7 +103,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color
   </defs>
 </svg>
 
-<div class="crumb">Day 05 of 10 &middot; Walkthrough</div>
+<div class="crumb">Day 05 of 7 &middot; Walkthrough</div>
 <h1 class="title">Window Functions &amp; Stored Procedures</h1>
 <p class="subtitle">Every statement from <code class="inline">day05_window_functions_and_stored_procedures.sql</code>, executed live against <code class="inline">rawaj</code> &mdash; SQL and real output, side by side.</p>
 
@@ -158,7 +158,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color
 <p class="explain">For every customer, what was their single largest order? (Same shape as Day 04&#x27;s Section 1/4 subquery/CTE question — a window function reaches the same answer more directly)</p>
 <div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">WITH</span> ranked_orders <span class="kw">AS</span> (
     <span class="kw">SELECT</span> customer_id, order_id, total_amount,
-           <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> customer_id <span class="kw">ORDER BY</span> total_amount <span class="kw">DESC</span>) <span class="kw">AS</span> order_rank
+           <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> customer_id <span class="kw">ORDER BY</span> total_amount <span class="kw">DESC</span>) <span class="kw">AS</span> order_rank
     <span class="kw">FROM</span> orders
 )
 <span class="kw">SELECT</span> customer_id, order_id, total_amount
@@ -174,17 +174,20 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color
     <span class="kw">GROUP BY</span> month
 )
 <span class="kw">SELECT</span> month, total_sales,
-       <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> prev_month_sales,
+       <span class="fn">LAG</span>(total_sales)  <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> prev_month_sales,
+       <span class="fn">LEAD</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> next_month_sales,
        total_sales - <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> change_from_prev_month
 <span class="kw">FROM</span> monthly_sales
 <span class="kw">ORDER BY</span> month;</div></div>
-<div class="result-wrap"><table class="api result-table"><thead><tr><th>month</th><th>total_sales</th><th>prev_month_sales</th><th>change_from_prev_month</th></tr></thead><tbody><tr><td>2023-06</td><td>647034.32</td><td></td><td></td></tr><tr><td>2023-07</td><td>741561.99</td><td>647034.32</td><td>94527.67</td></tr><tr><td>2023-08</td><td>655664.68</td><td>741561.99</td><td>-85897.31</td></tr><tr><td>2023-09</td><td>703923.25</td><td>655664.68</td><td>48258.57</td></tr><tr><td>2023-10</td><td>707834.26</td><td>703923.25</td><td>3911.01</td></tr><tr><td>2023-11</td><td>649264.43</td><td>707834.26</td><td>-58569.83</td></tr><tr><td>2023-12</td><td>704169.11</td><td>649264.43</td><td>54904.68</td></tr><tr><td>2024-01</td><td>763311.86</td><td>704169.11</td><td>59142.75</td></tr><tr><td>2024-02</td><td>666832.47</td><td>763311.86</td><td>-96479.39</td></tr><tr><td>2024-03</td><td>2937664.69</td><td>666832.47</td><td>2270832.22</td></tr><tr><td>2024-04</td><td>1936906.62</td><td>2937664.69</td><td>-1000758.07</td></tr><tr><td>2024-05</td><td>652697.27</td><td>1936906.62</td><td>-1284209.35</td></tr><tr><td>2024-06</td><td>780341.61</td><td>652697.27</td><td>127644.34</td></tr><tr><td>2024-07</td><td>717291.59</td><td>780341.61</td><td>-63050.02</td></tr><tr><td>2024-08</td><td>673522.10</td><td>717291.59</td><td>-43769.49</td></tr></tbody></table><p class="row-note">showing 15 of 24 rows</p></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>month</th><th>total_sales</th><th>prev_month_sales</th><th>next_month_sales</th><th>change_from_prev_month</th></tr></thead><tbody><tr><td>2023-06</td><td>647034.32</td><td></td><td>741561.99</td><td></td></tr><tr><td>2023-07</td><td>741561.99</td><td>647034.32</td><td>655664.68</td><td>94527.67</td></tr><tr><td>2023-08</td><td>655664.68</td><td>741561.99</td><td>703923.25</td><td>-85897.31</td></tr><tr><td>2023-09</td><td>703923.25</td><td>655664.68</td><td>707834.26</td><td>48258.57</td></tr><tr><td>2023-10</td><td>707834.26</td><td>703923.25</td><td>649264.43</td><td>3911.01</td></tr><tr><td>2023-11</td><td>649264.43</td><td>707834.26</td><td>704169.11</td><td>-58569.83</td></tr><tr><td>2023-12</td><td>704169.11</td><td>649264.43</td><td>763311.86</td><td>54904.68</td></tr><tr><td>2024-01</td><td>763311.86</td><td>704169.11</td><td>666832.47</td><td>59142.75</td></tr><tr><td>2024-02</td><td>666832.47</td><td>763311.86</td><td>2937664.69</td><td>-96479.39</td></tr><tr><td>2024-03</td><td>2937664.69</td><td>666832.47</td><td>1936906.62</td><td>2270832.22</td></tr><tr><td>2024-04</td><td>1936906.62</td><td>2937664.69</td><td>652697.27</td><td>-1000758.07</td></tr><tr><td>2024-05</td><td>652697.27</td><td>1936906.62</td><td>780341.61</td><td>-1284209.35</td></tr><tr><td>2024-06</td><td>780341.61</td><td>652697.27</td><td>717291.59</td><td>127644.34</td></tr><tr><td>2024-07</td><td>717291.59</td><td>780341.61</td><td>673522.10</td><td>-63050.02</td></tr><tr><td>2024-08</td><td>673522.10</td><td>717291.59</td><td>597880.62</td><td>-43769.49</td></tr></tbody></table><p class="row-note">showing 15 of 24 rows</p></div>
 <h2 class="section"><span class="num">6</span>STORED PROCEDURES (IN parameters)</h2>
-<p class="explain">Account managers constantly ask for the same report — order count and total revenue for one customer. Save it once as a procedure everyone can call.  DELIMITER is required here: running this file as a script (the mysql CLI, `source`, or Workbench&#x27;s &quot;execute script&quot;) splits statements on every plain semicolon — without switching the delimiter first, it would try to run &quot;BEGIN ... SELECT ...;&quot; as a complete statement and choke on the very first semicolon inside the procedure body. (This becomes unnecessary in Day 06, once you&#x27;re sending SQL through a Python driver instead — a Python driver sends the whole block as one request, no client-side statement-splitting involved.)</p>
+<p class="explain">Account managers constantly ask for the same report — order count and total revenue for one customer. Save it once as a procedure everyone can call.  DELIMITER is required here: running this file as a script (the mysql CLI, <code>source</code>, or Workbench&#x27;s &quot;execute script&quot;) splits statements on every plain semicolon — without switching the delimiter first, it would try to run &quot;BEGIN ... SELECT ...;&quot; as a complete statement and choke on the very first semicolon inside the procedure body. (This becomes unnecessary in Day 06, once you&#x27;re sending SQL through a Python driver instead — a Python driver sends the whole block as one request, no client-side statement-splitting involved.)</p>
 <div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">DROP</span> <span class="kw">PROCEDURE</span> <span class="kw">IF</span> <span class="kw">EXISTS</span> customer_sales_report;</div></div>
 <div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
 <p class="explain"></p>
-<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> customer_sales_report(<span class="kw"><span class="kw">IN</span></span> cust_id INT)
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">DELIMITER</span> $$
+
+<span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> customer_sales_report(<span class="kw"><span class="kw">IN</span></span> cust_id INT)
 <span class="kw">BEGIN</span>
     <span class="kw">SELECT</span> c.first_name, c.last_name,
            <span class="fn">COUNT</span>(o.order_id) <span class="kw">AS</span> num_orders,
@@ -193,27 +196,33 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color
     <span class="kw">JOIN</span> orders o <span class="kw">ON</span> o.customer_id = c.customer_id
     <span class="kw">WHERE</span> c.customer_id = cust_id
     <span class="kw">GROUP BY</span> c.first_name, c.last_name;
-<span class="kw">END</span>;</div></div>
+<span class="kw">END</span>$$</div></div>
 <div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
 <p class="explain"></p>
-<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">CALL</span> customer_sales_report(1);</div></div>
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> customer_sales_report(1);</div></div>
 <div class="result-wrap"><table class="api result-table"><thead><tr><th>first_name</th><th>last_name</th><th>num_orders</th><th>total_sales</th></tr></thead><tbody><tr><td>Mohamed</td><td>Abdelrahman</td><td>5</td><td>21938.36</td></tr></tbody></table><p class="row-note">1 row</p></div>
 <h2 class="section"><span class="num">7</span>STORED PROCEDURES (OUT parameters)</h2>
 <p class="explain">A nightly batch job needs just the single number — total company-wide revenue — captured into a variable it can act on, not a result set</p>
 <div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">DROP</span> <span class="kw">PROCEDURE</span> <span class="kw">IF</span> <span class="kw">EXISTS</span> get_total_revenue;</div></div>
 <div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
 <p class="explain"></p>
-<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> get_total_revenue(<span class="kw">OUT</span> total_revenue DECIMAL(14,2))
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">DELIMITER</span> $$
+
+<span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> get_total_revenue(<span class="kw">OUT</span> total_revenue DECIMAL(14,2))
 <span class="kw">BEGIN</span>
     <span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amount) <span class="kw">INTO</span> total_revenue <span class="kw">FROM</span> orders;
-<span class="kw">END</span>;</div></div>
+<span class="kw">END</span>$$</div></div>
 <div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
 <p class="explain"></p>
-<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">CALL</span> get_total_revenue(@rev);
+<div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div><div class="code-body"><span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> get_total_revenue(@rev);
 
 <span class="kw">SELECT</span> @rev <span class="kw">AS</span> total_revenue;</div></div>
-<div class="result-wrap"><p class="row-note status">&#10003; executed</p></div>
 <div class="result-wrap"><p class="row-note status">&#10003; 1 row affected</p></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>total_revenue</th></tr></thead><tbody><tr><td>23089926.36</td></tr></tbody></table><p class="row-note">1 row</p></div>
 
 <footer>Day 05 &middot; Window Functions &amp; Stored Procedures &middot; walkthrough &middot; self-paced</footer>
 </div>

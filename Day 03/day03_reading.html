@@ -138,7 +138,7 @@ body{margin-left:0}
   </defs>
 </svg>
 
-<div class="crumb">Day 03 of 10 · JOINs, CASE &amp; String Functions</div>
+<div class="crumb">Day 03 of 7 · JOINs, CASE &amp; String Functions</div>
 <h1 class="title">JOINs, CASE &amp; String Functions</h1>
 <p class="subtitle">Bringing every table together and labeling what you find, then cleaning and reshaping the text inside it — INNER · LEFT/RIGHT · anti-joins · UNION · HAVING · CASE · string functions.</p>
 
@@ -223,8 +223,8 @@ to the row it points to.</strong> Every relationship type is just a different pa
 <p>An N:N JOIN reaches the far side in two hops: <code class="inline">products JOIN
 product_listings ON ... JOIN sellers ON ...</code> — one JOIN to get from
 <code class="inline">products</code> to the listing row, a second to get from the listing row to
-<code class="inline">sellers</code>. Today's lesson mostly stays 1:N — the true N:N join is Day 04
-territory once views and window functions want to rank listings — but recognize the shape now.</p>
+<code class="inline">sellers</code>. Today's lesson mostly stays 1:N — just recognize the N:N shape
+for now; you'll write the real two-hop query once later days give you a reason to rank listings.</p>
 
 <h2 class="section"><span class="num">2</span>Anatomy of a JOIN</h2>
 <div class="code-block">
@@ -293,7 +293,7 @@ four tables together is just repeating the pattern from Section 2.</p>
 <span class="kw">GROUP BY</span> am.manager_name, g.governorate_name;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Order rarely matters</b><p>MySQL works out the join order internally — write the JOINs in whatever sequence reads clearest, usually following the FK chain from the table you care about most.</p></div>
+  <div class="annotation"><b>Order rarely matters — for INNER JOIN</b><p>MySQL works out the join order internally — write the JOINs in whatever sequence reads clearest, usually following the FK chain from the table you care about most. That holds for plain <code class="inline">JOIN</code>/<code class="inline">INNER JOIN</code> chains like this one — once <code class="inline">LEFT</code>/<code class="inline">RIGHT JOIN</code> shows up in Section 7, which table comes first starts to change the answer.</p></div>
   <div class="annotation"><b>Each JOIN = one more hop</b><p><code class="inline">account_managers → governorates → customers → orders</code> — four tables, three JOINs, following the same chain diagrammed back in Day 02.</p></div>
 </div>
 
@@ -384,7 +384,7 @@ is the mirror image: keep everything on the right, matched or not.</p>
 </svg>
 <figcaption>LEFT JOIN from customers to orders — Sameh N. has no orders, but LEFT JOIN keeps them in the result with NULLs where order columns would be.</figcaption>
 </figure>
-<p><strong>Business question:</strong> which customers exist, whether or not they've ever placed an order — and, mirrored, which orders exist even if their customer record can no longer be resolved?</p>
+<p><strong>Business question:</strong> which customers exist, whether or not they've ever placed an order?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="com">-- every customer, whether or not they have orders</span>
@@ -393,7 +393,8 @@ is the mirror image: keep everything on the right, matched or not.</p>
 <span class="kw">LEFT JOIN</span> orders
     <span class="kw">ON</span> orders.customer_id = customers.customer_id;
 
-<span class="com">-- every order, even if its customer can't be resolved</span>
+<span class="com">-- the SAME question, written with RIGHT JOIN by naming customers second —</span>
+<span class="com">-- same 6,004 rows as the LEFT JOIN above, not a different question</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> orders
 <span class="kw">RIGHT JOIN</span> customers
@@ -403,6 +404,30 @@ is the mirror image: keep everything on the right, matched or not.</p>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Unmatched side = NULL</b><p>Every column from the table that didn't find a match comes back <code class="inline">NULL</code> for that row — the row itself still shows up.</p></div>
+  <div class="annotation"><b>RIGHT JOIN is a mirror, not a different question</b><p><code class="inline">A RIGHT JOIN B</code> always means the same thing as <code class="inline">B LEFT JOIN A</code> — it keeps everything from the table named <em>second</em>. That's exactly why almost nobody actually writes <code class="inline">RIGHT JOIN</code> in practice: swapping the table order and writing <code class="inline">LEFT JOIN</code> says the same thing more plainly.</p></div>
+</div>
+
+<h3 class="sub">Why the JOIN type is a correctness decision, not a style one</h3>
+<p>Only 5 of Rawaj's 15 account managers currently have a governorate assigned. An
+<code class="inline">INNER JOIN</code> from <code class="inline">account_managers</code> to
+<code class="inline">governorates</code> silently reports on those 5 — the other 10 simply never
+appear in the output, with nothing to flag that they were dropped.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
+  <div class="code-body"><span class="com">-- INNER JOIN: quietly reports on 5 managers</span>
+<span class="kw">SELECT</span> <span class="fn">COUNT</span>(*) <span class="kw">AS</span> managers_returned
+<span class="kw">FROM</span> account_managers am
+<span class="kw">JOIN</span> governorates g
+    <span class="kw">ON</span> am.manager_id = g.manager_id;
+
+<span class="com">-- LEFT JOIN: all 15 come back — the 10 unassigned managers get NULLs, not silence</span>
+<span class="kw">SELECT</span> <span class="fn">COUNT</span>(*) <span class="kw">AS</span> managers_returned
+<span class="kw">FROM</span> account_managers am
+<span class="kw">LEFT JOIN</span> governorates g
+    <span class="kw">ON</span> am.manager_id = g.manager_id;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>5 vs. 15</b><p>Nothing in the INNER JOIN's result — no error, no warning, no row count that looks obviously wrong — tells you 10 managers exist that the query never saw. This is the concrete version of the objective at the top of this page: a plain JOIN silently drops rows you may have wanted.</p></div>
 </div>
 
 <h2 class="section"><span class="num">8</span>Anti-joins — finding non-matches</h2>
@@ -429,25 +454,25 @@ exactly the rows that found <em>no</em> match — this pattern is called an
 sides, matched or not). MySQL doesn't — you get the same result by taking the
 <code class="inline">UNION</code> of a <code class="inline">LEFT JOIN</code> and a
 <code class="inline">RIGHT JOIN</code>.</p>
-<p><strong>Business question:</strong> compliance wants a single report: which customers have placed an order, which have generated a web event, and where these two lists diverge — matched, order-only, and browse-only rows, all at once.</p>
+<p><strong>Business question:</strong> Marketing wants one 2025 activity report: which customers placed an order this year, which generated a tracked web event this year, and where the two lists diverge — matched, order-only (bought with no tracked session), and browse-only (never converted).</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
   <div class="code-body"><span class="kw">SELECT</span> o.customer_id <span class="kw">AS</span> ordered_customer, w.customer_id <span class="kw">AS</span> browsed_customer
-<span class="kw">FROM</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> orders) o
-<span class="kw">LEFT JOIN</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> web_events) w
+<span class="kw">FROM</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> orders <span class="kw">WHERE</span> order_date &gt;= <span class="str">'2025-01-01'</span>) o
+<span class="kw">LEFT JOIN</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> web_events <span class="kw">WHERE</span> occurred_at &gt;= <span class="str">'2025-01-01'</span>) w
     <span class="kw">ON</span> o.customer_id = w.customer_id
 
 <span class="kw">UNION</span>
 
 <span class="kw">SELECT</span> o.customer_id <span class="kw">AS</span> ordered_customer, w.customer_id <span class="kw">AS</span> browsed_customer
-<span class="kw">FROM</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> orders) o
-<span class="kw">RIGHT JOIN</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> web_events) w
+<span class="kw">FROM</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> orders <span class="kw">WHERE</span> order_date &gt;= <span class="str">'2025-01-01'</span>) o
+<span class="kw">RIGHT JOIN</span> (<span class="kw">SELECT DISTINCT</span> customer_id <span class="kw">FROM</span> web_events <span class="kw">WHERE</span> occurred_at &gt;= <span class="str">'2025-01-01'</span>) w
     <span class="kw">ON</span> o.customer_id = w.customer_id;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Why the DISTINCT subqueries</b><p><code class="inline">orders</code> and <code class="inline">web_events</code> both have many rows per customer — joining the raw tables directly would multiply rows in a way that has nothing to do with the actual question ("did this customer ever order, ever browse, or both"). Reducing each side to one row per customer first keeps the FULL JOIN meaningful.</p></div>
   <div class="annotation"><b>UNION drops duplicates</b><p>Rows that matched appear in both halves (the LEFT JOIN result and the RIGHT JOIN result) but <code class="inline">UNION</code> only keeps one copy — <code class="inline">UNION ALL</code> would keep both if you ever wanted the duplicates.</p></div>
-  <div class="annotation"><b>Read the NULLs</b><p>A row with <code class="inline">browsed_customer</code> NULL placed an order but generated no tracked web event; a row with <code class="inline">ordered_customer</code> NULL browsed but never converted — that second group is the more common one in this dataset.</p></div>
+  <div class="annotation"><b>Read the NULLs</b><p>A row with <code class="inline">browsed_customer</code> NULL placed an order but generated no tracked web event; a row with <code class="inline">ordered_customer</code> NULL browsed but never converted. Counted: 798 customers did both in 2025, 116 ordered with no tracked event, 255 browsed without ordering — both "only" buckets are real here, which is what makes a FULL JOIN worth writing. (Over <em>all</em> time instead of just 2025, the order-only bucket is empty — almost every customer who ever ordered also has a tracked web event somewhere in their history — so restricting to this year is what makes the three-way split meaningful.)</p></div>
 </div>
 
 <h2 class="section"><span class="num">10</span>CASE — conditional logic inside a query</h2>
@@ -528,10 +553,14 @@ uses to decide its label.</p>
 <p><strong>Business question:</strong> which account managers fall specifically into the "2–3M EGP total revenue" band — a mid-tier group worth a closer look?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day03_joins_case_and_strings.sql</span></div>
-  <div class="code-body"><span class="kw">SELECT</span> am.manager_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_revenue,
+  <div class="code-body"><span class="com">-- band boundaries use <= rather than BETWEEN...AND: total_amount is DECIMAL, so</span>
+<span class="com">-- BETWEEN 1 AND 2000000 / BETWEEN 2000001 AND 3000000 would leave a gap for</span>
+<span class="com">-- anything between 2,000,000.01 and 2,000,000.99 — first-match-wins CASE ordering</span>
+<span class="com">-- closes the ranges instead</span>
+<span class="kw">SELECT</span> am.manager_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_revenue,
     <span class="kw">CASE</span>
-        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amount) <span class="kw">BETWEEN</span> 1 <span class="kw">AND</span> 2000000 <span class="kw">THEN</span> <span class="str">'Under 2M'</span>
-        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amount) <span class="kw">BETWEEN</span> 2000001 <span class="kw">AND</span> 3000000 <span class="kw">THEN</span> <span class="str">'2-3M'</span>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amount) &lt;= 2000000 <span class="kw">THEN</span> <span class="str">'Under 2M'</span>
+        <span class="kw">WHEN</span> <span class="fn">SUM</span>(o.total_amount) &lt;= 3000000 <span class="kw">THEN</span> <span class="str">'2-3M'</span>
         <span class="kw">ELSE</span> <span class="str">'+3M'</span>
     <span class="kw">END</span> <span class="kw">AS</span> revenue_band
 <span class="kw">FROM</span> orders o
@@ -539,10 +568,10 @@ uses to decide its label.</p>
 <span class="kw">JOIN</span> governorates g <span class="kw">ON</span> c.governorate_id = g.governorate_id
 <span class="kw">JOIN</span> account_managers am <span class="kw">ON</span> g.manager_id = am.manager_id
 <span class="kw">GROUP BY</span> am.manager_id, am.manager_name
-<span class="kw">HAVING</span> <span class="fn">SUM</span>(o.total_amount) <span class="kw">BETWEEN</span> 2000001 <span class="kw">AND</span> 3000000;</div>
+<span class="kw">HAVING</span> revenue_band = <span class="str">'2-3M'</span>;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>HAVING re-checks the condition directly</b><p>It re-evaluates <code class="inline">SUM(o.total_amount)</code> itself here — MySQL doesn't let <code class="inline">HAVING</code> reuse the <code class="inline">CASE</code> expression's own alias for filtering, only for display.</p></div>
+  <div class="annotation"><b>HAVING can reference the CASE alias directly</b><p>MySQL extends standard SQL here: <code class="inline">HAVING revenue_band = '2-3M'</code> is allowed to reference the <code class="inline">SELECT</code>-list alias, not just <code class="inline">SUM(o.total_amount)</code> written out again. It's a MySQL-specific convenience — repeating the full aggregate expression in <code class="inline">HAVING</code> is the version that also works on databases that don't support this extension.</p></div>
 </div>
 
 <div class="callout recap">
@@ -636,11 +665,22 @@ splitting step.</p>
 <span class="com">-- SUBSTRING(str, start, length) — 1-indexed, same indexing LOCATE returns</span>
 <span class="com">-- every seller name has at least one space — this finds where it falls</span>
 <span class="kw">SELECT</span> seller_name, <span class="fn">LOCATE</span>(<span class="str">' '</span>, seller_name) <span class="kw">AS</span> space_position
-<span class="kw">FROM</span> sellers;</div>
+<span class="kw">FROM</span> sellers;
+
+<span class="com">-- RIGHT counts from the opposite end — the last 4 digits of each product SKU</span>
+<span class="kw">SELECT</span> sku, <span class="fn">RIGHT</span>(sku, 4) <span class="kw">AS</span> sku_suffix
+<span class="kw">FROM</span> products;
+
+<span class="com">-- SUBSTRING(str, start) with no length: from a position to the end of the string —</span>
+<span class="com">-- everything after the '@', using LOCATE's result as the starting point</span>
+<span class="kw">SELECT</span> email, <span class="fn">SUBSTRING</span>(email, <span class="fn">LOCATE</span>(<span class="str">'@'</span>, email) + 1) <span class="kw">AS</span> email_domain
+<span class="kw">FROM</span> customers
+<span class="kw">WHERE</span> email <span class="kw">IS NOT NULL</span>;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>LOCATE is 1-indexed, and 0 means "not found"</b><p>Unlike most programming languages, position 1 is the first character — and if the search string never appears, <code class="inline">LOCATE</code> returns <code class="inline">0</code>, not <code class="inline">-1</code> or <code class="inline">NULL</code>.</p></div>
   <div class="annotation"><b>Finds the FIRST match only</b><p>A seller name like <code class="inline">'Cairo Electronics Supply'</code> has two spaces — <code class="inline">LOCATE(' ', seller_name)</code> stops at the first one. Getting a later word would need a second <code class="inline">LOCATE</code> starting after the first match — not needed for today's lesson, but worth knowing the limit.</p></div>
+  <div class="annotation"><b>SUBSTRING has two forms</b><p><code class="inline">SUBSTRING(str, start)</code> takes everything from <code class="inline">start</code> to the end of the string; adding a third argument, <code class="inline">SUBSTRING(str, start, length)</code>, caps how many characters come back. <code class="inline">RIGHT</code> and <code class="inline">LEFT</code> are really just fixed-position shortcuts for the same idea.</p></div>
   <div class="annotation"><b>The -1 in the next section</b><p><code class="inline">LOCATE(' ', seller_name) - 1</code> is the length of everything <em>before</em> the space — feeding that as the length argument to <code class="inline">LEFT</code> is exactly how Section 15's contact-email builder isolates the first word.</p></div>
 </div>
 
@@ -662,11 +702,16 @@ all lowercase.</p>
 )
 <span class="kw">SELECT</span> seller_name, first_word,
        <span class="fn">CONCAT</span>(<span class="fn">LOWER</span>(first_word), <span class="str">'@rawaj-marketplace.com'</span>) <span class="kw">AS</span> contact_email
-<span class="kw">FROM</span> first_word;</div>
+<span class="kw">FROM</span> first_word;
+
+<span class="com">-- REPLACE swaps every occurrence of one substring for another —</span>
+<span class="com">-- a URL-safe slug for each seller's shop name, one space at a time</span>
+<span class="kw">SELECT</span> seller_name, <span class="fn">REPLACE</span>(seller_name, <span class="str">' '</span>, <span class="str">'-'</span>) <span class="kw">AS</span> seller_slug
+<span class="kw">FROM</span> sellers;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Don't worry about WITH yet</b><p>This is a CTE (Day 04 covers the syntax properly) — it's used here only so the first-word split doesn't have to be repeated inside one long <code class="inline">SELECT</code>.</p></div>
-  <div class="annotation"><b>Each piece is one function, chained</b><p><code class="inline">LEFT</code> + <code class="inline">LOCATE</code> isolates the first word — then <code class="inline">LOWER</code> and <code class="inline">CONCAT</code> assemble the final address. Rawaj's <code class="inline">customers</code> table already stores <code class="inline">first_name</code>/<code class="inline">last_name</code> separately, so this kind of split is only needed for single-field text like a seller's shop name.</p></div>
+  <div class="annotation"><b>Each piece is one function, chained</b><p><code class="inline">LEFT</code> + <code class="inline">LOCATE</code> isolates the first word — then <code class="inline">LOWER</code> and <code class="inline">CONCAT</code> assemble the final address. A split like this is only needed for a single-field name like a seller's shop name — a table that already stores first and last name separately, like <code class="inline">customers</code>, never needs it.</p></div>
 </div>
 
 <h2 class="section"><span class="num">16</span>COALESCE / IFNULL — filling in the gaps</h2>
@@ -691,11 +736,35 @@ cell on the dashboard.</p>
     <span class="kw">FROM</span> orders
 )
 <span class="kw">SELECT</span> <span class="fn">IFNULL</span>(total_range, <span class="str">'5000+'</span>) <span class="kw">AS</span> total_range
+<span class="kw">FROM</span> total_range;
+
+<span class="com">-- COALESCE does the exact same job here — first non-NULL argument wins</span>
+<span class="kw">SELECT</span> <span class="fn">COALESCE</span>(total_range, <span class="str">'5000+'</span>) <span class="kw">AS</span> total_range
 <span class="kw">FROM</span> total_range;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>No ELSE means NULL, on purpose</b><p>Leaving the CASE without an <code class="inline">ELSE</code> is what creates the gap <code class="inline">IFNULL</code> then fills — the two techniques are meant to pair together, not compete.</p></div>
+  <div class="annotation"><b>No ELSE means NULL, on purpose</b><p>Leaving the CASE without an <code class="inline">ELSE</code> is what creates the gap <code class="inline">IFNULL</code>/<code class="inline">COALESCE</code> then fills — the two techniques are meant to pair together, not compete.</p></div>
 </div>
+
+<h2 class="section"><span class="num">17</span>Common errors, and which JOIN to reach for</h2>
+<p class="section-intro">Two quick references worth bookmarking before Day 04.</p>
+<table class="api">
+  <thead><tr><th>Error you'll see</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">ERROR 1052: Column 'customer_id' in field list is ambiguous</code></td><td>Both joined tables have a column with this name — qualify it (<code class="inline">c.customer_id</code>) instead of using the bare name.</td></tr>
+    <tr><td>Two identically-named columns in a <code class="inline">SELECT *</code> result</td><td>Not a bug — both tables really do have a <code class="inline">customer_id</code> column, and <code class="inline">*</code> shows both. Pick specific columns once you need to tell them apart.</td></tr>
+    <tr><td>A <code class="inline">SUM</code>/<code class="inline">COUNT</code> that looks too high after a JOIN</td><td>JOIN fan-out — joining a table to something with several rows per parent (e.g. a seller to their many listings, then to their many shipments) multiplies rows before the aggregate ever runs. <code class="inline">COUNT(DISTINCT ...)</code> on the right id is the usual fix.</td></tr>
+  </tbody>
+</table>
+<table class="api">
+  <thead><tr><th>Need</th><th>Reach for</th></tr></thead>
+  <tbody>
+    <tr><td>Only rows that match on both sides</td><td><code class="inline">JOIN</code> / <code class="inline">INNER JOIN</code></td></tr>
+    <tr><td>Every row from one side, matched or not</td><td><code class="inline">LEFT JOIN</code> (name that table first)</td></tr>
+    <tr><td>Rows from one side with <em>no</em> match on the other</td><td><code class="inline">LEFT JOIN ... WHERE ... IS NULL</code> (anti-join)</td></tr>
+    <tr><td>Everything from both sides, matched or not</td><td><code class="inline">UNION</code> of a <code class="inline">LEFT JOIN</code> and a <code class="inline">RIGHT JOIN</code> (MySQL has no <code class="inline">FULL JOIN</code>)</td></tr>
+  </tbody>
+</table>
 
 <div class="callout recap">
   <div class="ti">Next: Day 04</div>

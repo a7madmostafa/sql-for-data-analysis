@@ -2,18 +2,22 @@
 
 The first applied project day. You're helping an operations analyst at Wasel, a fictional
 Egyptian ride-hailing app, decide where to spend next quarter's driver-incentive budget — twenty
-real questions about drivers, riders, and trips, covering every technique from Days 01-05. No new
-SQL syntax — everything here is Days 01-05 (filtering, aggregation, JOINs, CASE, anti-joins,
-subqueries, CTEs, views, temp tables, window functions), applied to a schema that wasn't built
-with these exact questions in mind.
+questions about drivers, riders, and trips, covering every Day 01-05 technique that SQLite
+supports. No new SQL syntax — everything here is Days 01-05 (filtering, aggregation, JOINs, CASE,
+anti-joins, subqueries, CTEs, views, temp tables, window functions) applied to a completely
+different business from Rawaj. The one exception is stored procedures: SQLite has no procedural
+logic, so that half of Day 05 doesn't carry over.
 
 Like Day 06, this day needs no MySQL server and no `.env` file — everything runs against a local
 SQLite file.
 
+See [`Databases/wasel_schema.md`](../Databases/wasel_schema.md) for the full table/column
+reference if you need to check a name while working through the questions.
+
 ## What you'll learn
 
-- Apply every Day 01-05 technique to a fresh schema (cities, drivers, riders, vehicles, trips,
-  ratings) that wasn't built with these exact questions in mind.
+- Apply every Day 01-05 technique SQLite supports to a fresh schema (cities, drivers, riders,
+  vehicles, trips, ratings) from a completely different business than Rawaj.
 - Spot a driver-supply gap with an anti-join, then confirm with a second query whether it's a real
   demand problem or a data problem.
 - Save a "top drivers by earnings" view and reuse it across later questions instead of repeating
@@ -28,8 +32,9 @@ SQLite file.
 | File | What it is |
 |---|---|
 | `day07_reading.html` | Start here — the business case, the dataset, and all 20 questions. Open directly in a browser. |
-| `project_07.ipynb` | The working notebook — all 20 questions, worked in order. |
-| `project_07.html` | The same notebook, already run — every question plus its real output, rendered as a page. No Jupyter needed; open it to check your own output against. |
+| `project_07_exercises.ipynb` | The working notebook — all 20 questions, empty `%%sql` cells for you to fill in. Try these before looking at the solutions. |
+| `project_07_solutions.ipynb` | Answer key — every question worked and run, with Randa's actual recommendation at the end. |
+| `project_07_solutions.html` | The solutions notebook, already run — every question plus its real output, rendered as a page. No Jupyter needed; open it to check your own output against. |
 
 ## Before you start
 
@@ -38,6 +43,16 @@ SQLite file.
 2. **Python packages:** from the repo root, `pip install -r requirements.txt` if you haven't
    already — this day runs every query through jupysql's `%sql`/`%%sql` magic, plus `pandas` and
    `matplotlib` for the charts. No MySQL server or `.env` needed.
-3. **Launch:** `jupyter notebook` from the repo root, then open `Day 07/project_07.ipynb`.
+3. **Launch:** `jupyter notebook` from the repo root, then open `Day 07/project_07_exercises.ipynb`.
 
-**Order:** `day07_reading.html` → `project_07.ipynb`.
+**Order:** `day07_reading.html` → `project_07_exercises.ipynb` → `project_07_solutions.ipynb` (or
+`project_07_solutions.html` if you'd rather not open Jupyter) to check your answers.
+
+## When it doesn't work
+
+| Error | Cause | Fix |
+|---|---|---|
+| `UsageError: Line magic function `%sql` not found` | Notebook kernel was restarted | Re-run the `%load_ext sql` cell near the top |
+| `sqlite3.OperationalError: unable to open database file` | Wrong working directory | Launch `jupyter notebook` from inside `Day 07/`, not the repo root — the connection string is a relative path |
+| `ModuleNotFoundError` | Packages not installed | `pip install -r requirements.txt` from the repo root |
+| A query from an earlier question errors out | Ran cells out of order, or restarted the kernel | Restart and run all cells from the top — Q11's view and Q13's temp table are reused by later questions |

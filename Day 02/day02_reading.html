@@ -143,7 +143,7 @@ figure pre.mermaid{background:transparent;font-family:inherit;overflow-x:auto}
   </defs>
 </svg>
 
-<div class="crumb">Day 02 of 10 · Filtering &amp; Aggregation</div>
+<div class="crumb">Day 02 of 7 · Filtering &amp; Aggregation</div>
 <h1 class="title">Filtering &amp; Aggregation</h1>
 <p class="subtitle">WHERE · AND/OR · BETWEEN · IN · NULL · LIKE · GROUP BY · HAVING · DATE functions — still on <code class="inline">rawaj</code>, digging into two new tables.</p>
 
@@ -152,6 +152,7 @@ figure pre.mermaid{background:transparent;font-family:inherit;overflow-x:auto}
   <ul>
     <li>Filter rows with WHERE, comparison operators, AND/OR, BETWEEN, IN, and NULL checks.</li>
     <li>Match text patterns with LIKE.</li>
+    <li>Summarize a whole table with SUM, AVG, MIN, and MAX, not just COUNT.</li>
     <li>Aggregate per group with GROUP BY, and know when WHERE can't do the job but HAVING can.</li>
     <li>Pull pieces out of a date/time column and reason about date ranges.</li>
   </ul>
@@ -307,12 +308,18 @@ and <code class="inline">web_events</code> — both tables sit one level below
 <code class="inline">customers</code> in the same chain.</p>
 
 <h2 class="section"><span class="num">2</span>Same database, two new tables</h2>
-<p class="section-intro">Same syntax you already know, applied to richer columns — a deliberate warm-up before anything new.</p>
-<p>The walkthrough opens with <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>,
-<code class="inline">DISTINCT</code>, and <code class="inline">ORDER BY</code> again — now against
-<code class="inline">orders</code> and <code class="inline">web_events</code>, alongside the
-<code class="inline">customers</code> table from Day 01. If any of that feels shaky, this is the
-moment to revisit Day 01, because everything below assumes it's second nature.</p>
+<p class="section-intro">Same syntax you already know, applied to richer columns.</p>
+<p>Before anything new, re-run Day 01's moves — <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>,
+<code class="inline">DISTINCT</code>, <code class="inline">ORDER BY</code> — against
+<code class="inline">orders</code> and <code class="inline">web_events</code> instead of
+<code class="inline">customers</code>. If any of that feels shaky, revisit Day 01 now: everything
+below assumes it's second nature.</p>
+<div class="callout tip">
+  <div class="ti">Numbering note</div>
+  <p>Sections here are grouped by concept; the walkthrough and exercises number every technique
+  separately (1&ndash;14) so their question numbers line up exactly. If an exercise says
+  &ldquo;Section 8,&rdquo; check the walkthrough file for that number, not this page.</p>
+</div>
 
 <h2 class="section"><span class="num">3</span>WHERE — filtering rows</h2>
 <p>WHERE narrows which rows a query returns, evaluated <em>before</em>
@@ -333,26 +340,26 @@ get a chance to do anything — think of it as a gate that rows have to pass thr
 
 <h2 class="section"><span class="num">4</span>AND / OR — combining conditions</h2>
 <div class="compare">
-  <div class="col good"><h4>AND — narrows</h4><p>Both conditions must hold. <code class="inline">channel = 'facebook' AND customer_id = 1</code> returns only Facebook events, and only for that one customer — the smallest of the four possible result sets.</p></div>
-  <div class="col bad"><h4>OR — widens</h4><p>Either can hold. Swap in <code class="inline">OR</code> and you get every Facebook event from <em>any</em> customer, plus every event (any channel) from customer 1 — often a much bigger, looser result than intended.</p></div>
+  <div class="col good"><h4>AND — narrows</h4><p>Both conditions must hold. <code class="inline">channel = 'facebook' AND customer_id = 631</code> returns only Facebook events, and only for that one customer — the smallest of the four possible result sets.</p></div>
+  <div class="col bad"><h4>OR — widens</h4><p>Either can hold. Swap in <code class="inline">OR</code> and you get every Facebook event from <em>any</em> customer, plus every event (any channel) from customer 631 — often a much bigger, looser result than intended.</p></div>
 </div>
-<p><strong>Business question:</strong> did customer 1 specifically show up on Facebook — versus casting a much wider net for anything Facebook-related, plus everything from that customer regardless of channel?</p>
+<p><strong>Business question:</strong> did customer 631 specifically show up on Facebook — versus casting a much wider net for anything Facebook-related, plus everything from that customer regardless of channel?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
-  <div class="code-body"><span class="com">-- AND: narrow — only Facebook events from customer 1</span>
+  <div class="code-body"><span class="com">-- AND: narrow — only Facebook events from customer 631</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> web_events
 <span class="kw">WHERE</span> channel = <span class="str">'facebook'</span>
-  <span class="kw">AND</span> customer_id = 1;
+  <span class="kw">AND</span> customer_id = 631;
 
-<span class="com">-- OR: wide — Facebook events from anyone, plus every event from customer 1</span>
+<span class="com">-- OR: wide — Facebook events from anyone, plus every event from customer 631</span>
 <span class="kw">SELECT</span> *
 <span class="kw">FROM</span> web_events
 <span class="kw">WHERE</span> channel = <span class="str">'facebook'</span>
-   <span class="kw">OR</span> customer_id = 1;</div>
+   <span class="kw">OR</span> customer_id = 631;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Same shape, different meaning</b><p>Only the keyword changed — the row counts these two return can differ by an order of magnitude on a real dataset. (Run both — the AND version might come back empty for a given customer, while OR still returns thousands of Facebook rows alone. That's not a bug; it just means this particular customer's own activity doesn't happen to include a Facebook visit.)</p></div>
+  <div class="annotation"><b>Same shape, different meaning</b><p>Only the keyword changed. AND returns customer 631's 3 Facebook events; OR returns 2,266 rows — every one of the 2,252 Facebook events sitewide, plus 631's own activity on every other channel too. The row counts these two return can differ by an order of magnitude, and MySQL never flags it — reading each condition back is the only defense.</p></div>
 </div>
 <div class="callout warn">
   <div class="ti">The most common real-world SQL bug</div>
@@ -376,10 +383,10 @@ get a chance to do anything — think of it as a gate that rows have to pass thr
 </figure>
 <p><code class="inline">WHERE total_amount BETWEEN 2000 AND 4999</code> is shorthand for
 <code class="inline">WHERE total_amount &gt;= 2000 AND total_amount &lt;= 4999</code> —
-<strong>both endpoints inclusive</strong>. It works on dates too:
-<code class="inline">WHERE order_date BETWEEN '2024-12-30' AND '2025-01-01'</code> — a pattern you'll
-use constantly once real reporting periods (last week, last quarter) enter the picture.</p>
-<p><strong>Business question:</strong> which orders fall in the 2,000–4,999 EGP mid-size range, and which orders came in during the final two days of 2024, for a year-end cutoff report?</p>
+<strong>both endpoints inclusive</strong>. It works on dates too — but on this schema,
+<code class="inline">order_date</code> isn't a plain date, it's a <code class="inline">DATETIME</code>,
+and that changes the endpoint math.</p>
+<p><strong>Business question:</strong> which orders fall in the 2,000–4,999 EGP mid-size range, and which orders came in during the final two days of 2024 plus New Year's Day, for a year-end cutoff report?</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- numeric range</span>
@@ -387,13 +394,32 @@ use constantly once real reporting periods (last week, last quarter) enter the p
 <span class="kw">FROM</span> orders
 <span class="kw">WHERE</span> total_amount <span class="kw">BETWEEN</span> 2000 <span class="kw">AND</span> 4999;
 
-<span class="com">-- date range — same keyword, no numeric/date distinction to remember</span>
+<span class="com">-- date range, done wrong: BETWEEN pads '2025-01-01' to 2025-01-01 00:00:00,</span>
+<span class="com">-- so every Jan 1 order placed later that day is silently dropped</span>
 <span class="kw">SELECT</span> order_id, order_date
 <span class="kw">FROM</span> orders
-<span class="kw">WHERE</span> order_date <span class="kw">BETWEEN</span> <span class="str">'2024-12-30'</span> <span class="kw">AND</span> <span class="str">'2025-01-01'</span>;</div>
+<span class="kw">WHERE</span> order_date <span class="kw">BETWEEN</span> <span class="str">'2024-12-30'</span> <span class="kw">AND</span> <span class="str">'2025-01-01'</span>;
+
+<span class="com">-- done right: start at the first moment you want, stop before the first moment you don't</span>
+<span class="kw">SELECT</span> order_id, order_date
+<span class="kw">FROM</span> orders
+<span class="kw">WHERE</span> order_date &gt;= <span class="str">'2024-12-30'</span>
+<span class="kw">AND</span> order_date &lt; <span class="str">'2025-01-02'</span>;</div>
 </div>
 <div class="annotations">
   <div class="annotation"><b>Written out with AND/OR, this gets long fast</b><p><code class="inline">WHERE total_amount &gt;= 2000 AND total_amount &lt;= 4999</code> says exactly the same thing — <code class="inline">BETWEEN</code> is purely a shorter way to write a two-sided AND.</p></div>
+</div>
+<div class="callout warn">
+  <div class="ti">BETWEEN on a DATETIME column is a trap</div>
+  <p><code class="inline">BETWEEN</code> really is inclusive of both endpoints — but a date literal
+  like <code class="inline">'2025-01-01'</code> means <em>midnight</em> on that date, not the whole
+  day. Against a <code class="inline">DATETIME</code> column, <code class="inline">BETWEEN
+  '2024-12-30' AND '2025-01-01'</code> only matches orders placed at exactly
+  <code class="inline">00:00:00</code> on Jan 1 — every other order that day is excluded, with no
+  error to warn you. The fix is the pattern in the third query above: start the range at the first
+  moment you want, and stop it <em>before</em> the first moment you don't
+  (<code class="inline">&lt; 'day-after-the-last-day-you-want'</code>) — use this any time a
+  reporting period ends on a real calendar day rather than a timestamp.</p>
 </div>
 
 <h2 class="section"><span class="num">6</span>IN vs OR</h2>
@@ -401,10 +427,14 @@ use constantly once real reporting periods (last week, last quarter) enter the p
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
   <div class="code-body"><span class="com">-- gets unwieldy fast</span>
-<span class="kw">WHERE</span> channel = <span class="str">'facebook'</span> <span class="kw">OR</span> channel = <span class="str">'instagram'</span> <span class="kw">OR</span> channel = <span class="str">'organic'</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> web_events
+<span class="kw">WHERE</span> channel = <span class="str">'facebook'</span> <span class="kw">OR</span> channel = <span class="str">'instagram'</span> <span class="kw">OR</span> channel = <span class="str">'organic'</span>;
 
 <span class="com">-- identical result, one line</span>
-<span class="kw">WHERE</span> channel <span class="kw">IN</span> (<span class="str">'facebook'</span>, <span class="str">'instagram'</span>, <span class="str">'organic'</span>)</div>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> web_events
+<span class="kw">WHERE</span> channel <span class="kw">IN</span> (<span class="str">'facebook'</span>, <span class="str">'instagram'</span>, <span class="str">'organic'</span>);</div>
 </div>
 <div class="annotations"><div class="annotation"><b>NOT IN works too</b><p>Excludes every value in the list instead of matching it — handy for "everything except these legacy channels."</p></div></div>
 
@@ -414,12 +444,19 @@ use constantly once real reporting periods (last week, last quarter) enter the p
 <code class="inline">=</code> silently fails to test for it (<code class="inline">WHERE x = NULL</code>
 matches nothing, with no error). Use <code class="inline">IS NULL</code> /
 <code class="inline">IS NOT NULL</code> instead.</p>
+<p><strong>Business question:</strong> Compliance wants a list of customers with no email on file, so outreach can flag them for a different contact method.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> customer_id, first_name, last_name
+<span class="kw">FROM</span> customers
+<span class="kw">WHERE</span> email <span class="kw">IS</span> <span class="kw">NULL</span>;</div>
+</div>
 <div class="callout insight">
   <div class="ti">Rawaj actually has these</div>
-  <p>About 1 in 10 customers checked out as a guest and never left an email on file, so
-  <code class="inline">WHERE email IS NULL</code> genuinely returns rows here — not a hypothetical.
-  This is the everyday reason you reach for <code class="inline">IS NULL</code>: missing optional
-  fields, unfilled form data, a join that didn't find a match (you'll see that scenario properly on
+  <p>119 of Rawaj's 1,200 customers — about 1 in 10 — checked out as a guest and never left an
+  email on file, so this query genuinely returns rows here, not a hypothetical. This is the
+  everyday reason you reach for <code class="inline">IS NULL</code>: missing optional fields,
+  unfilled form data, a join that didn't find a match (you'll see that scenario properly on
   Day 03).</p>
 </div>
 
@@ -433,8 +470,49 @@ matches nothing, with no error). Use <code class="inline">IS NULL</code> /
 <tr><td><code class="inline">'_a___'</code></td><td>exactly 5 characters, 'a' 2nd</td></tr>
 <tr><td><code class="inline">'%ct'</code></td><td>ends with 'ct'</td></tr>
 </tbody></table>
+<p><strong>Business question:</strong> marketing wants an alphabetized outreach list of every customer whose first name starts with A.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> first_name, last_name
+<span class="kw">FROM</span> customers
+<span class="kw">WHERE</span> first_name <span class="kw">LIKE</span> <span class="str">'A%'</span>
+<span class="kw">ORDER BY</span> first_name;</div>
+</div>
+<div class="callout warn">
+  <div class="ti">LIKE is case-insensitive by default in MySQL</div>
+  <p><code class="inline">'%el%'</code> matches <code class="inline">El-Sayed</code> just as much as
+  it matches <code class="inline">Abdelrahman</code> — MySQL's default collation doesn't
+  distinguish upper from lowercase for text comparison. Searching last names for
+  <code class="inline">'%el%'</code> returns 338 of Rawaj's 1,200 customers, not just the ones
+  spelled with a capital <em>El-</em>. If you need a case-sensitive match, that's a separate,
+  more advanced setting (a binary or case-sensitive collation) — worth knowing exists, not
+  needed here.</p>
+</div>
 
-<h2 class="section"><span class="num">9</span>GROUP BY — aggregating per bucket</h2>
+<h2 class="section"><span class="num">9</span>Aggregate functions beyond COUNT</h2>
+<p>Day 01 covered <code class="inline">COUNT</code>. Four more aggregate functions collapse a whole
+column into a single number the same way: <code class="inline">SUM</code> (total),
+<code class="inline">AVG</code> (average), <code class="inline">MIN</code>, and
+<code class="inline">MAX</code>. <code class="inline">ROUND(value, n)</code> rounds a number to
+<code class="inline">n</code> decimal places — useful the moment <code class="inline">AVG</code>
+returns something like <code class="inline">3848.321060</code>.</p>
+<p><strong>Business question:</strong> leadership wants one summary row for a board slide — order count, smallest order, biggest order, average order, and total revenue, all at once.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span>
+    <span class="fn">COUNT</span>(*) <span class="kw">AS</span> OrderCount,
+    <span class="fn">MIN</span>(total_amount) <span class="kw">AS</span> MinTotal,
+    <span class="fn">MAX</span>(total_amount) <span class="kw">AS</span> MaxTotal,
+    <span class="fn">ROUND</span>(<span class="fn">AVG</span>(total_amount), 2) <span class="kw">AS</span> AvgTotal,
+    <span class="fn">SUM</span>(total_amount) <span class="kw">AS</span> TotalRevenue
+<span class="kw">FROM</span> orders;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>One row, five numbers</b><p>Every aggregate here scans the same 6,000 rows independently — Rawaj's lifetime total comes back as 23,089,926.36 EGP, averaging 3,848.32 EGP per order.</p></div>
+  <div class="annotation"><b>ROUND matters for AVG</b><p><code class="inline">AVG</code> keeps every decimal place MySQL computes (<code class="inline">3848.321060</code>) unless you wrap it in <code class="inline">ROUND(..., 2)</code> — almost always what you want for a currency figure.</p></div>
+</div>
+
+<h2 class="section"><span class="num">10</span>GROUP BY — aggregating per bucket</h2>
 <p>Aggregate functions (<code class="inline">COUNT</code>, <code class="inline">SUM</code>,
 <code class="inline">AVG</code>, <code class="inline">MIN</code>, <code class="inline">MAX</code>)
 collapse <em>all</em> matching rows into one number, unless you tell them to collapse separately
@@ -495,7 +573,7 @@ per group:</p>
   <div class="annotation"><b>Multi-column groups</b><p><code class="inline">GROUP BY customer_id, channel</code> gives one row per <em>combination</em> — this customer, that channel.</p></div>
 </div>
 
-<h2 class="section"><span class="num">10</span>HAVING — filtering grouped results</h2>
+<h2 class="section"><span class="num">11</span>HAVING — filtering grouped results</h2>
 <p><code class="inline">WHERE</code> filters rows <em>before</em> grouping; <code class="inline">HAVING</code>
 filters groups <em>after</em> aggregation runs. That distinction matters because an aggregate like
 <code class="inline">COUNT(*)</code> or <code class="inline">SUM(...)</code> doesn't exist yet at the
@@ -519,7 +597,7 @@ filter on it.</p>
   <div class="annotation"><b>Stacks with WHERE</b><p>Filter rows first with <code class="inline">WHERE</code>, then filter the resulting groups with <code class="inline">HAVING</code> — the two run at different stages, so a query can use both at once.</p></div>
 </div>
 
-<h2 class="section"><span class="num">11</span>DATE functions</h2>
+<h2 class="section"><span class="num">12</span>DATE functions</h2>
 <p>MySQL pulls pieces out of a <code class="inline">TIMESTAMP</code> with dedicated functions:
 <code class="inline">YEAR()</code>, <code class="inline">MONTH()</code>,
 <code class="inline">DAY()</code>, <code class="inline">HOUR()</code>,

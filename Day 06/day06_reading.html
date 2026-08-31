@@ -138,7 +138,7 @@ body{margin-left:0}
   </defs>
 </svg>
 
-<div class="crumb">Day 06 of 10 · Python Connectivity: MySQL &amp; SQLite</div>
+<div class="crumb">Day 06 of 7 · Python Connectivity: MySQL &amp; SQLite</div>
 <h1 class="title">Python Connectivity: MySQL &amp; SQLite</h1>
 <p class="subtitle">No new SQL today — everything from Days 01–05, now reached from Python, against both engines every remaining project day will use.</p>
 
@@ -152,7 +152,7 @@ body{margin-left:0}
     <li>Avoid two real driver gotchas that only show up once you call stored procedures from Python.</li>
     <li>Migrate a live MySQL database into a local SQLite file with pandas, verify the migration, and connect to the copy two ways — with SQLAlchemy, or with a bare connection string.</li>
     <li>Turn a query result into a chart with pandas — the payoff SQL alone can't give you.</li>
-    <li>Recognize the handful of SQL differences between MySQL and SQLite that Days 07–10 will lean on.</li>
+    <li>Recognize the handful of SQL differences between MySQL and SQLite that Day 07 will lean on.</li>
   </ul>
 </div>
 
@@ -183,7 +183,11 @@ SQLAlchemy, jupysql's <code class="inline">%%sql</code> — is built on exactly 
 driver.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day06_python_mysql.ipynb</span></div>
-  <div class="code-body"><span class="kw">import</span> mysql.connector
+  <div class="code-body"><span class="kw">import</span> os
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+<span class="kw">import</span> mysql.connector
+
+load_dotenv()  <span class="com"># reads DB_PASSWORD from the local .env file</span>
 
 raw_conn = mysql.connector.connect(
     host=<span class="str">"localhost"</span>, port=<span class="fn">3306</span>,
@@ -232,7 +236,7 @@ mysql_engine = create_engine(mysql_url, connect_args={<span class="str">"use_pur
 </div>
 <div class="annotations">
   <div class="annotation"><b>.env is never committed</b><p><code class="inline">.env</code> is listed in <code class="inline">.gitignore</code> — only <code class="inline">.env.example</code> (a template with no real values) is tracked in git. Copy it, fill in your own credentials, keep the real file local.</p></div>
-  <div class="annotation"><b>URL.create(...), not an f-string</b><p>Hand-building the connection string with an f-string breaks the moment a password contains <code class="inline">@</code>, <code class="inline">:</code>, <code class="inline">/</code>, or <code class="inline">%</code> — an <code class="inline">@</code> inside the password gets misread as the separator before the hostname, producing a confusing "unknown host" error that has nothing to do with the actual host. <code class="inline">URL.create()</code> percent-encodes every part correctly, regardless of what characters it contains — a real bug found while testing this lesson.</p></div>
+  <div class="annotation"><b>URL.create(...), not an f-string</b><p>Hand-building the connection string with an f-string breaks the moment a password contains <code class="inline">@</code>, <code class="inline">:</code>, <code class="inline">/</code>, or <code class="inline">%</code> — an <code class="inline">@</code> inside the password gets misread as the separator before the hostname, producing a confusing "unknown host" error that has nothing to do with the actual host. <code class="inline">URL.create()</code> percent-encodes every part correctly, regardless of what characters it contains.</p></div>
   <div class="annotation"><b>use_pure — see the callout in Section 5</b><p>Forces the pure-Python driver instead of the C extension, avoiding a "commands out of sync" bug the C extension has with stored procedures that return a result set.</p></div>
 </div>
 
@@ -261,11 +265,12 @@ confirm the connection actually works end to end.</p>
   <div class="annotation"><b>Nothing new syntactically</b><p>Same JOIN technique from Day 03 — the point of this quick check is proving the plumbing works, not teaching new SQL. The full sweep through every technique happens in <code class="inline">day06_python_sqlite.ipynb</code>, below.</p></div>
 </div>
 <div class="callout tip">
-  <div class="ti">day06_python_mysql.ipynb stays short on purpose</div>
-  <p>This notebook is just a quick check that the Python↔MySQL plumbing works — one JOIN, then the
-  stored-procedure calls in Section 5. Every remaining project day (07–10) runs on SQLite, not
-  MySQL, so the real depth lives in <code class="inline">day06_python_sqlite.ipynb</code>: a full
-  sweep through <strong>every</strong> Day 01–05 concept — <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>,
+  <div class="ti">This notebook is a short connection check</div>
+  <p><code class="inline">day06_python_mysql.ipynb</code> is just enough to prove the Python↔MySQL
+  plumbing works — one JOIN, then the stored-procedure calls in Section 5. Day 07's project runs on
+  SQLite, not MySQL, so most of Day 06's actual depth is in
+  <code class="inline">day06_python_sqlite.ipynb</code>: a full sweep through <strong>every</strong>
+  Day 01–05 concept — <code class="inline">LIMIT</code>/<code class="inline">OFFSET</code>,
   <code class="inline">WHERE</code>, every JOIN variant, <code class="inline">CASE</code>, string
   functions, subqueries, CTEs, temp tables, views, every window function, all re-run via
   <code class="inline">%%sql</code> against the migrated copy.</p>
@@ -277,32 +282,33 @@ somewhere else — a form field, a function argument, another system — and the
 the query matters. This is covered hands-on in <code class="inline">day06_python_sqlite.ipynb</code>,
 since SQLite is where the rest of this course's Python work happens.</p>
 <p><strong>Business question:</strong> build a small function, <code class="inline">orders_for_customer(customer_id)</code>,
-that a dashboard could call with whatever customer a user picks.</p>
+that a dashboard could call with whatever customer a user picks. (This uses <code class="inline">sqlite_conn</code>
+— the SQLite connection from Section 7 below — since that's the connection this course's Python work uses from here on.)</p>
 <div class="compare">
   <div class="col bad">
     <h4>The wrong way — an f-string</h4>
     <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">def orders_for_customer_UNSAFE(customer_id):
     query = f"SELECT ... WHERE customer_id = {customer_id}"
-    return pd.read_sql(text(query), sqlite_engine)</pre>
+    return pd.read_sql(query, sqlite_conn)</pre>
   </div>
   <div class="col good">
     <h4>The right way — a bound parameter</h4>
     <pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:0">def orders_for_customer(customer_id):
-    query = text("SELECT ... WHERE customer_id = :cust_id")
-    return pd.read_sql(query, sqlite_engine, params={"cust_id": customer_id})</pre>
+    query = "SELECT ... WHERE customer_id = :cust_id"
+    return pd.read_sql(query, sqlite_conn, params={"cust_id": customer_id})</pre>
   </div>
 </div>
 <div class="callout warn">
-  <div class="ti">What actually happens with a malicious input — tested on both engines</div>
+  <div class="ti">What actually happens with a malicious input</div>
   <p>Call the f-string version with <code class="inline">customer_id = "1 OR 1=1"</code> and it
-  returns <strong>every order in the table</strong>, on either engine — classic SQL injection, since
-  the value was pasted directly into the query text and then parsed as SQL. Call the
-  bound-parameter version with the exact same input and both engines come back safe, but not
-  identically: MySQL coerces the string down to the number it starts with (<code class="inline">1</code>)
-  and returns the normal 5 rows for that customer; SQLite is stricter about comparing text to an
-  integer column and returns <strong>zero rows</strong> instead, since the malicious string simply
-  matches nothing. Different failure mode, equally safe either way — the value never got a chance
-  to be parsed as SQL on either engine, which is the only guarantee that actually matters.</p>
+  returns <strong>every order in the table</strong> — classic SQL injection, since the value was
+  pasted directly into the query text and then parsed as SQL. Call the bound-parameter version with
+  the exact same input and it comes back safe: SQLite is strict about comparing text to an integer
+  column, so the malicious string simply matches nothing and the query returns zero rows (see it run
+  in <code class="inline">day06_python_sqlite.ipynb</code>). MySQL's driver would instead coerce the
+  string down to the number it starts with (<code class="inline">1</code>) and return that customer's
+  normal rows — a different failure mode, but the value still never gets a chance to be parsed as
+  SQL, which is the only guarantee that actually matters.</p>
 </div>
 <p><strong>The single most important habit in this notebook:</strong> never build a query string
 with f-strings/<code class="inline">.format()</code>/<code class="inline">%</code>-formatting using
@@ -327,7 +333,7 @@ needed at all from here on.</p>
 <span class="kw">SELECT</span> @rev <span class="kw">AS</span> total_revenue;</div>
 </div>
 <div class="callout warn">
-  <div class="ti">Two real driver bugs, found while testing this lesson</div>
+  <div class="ti">Two driver quirks worth knowing</div>
   <p><code class="inline">mysql-connector-python</code> ships two implementations: a fast C
   extension (the default) and a pure-Python fallback. The C extension has a known bug calling a
   stored procedure that returns a result set — it leaves the connection in a broken "commands out
@@ -343,27 +349,21 @@ needed at all from here on.</p>
 </div>
 
 <h2 class="section"><span class="num">6</span>Loading results into pandas</h2>
-<p><strong>Business question:</strong> finance wants the daily sales trend as a chart for a deck, not
-a table of numbers to read row by row.</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day06_python_mysql.ipynb</span></div>
-  <div class="code-body">daily_sales = pd.read_sql(
-    text(<span class="str">"SELECT DATE(order_date) AS day, SUM(total_amount) AS daily_sales FROM orders GROUP BY day"</span>),
-    mysql_engine,
-)
-daily_sales.plot(x=<span class="str">"day"</span>, y=<span class="str">"daily_sales"</span>, figsize=(10, 4), title=<span class="str">"Daily Sales"</span>)</div>
-</div>
-<div class="annotations">
-  <div class="annotation"><b>text() is the version-safe habit</b><p>Wrapping the query string in <code class="inline">text(...)</code> is required on modern SQLAlchemy (2.x) — a bare string still works on older versions, but <code class="inline">text()</code> is the pattern that won't break later.</p></div>
-  <div class="annotation"><b>A completely normal DataFrame from here</b><p><code class="inline">daily_sales</code> behaves exactly like data loaded any other way — every pandas method (<code class="inline">.plot()</code>, <code class="inline">.describe()</code>, <code class="inline">.to_csv()</code>) works the same.</p></div>
-</div>
+<p><code class="inline">pd.read_sql(query, engine)</code> is the bridge between a SQL result and
+everything pandas can do with it — the DataFrame that comes back behaves exactly like data loaded
+any other way, so every pandas method (<code class="inline">.plot()</code>,
+<code class="inline">.describe()</code>, <code class="inline">.to_csv()</code>) works the same. On a
+SQLAlchemy engine, wrap the query string in <code class="inline">text(...)</code> — that's the habit
+that keeps working once you move from <code class="inline">read_sql</code> to
+<code class="inline">connection.execute()</code>, which requires it. Section 10 below puts this to
+work on the charts finance and marketing actually asked for.</p>
 
 <h2 class="section"><span class="num">7</span>Migrating to SQLite with pandas</h2>
-<p>Every project day from Day 07 on runs against a local <code class="inline">.sqlite</code> file
-instead of a MySQL server. Rather than jumping straight into an unfamiliar project dataset,
-<code class="inline">day06_python_sqlite.ipynb</code> first rebuilds the already-familiar
+<p>Day 07's project runs against a local <code class="inline">.sqlite</code> file instead of a MySQL
+server. <code class="inline">day06_python_sqlite.ipynb</code> first rebuilds the already-familiar
 <code class="inline">rawaj</code> as a local SQLite file — a real, useful skill on its own
-(migrating between engines), and a gentler way to meet the SQLite connection pattern.</p>
+(migrating between engines), and a gentler way to meet the SQLite connection pattern than jumping
+straight into Day 07's unfamiliar schema.</p>
 <p><strong>Business question:</strong> a teammate without MySQL installed still needs to work with
 this data — hand them a single portable file instead.</p>
 <div class="code-block">
@@ -382,6 +382,19 @@ sqlite_conn.commit()</div>
   <div class="annotation"><b>No SQLAlchemy on the destination side</b><p><code class="inline">sqlite3</code> is a Python stdlib module — nothing to install. <code class="inline">df.to_sql</code> accepts a raw <code class="inline">sqlite3.Connection</code> just as happily as a SQLAlchemy engine; the source side (<code class="inline">mysql_engine</code>) still needs SQLAlchemy, for the reasons in Section 2.</p></div>
   <div class="annotation"><b>Read from one engine, write to another</b><p><code class="inline">pd.read_sql</code> and <code class="inline">df.to_sql</code> don't care what's on either end — a DataFrame is the universal middle step.</p></div>
   <div class="annotation"><b>Generated, not committed</b><p>This file is regenerated by running the notebook, not stored in git — same reasoning as never committing <code class="inline">.env</code>: it's derived, disposable local state.</p></div>
+  <div class="annotation"><b>Seven tables, not all fourteen</b><p>This list covers what today's exercises need — the rest of Rawaj's schema (products, sellers' listings, order line items, and the rest) isn't part of this local copy. Querying one of those tables against <code class="inline">rawaj.sqlite</code> fails with "no such table"; the MySQL <code class="inline">rawaj</code> database still has all 14.</p></div>
+</div>
+<div class="callout tip">
+  <div class="ti">A migration changes types, not just location</div>
+  <p>Round-tripping through a DataFrame preserves every row, but not every column's original type.
+  <code class="inline">governorates.manager_id</code> has a <code class="inline">NULL</code> for the one
+  governorate with no manager yet — pandas responds by widening that whole integer column to a
+  float, so it prints as <code class="inline">5.0</code> instead of <code class="inline">5</code> once
+  it's back out of SQLite. Every <code class="inline">DECIMAL</code> column becomes a plain floating-point
+  number the same way, which is why a total that was exactly <code class="inline">60579.87</code>
+  in MySQL can print as <code class="inline">60579.869999999995</code> here — a floating-point
+  rounding artifact, not a data error. Verifying a migration with <code class="inline">COUNT(*)</code>
+  alone won't catch this; comparing a <code class="inline">SUM()</code> on both sides would.</p>
 </div>
 
 <h2 class="section"><span class="num">8</span>The cursor, once more, on SQLite</h2>
@@ -419,8 +432,8 @@ how to connect.</p>
 <p>Both register a connection jupysql can run <code class="inline">%%sql</code> against, and both
 return identical results for the same query. Option 2 is what
 <code class="inline">day06_python_sqlite.ipynb</code> uses from here on — it's also the exact
-pattern the Kaggle-based project notebooks (Days 07–10) already use, so getting comfortable with
-it now pays off directly later.</p>
+pattern Day 07's project notebook already uses, so getting comfortable with it now pays off
+directly later.</p>
 <div class="annotations">
   <div class="annotation"><b>jupysql needs a connection string or an Engine — nothing less</b><p>It can't bind directly to a raw <code class="inline">sqlite3.Connection</code> the way pandas can. That's the one place SQLAlchemy genuinely earns its keep for SQLite — not for connecting in general, just for this specific magic.</p></div>
 </div>
@@ -446,27 +459,51 @@ trend over time, a bar for comparing categories, a pie for a proportional split.
 
 <h2 class="section"><span class="num">11</span>MySQL vs SQLite — what actually differs</h2>
 <p>Most of what you've learned transfers directly. A handful of functions don't exist in SQLite, or
-are spelled differently — worth recognizing before Days 07–10.</p>
+are spelled differently — worth recognizing before Day 07.</p>
 <table class="api">
   <thead><tr><th>Need</th><th>MySQL</th><th>SQLite</th></tr></thead>
   <tbody>
     <tr><td>Format a date</td><td><code class="inline">DATE_FORMAT(col, '%Y-%m')</code></td><td><code class="inline">STRFTIME('%Y-%m', col)</code></td></tr>
     <tr><td>Difference between two dates</td><td><code class="inline">DATEDIFF(d1, d2)</code></td><td>No <code class="inline">DATEDIFF</code> — subtract <code class="inline">JULIANDAY(d1) - JULIANDAY(d2)</code> instead</td></tr>
-    <tr><td>Concatenate strings</td><td><code class="inline">CONCAT(a, b)</code></td><td><code class="inline">a || b</code> (also works: <code class="inline">CONCAT</code> isn't standard SQLite, though some builds allow it)</td></tr>
+    <tr><td>Concatenate strings</td><td><code class="inline">CONCAT(a, b)</code></td><td><code class="inline">a || b</code> (SQLite 3.44+ also has a <code class="inline">CONCAT()</code> function, but <code class="inline">||</code> works on every version)</td></tr>
     <tr><td>Auto-incrementing primary key</td><td><code class="inline">AUTO_INCREMENT</code></td><td><code class="inline">AUTOINCREMENT</code></td></tr>
     <tr><td>Stored procedures</td><td><code class="inline">CREATE PROCEDURE</code></td><td>Not supported at all — SQLite has no procedural logic</td></tr>
   </tbody>
 </table>
 <div class="callout insight">
   <div class="ti">Everything else transfers directly</div>
-  <p>JOINs, CASE, subqueries, CTEs, and window functions (including <code class="inline">RANK</code>/<code class="inline">LAG</code>/<code class="inline">LEAD</code>) all work identically in SQLite — Days 07–10 lean on exactly these, just without stored procedures or MySQL's date-function names.</p>
+  <p>JOINs, CASE, subqueries, CTEs, and window functions (including <code class="inline">RANK</code>/<code class="inline">LAG</code>/<code class="inline">LEAD</code>) all work identically in SQLite — Day 07 leans on exactly these, just without stored procedures or MySQL's date-function names.</p>
+</div>
+
+<h3 class="sub">Python vocabulary from today</h3>
+<table class="api">
+  <thead><tr><th>Term</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td>Connection</td><td>One open line to a specific database — created once, reused for many queries.</td></tr>
+    <tr><td>Cursor</td><td>Runs statements through a connection and hands back results, one query at a time.</td></tr>
+    <tr><td>Engine (SQLAlchemy)</td><td>A reusable connection factory — one <code class="inline">create_engine(...)</code> call, shared by <code class="inline">pd.read_sql</code>, jupysql, and anything else that needs a connection.</td></tr>
+    <tr><td>Magic (<code class="inline">%sql</code>/<code class="inline">%%sql</code>)</td><td>A Jupyter-only shortcut — jupysql intercepts the cell and runs it as SQL instead of Python.</td></tr>
+    <tr><td>DataFrame</td><td>pandas' table object — what <code class="inline">pd.read_sql</code> returns, and what every pandas method afterward operates on.</td></tr>
+  </tbody>
+</table>
+<div class="callout warn">
+  <div class="ti">If something doesn't run</div>
+  <p><code class="inline">Access denied for user 'root'@'localhost'</code> — check the password in
+  <code class="inline">.env</code> against what actually unlocks MySQL Workbench/CLI for you.
+  <code class="inline">ModuleNotFoundError</code> — run <code class="inline">pip install -r requirements.txt</code>
+  from the repo root. <code class="inline">Can't connect to MySQL server</code> — the MySQL service
+  isn't running; start it the same way you did for Days 01–05.
+  <code class="inline">UsageError: Line magic function `%sql` not found</code> — the notebook was
+  restarted; re-run the <code class="inline">%load_ext sql</code> cell. A relative path like
+  <code class="inline">../Databases/rawaj.sqlite</code> failing — Jupyter must be launched from
+  inside the <code class="inline">Day 06</code> folder, not the repo root.</p>
 </div>
 
 <div class="callout recap">
   <div class="ti">Next: Day 07</div>
-  <p>This closes the core curriculum. Days 07–10 apply everything from Days 01–05 — filtering,
-  JOINs, CASE, string functions, subqueries, CTEs, window functions, stored logic patterns — against
-  real SQLite datasets, with far less hand-holding.</p>
+  <p>This closes the core curriculum. Day 07 applies everything from Days 01–05 — filtering,
+  JOINs, CASE, string functions, subqueries, CTEs, window functions — against an unfamiliar SQLite
+  dataset, with far less hand-holding.</p>
 </div>
 
 <footer>Day 06 · Python Connectivity: MySQL &amp; SQLite · self-paced</footer>

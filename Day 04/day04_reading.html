@@ -138,7 +138,7 @@ body{margin-left:0}
   </defs>
 </svg>
 
-<div class="crumb">Day 04 of 10 · Subqueries, CTEs &amp; Views</div>
+<div class="crumb">Day 04 of 7 · Subqueries, CTEs &amp; Views</div>
 <h1 class="title">Subqueries, CTEs &amp; Views</h1>
 <p class="subtitle">Four ways to reuse a query's result — nested, named, materialized, or saved.</p>
 
@@ -196,10 +196,14 @@ or <code class="inline">&gt;</code>.</p>
 orders were placed, and finance wants every order that sold for more than the company-wide average.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
-  <div class="code-body"><span class="com">-- hardcoding the date works once, but breaks the moment new orders arrive</span>
+  <div class="code-body"><span class="com">-- what IS the most recent day? Rawaj's data currently ends 2025-05-31</span>
+<span class="kw">SELECT</span> <span class="fn">MAX</span>(<span class="fn">DATE</span>(order_date)) <span class="kw">AS</span> last_day
+<span class="kw">FROM</span> orders;
+
+<span class="com">-- hardcoding that date works once, but breaks the moment new orders arrive</span>
 <span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amount) <span class="kw">AS</span> total_sales
 <span class="kw">FROM</span> orders
-<span class="kw">WHERE</span> <span class="fn">DATE</span>(order_date) = <span class="str">'2024-03-18'</span>;
+<span class="kw">WHERE</span> <span class="fn">DATE</span>(order_date) = <span class="str">'2025-05-31'</span>;
 
 <span class="com">-- a scalar subquery keeps it correct automatically, no matter when this runs</span>
 <span class="kw">SELECT</span> <span class="fn">SUM</span>(total_amount) <span class="kw">AS</span> total_sales
@@ -211,14 +215,28 @@ orders were placed, and finance wants every order that sold for more than the co
 <span class="kw">WHERE</span> total_amount &gt; (<span class="kw">SELECT</span> <span class="fn">AVG</span>(total_amount) <span class="kw">FROM</span> orders);</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Self-maintaining, not just shorter</b><p>The hardcoded-date version silently goes stale as soon as newer orders arrive — the subquery version always reflects the current data.</p></div>
-  <div class="annotation"><b>Must return exactly one value</b><p>If a subquery used with <code class="inline">=</code> or <code class="inline">&gt;</code> ever returns more than one row, MySQL raises an error at runtime — this is exactly what Section 2's row subquery is for.</p></div>
+  <div class="annotation"><b>Self-maintaining, not just shorter</b><p>Both queries return the same number today — 7,948.50 EGP — but the hardcoded-date version silently goes stale the moment newer orders arrive. The subquery version always reflects whatever "most recent" means at the time it runs.</p></div>
+  <div class="annotation"><b>Must return exactly one value</b><p>If a subquery used with <code class="inline">=</code> or <code class="inline">&gt;</code> ever returns more than one row, MySQL raises <code class="inline">ERROR 1242: Subquery returns more than 1 row</code> at runtime. The fix for that error is usually <code class="inline">IN</code> instead of <code class="inline">=</code> — Section 2 covers a different problem: identifying a row by more than one column at once.</p></div>
 </div>
 
 <h2 class="section"><span class="num">2</span>Row subqueries — matching a tuple</h2>
-<p>When "one value" isn't enough to identify the right row — like needing <em>both</em> a customer
-and its latest timestamp together — compare a <strong>tuple</strong> of columns against a subquery
-that returns matching tuples, using <code class="inline">IN</code>.</p>
+<p>Before the harder case, the everyday one: a subquery that returns a <em>list</em> of single values,
+matched with <code class="inline">IN</code>.</p>
+<p><strong>Business question:</strong> customer support wants every customer who has left at least
+one 1-star review.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> customer_id, first_name, last_name
+<span class="kw">FROM</span> customers
+<span class="kw">WHERE</span> customer_id <span class="kw">IN</span> (<span class="kw">SELECT</span> customer_id <span class="kw">FROM</span> reviews <span class="kw">WHERE</span> rating = 1);</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>131 customers</b><p>The subquery returns one <code class="inline">customer_id</code> per matching review — <code class="inline">IN</code> checks the outer row's <code class="inline">customer_id</code> against that whole list. This is also exactly how Day 03's anti-join reads in reverse: <code class="inline">NOT IN (subquery)</code> is the subquery-flavored version of <code class="inline">LEFT JOIN ... WHERE ... IS NULL</code>.</p></div>
+</div>
+<p>Now a case one column can't handle: when "one value" isn't enough to identify the right row —
+like needing <em>both</em> a customer and its latest timestamp together — compare a
+<strong>tuple</strong> of columns against a subquery that returns matching tuples, still using
+<code class="inline">IN</code>.</p>
 <p><strong>Business question:</strong> the web team wants each customer's single most recent web
 event.</p>
 <div class="code-block">
@@ -300,23 +318,10 @@ and separately, find Rawaj's single highest lifetime-spend customer.</p>
     <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>
     <span class="kw">LIMIT</span> 1
 )
-<span class="kw">SELECT</span> * <span class="kw">FROM</span> top_customer;</div>
-</div>
-<div class="annotations">
-  <div class="annotation"><b>Same result, more readable</b><p>Compare this to Section 3's version — the query structure is identical, but the CTE names the intermediate step <em>before</em> it's used instead of making the reader find it nested inside <code class="inline">FROM</code>.</p></div>
-  <div class="annotation"><b>A CTE only lives for one statement</b><p>Once the final <code class="inline">SELECT</code> finishes, <code class="inline">top_customer</code> is gone — the very next query can't reference it. That limitation is exactly what Sections 6–7 solve.</p></div>
-</div>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> top_customer;
 
-<h2 class="section"><span class="num">5</span>Chained CTEs</h2>
-<p>One CTE can reference an <em>earlier</em> CTE defined in the same <code class="inline">WITH</code>
-clause — separated by a comma — letting you build a multi-step calculation as a readable sequence
-instead of one deeply nested query.</p>
-<p><strong>Business question:</strong> for that same top customer, how many web events came through
-each channel — and separately, is any customer's total spend above the company-wide average customer
-spend?</p>
-<div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
-  <div class="code-body"><span class="kw">WITH</span> top_customer <span class="kw">AS</span> (
+<span class="com">-- a CTE is joined exactly like a real table — no special syntax needed</span>
+<span class="kw">WITH</span> top_customer <span class="kw">AS</span> (
     <span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_sales
     <span class="kw">FROM</span> orders o
     <span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.customer_id
@@ -329,9 +334,24 @@ spend?</p>
 <span class="kw">JOIN</span> web_events w <span class="kw">ON</span> c.customer_id = w.customer_id
 <span class="kw">JOIN</span> top_customer <span class="kw">ON</span> c.customer_id = top_customer.customer_id
 <span class="kw">GROUP BY</span> c.first_name, c.last_name, w.channel
-<span class="kw">ORDER BY</span> num_events <span class="kw">DESC</span>;
+<span class="kw">ORDER BY</span> num_events <span class="kw">DESC</span>;</div>
+</div>
+<div class="annotations">
+  <div class="annotation"><b>Same result, more readable</b><p>Compare the first query to Section 3's version — the query structure is identical, but the CTE names the intermediate step <em>before</em> it's used instead of making the reader find it nested inside <code class="inline">FROM</code>.</p></div>
+  <div class="annotation"><b>top_customer joined like a real table</b><p>The second query brings <code class="inline">top_customer</code> into a JOIN the same way you'd join <code class="inline">customers</code> or <code class="inline">orders</code> — a CTE is a real, if temporary, table as far as the rest of the statement is concerned.</p></div>
+  <div class="annotation"><b>A CTE only lives for one statement</b><p>Once the final <code class="inline">SELECT</code> finishes, <code class="inline">top_customer</code> is gone — the very next query can't reference it. That limitation is exactly what Sections 6–7 solve.</p></div>
+</div>
 
-<span class="com">-- a second CTE, chained off the first with a comma</span>
+<h2 class="section"><span class="num">5</span>Chained CTEs</h2>
+<p>One CTE can reference an <em>earlier</em> CTE defined in the same <code class="inline">WITH</code>
+clause — separated by a comma — letting you build a multi-step calculation as a readable sequence
+instead of one deeply nested query. This is different from Section 4's example above: there, one CTE
+was just joined like a table; here, a <em>second</em> CTE is built directly on top of the first.</p>
+<p><strong>Business question:</strong> which customers spend more than the company-wide average
+customer spend?</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
+  <div class="code-body"><span class="com">-- a second CTE, chained off the first with a comma</span>
 <span class="kw">WITH</span> customer_totals <span class="kw">AS</span> (
     <span class="kw">SELECT</span> c.customer_id, c.first_name, c.last_name, <span class="fn">SUM</span>(o.total_amount) <span class="kw">AS</span> total_spend
     <span class="kw">FROM</span> orders o
@@ -347,7 +367,7 @@ avg_total <span class="kw">AS</span> (
 <span class="kw">WHERE</span> total_spend &gt; (<span class="kw">SELECT</span> avg_total_spend <span class="kw">FROM</span> avg_total);</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>top_customer joined like a real table</b><p>Once declared, a CTE is joined exactly like <code class="inline">customers</code> or <code class="inline">orders</code> — no special syntax needed to bring it into the rest of the query.</p></div>
+  <div class="annotation"><b>530 of 1,196 customers</b><p>A minority — spend is right-skewed, with a handful of big spenders pulling the average up above where most customers actually sit.</p></div>
   <div class="annotation"><b>Order matters in the chain</b><p><code class="inline">avg_total</code> references <code class="inline">customer_totals</code>, so <code class="inline">customer_totals</code> must be declared first — a CTE can only see CTEs that came before it, not after.</p></div>
 </div>
 
@@ -364,8 +384,10 @@ avg_total <span class="kw">AS</span> (
 by actually materializing the result — it persists for the rest of the session (until you disconnect,
 or run <code class="inline">DROP TEMPORARY TABLE</code>), so multiple separate queries can reuse it
 without recomputing anything.</p>
-<p><strong>Business question:</strong> the same top-customer question as Section 5, but the sales team
-wants to run several different follow-up queries against it during one working session, not just one.</p>
+<p><strong>Business question:</strong> the same top-customer question as Section 4, but the sales team
+wants to run several different follow-up queries against it during one working session, not just one.
+The part worth saving isn't the single resulting row — it's the expensive <code class="inline">SUM</code>
+across all 6,000 orders that produces it, computed once instead of on every follow-up query.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day04_subqueries_ctes_and_views.sql</span></div>
   <div class="code-body"><span class="kw">CREATE TEMPORARY TABLE</span> top_customer
@@ -439,8 +461,8 @@ different tradeoffs on lifetime, visibility, and whether the data is actually st
     <tr><td>Scope &amp; lifetime</td><td>Inside its enclosing query only</td><td>One statement only</td><td>Rest of the session, or until dropped</td><td>Until dropped — permanent</td></tr>
     <tr><td>Visible to other sessions?</td><td>N/A</td><td>N/A</td><td>No</td><td>Yes</td></tr>
     <tr><td>Reusable across multiple queries?</td><td>No — rewrite it each time</td><td>Only within the one statement that declares it</td><td>Yes, any query in the session</td><td>Yes, any query, any session</td></tr>
-    <tr><td>Data actually stored?</td><td>No — recomputed every reference</td><td>No — recomputed every reference</td><td>Yes — materialized once</td><td>No — query re-runs every time</td></tr>
-    <tr><td>Supports INSERT/UPDATE/DELETE?</td><td>Generally no</td><td>Generally no</td><td>Yes</td><td>Generally no</td></tr>
+    <tr><td>Data actually stored?</td><td>No — recomputed every reference</td><td>No — MySQL may materialize or inline it, but either way you don't manage the storage</td><td>Yes — materialized once</td><td>No — query re-runs every time</td></tr>
+    <tr><td>Supports INSERT/UPDATE/DELETE?</td><td>No</td><td>No</td><td>Yes</td><td>Sometimes — a simple view (no GROUP BY/aggregate/DISTINCT/LIMIT) is updatable; <code class="inline">top10_customers</code> above isn't</td></tr>
     <tr><td>Best for</td><td>A one-off comparison or filter</td><td>Readability — naming a step before it's used</td><td>Several follow-up queries reusing one expensive result</td><td>A saved, shareable definition everyone should query the same way</td></tr>
   </tbody>
 </table>
@@ -449,6 +471,15 @@ different tradeoffs on lifetime, visibility, and whether the data is actually st
   <div class="card"><h4>Reach for a CTE when...</h4><p>The query has multiple steps and naming each one makes the whole statement easier to read — the default choice for most multi-step queries today.</p></div>
   <div class="card"><h4>Reach for a temp table when...</h4><p>You'll run several different follow-up queries against the same expensive intermediate result, within one working session.</p></div>
   <div class="card"><h4>Reach for a view when...</h4><p>Other people, other sessions, or other tools (a BI dashboard, a report) need to query the exact same logic without re-deriving it.</p></div>
+</div>
+
+<div class="callout warn">
+  <div class="ti">Errors you'll likely hit today</div>
+  <p><code class="inline">ERROR 1242: Subquery returns more than 1 row</code> — a <code class="inline">=</code>/<code class="inline">&gt;</code> scalar subquery matched more than one row; switch to <code class="inline">IN</code>, or add a condition that narrows it back to one. <code class="inline">ERROR 1248: Every derived table must have its own alias</code> — add <code class="inline">AS name</code> after a subquery's closing parenthesis in <code class="inline">FROM</code>. <code class="inline">ERROR 1050: Table 'x' already exists</code> — re-running <code class="inline">CREATE TEMPORARY TABLE</code>/<code class="inline">CREATE VIEW</code> without dropping first; use <code class="inline">DROP TEMPORARY TABLE IF EXISTS</code> or <code class="inline">CREATE OR REPLACE VIEW</code>.</p>
+</div>
+<div class="callout tip">
+  <div class="ti">Not covered today</div>
+  <p>A <strong>correlated subquery</strong> — one that references a column from the outer query, re-running once per outer row instead of once total — and a subquery inside the <code class="inline">SELECT</code> list are both real, valid SQL you'll meet eventually. Both are out of scope for this course; everything above runs as an independent subquery, evaluated once.</p>
 </div>
 
 <div class="callout recap">

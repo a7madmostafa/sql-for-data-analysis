@@ -1,7 +1,8 @@
 # SQL for Data Analysis — Self-Paced Course
 
-A 7-day self-paced course: five days of core SQL syntax, one day of Python connectivity, and one
-applied project on a real dataset.
+A 7-day self-paced course for complete beginners: five days of core SQL syntax, one day of Python
+connectivity, and one applied project on an unfamiliar dataset. No prior SQL is assumed, and no
+programming until Day 06.
 
 `Databases/` holds the shared database-provisioning scripts for every MySQL-backed day — run the
 relevant one once before starting that day.
@@ -20,8 +21,13 @@ of `.sql` files: no new SQL, everything from Days 01–05 reached from Python, f
 sanity check, then real depth against a migrated SQLite copy.
 
 Day 07 is the applied project day — `day07_reading.html` (the business case and the full question
-list, same format as the lesson days above) and `project_07.ipynb` (the working notebook, run
-through jupysql's `%sql`/`%%sql` magic from Day 06).
+list, same format as the lesson days above), `project_07_exercises.ipynb` (empty `%%sql` cells to
+fill in yourself), and `project_07_solutions.ipynb` (the worked answer key), both run through
+jupysql's `%sql`/`%%sql` magic from Day 06.
+
+Every walkthrough `.sql` file and notebook also has a pre-rendered HTML twin (`day0N_*.html` /
+`project_07_solutions.html`) — every statement plus its real output, already run, so you can read
+a day's material without MySQL or Jupyter running yet.
 
 ## Table of Contents
 
@@ -40,6 +46,8 @@ through jupysql's `%sql`/`%%sql` magic from Day 06).
 - Each MySQL-backed day expects a local MySQL server.
 - Run the relevant database script once before starting that day:
   - `Databases/rawaj_db.sql` for Days 01–05
-- From Day 06 onward you'll also need:
+- Day 06 additionally needs:
   - Python packages listed in `requirements.txt`
-  - a `.env` file (see `.env.example`) holding your local MySQL password
+  - a `.env` file (see `.env.example`) holding your local MySQL password — for its MySQL half only
+- Day 07 needs neither a MySQL server nor `.env` — it runs entirely against a local SQLite file
+  already included in the repo (just the Python packages above).

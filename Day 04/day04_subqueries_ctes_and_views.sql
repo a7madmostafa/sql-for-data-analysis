@@ -11,7 +11,7 @@ FROM orders;
 -- hardcoding that date works once, but breaks the moment new orders come in
 SELECT SUM(total_amount) AS total_sales
 FROM orders
-WHERE DATE(order_date) = '2024-03-18';
+WHERE DATE(order_date) = '2025-05-31';
 
 -- a scalar subquery keeps it correct automatically, no matter when this runs
 SELECT SUM(total_amount) AS total_sales
@@ -30,7 +30,14 @@ WHERE total_amount > (SELECT AVG(total_amount) FROM orders);
 -- SECTION 2 — ROW SUBQUERIES (matching a tuple of values)
 -- ======================================
 
--- The web team wants each customer's single most recent web event — comparing
+-- Customer support wants every customer who has left at least one 1-star
+-- review — the everyday, single-column form: WHERE column IN (subquery)
+SELECT customer_id, first_name, last_name
+FROM customers
+WHERE customer_id IN (SELECT customer_id FROM reviews WHERE rating = 1);
+
+-- Now a case one column can't handle. The web team wants each customer's
+-- single most recent web event — comparing
 -- (customer_id, occurred_at) as a pair is what makes this "most recent PER customer"
 SELECT customer_id, occurred_at, channel
 FROM web_events
@@ -87,11 +94,8 @@ WITH top_customer AS (
 )
 SELECT * FROM top_customer;
 
--- ======================================
--- SECTION 5 — CHAINED CTEs (one CTE referencing another)
--- ======================================
-
--- For that same top customer, how many web events came through each channel?
+-- A CTE can be joined like any other table — for that same top customer,
+-- how many web events came through each channel?
 WITH top_customer AS (
     SELECT c.customer_id, c.first_name, c.last_name, SUM(o.total_amount) AS total_sales
     FROM orders o
@@ -110,8 +114,14 @@ JOIN top_customer
 GROUP BY c.first_name, c.last_name, w.channel
 ORDER BY num_events DESC;
 
--- A second CTE can reference the first one directly — is any customer's total
--- spend above the company-wide average customer spend?
+-- ======================================
+-- SECTION 5 — CHAINED CTEs (one CTE referencing another)
+-- ======================================
+
+-- A second CTE can reference the first one directly — which customers spend
+-- more than the company-wide average customer spend? (530 of 1,196 customers
+-- with orders — a minority, since spend is right-skewed by a handful of big
+-- spenders pulling the average up)
 WITH customer_totals AS (
     SELECT c.customer_id, c.first_name, c.last_name, SUM(o.total_amount) AS total_spend
     FROM orders o
@@ -133,6 +143,8 @@ WHERE total_spend > (SELECT avg_total_spend FROM avg_total);
 
 -- Same top-customer question as Section 4, but materialized as a real table —
 -- useful when several separate queries need to reuse the same intermediate result
+DROP TEMPORARY TABLE IF EXISTS top_customer;
+
 CREATE TEMPORARY TABLE top_customer
 SELECT c.customer_id, c.first_name, c.last_name, SUM(o.total_amount) AS total_sales
 FROM orders o
@@ -160,8 +172,10 @@ ORDER BY num_events DESC;
 -- ======================================
 
 -- Sales asks for a "top 10 customers" leaderboard they can query repeatedly,
--- from any session, without re-writing the ranking logic every time
-CREATE VIEW top10_customers AS
+-- from any session, without re-writing the ranking logic every time.
+-- CREATE OR REPLACE VIEW makes this safe to re-run — plain CREATE VIEW errors
+-- with "table already exists" the second time
+CREATE OR REPLACE VIEW top10_customers AS
 SELECT c.customer_id, c.first_name, c.last_name, SUM(o.total_amount) AS total_sales
 FROM orders o
 JOIN customers c

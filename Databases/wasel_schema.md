@@ -15,16 +15,19 @@ continuing the same fictional Egyptian/MENA world as Rawaj. See `wasel.sqlite`.
   rather than one `city_id`.
 - **Promotions** are optional per trip (most trips have none) — a nullable FK, not a bridge table,
   since one trip uses at most one promo code.
-- **Ratings** mirror Rawaj's reviews — optional, nullable comment, deliberate real `NULL`s.
+- **Ratings** mirror Rawaj's reviews — optional, with a nullable comment: some ratings have no
+  comment left.
 
-## Full-sweep check against Days 01–05
+## What this schema is good for
 
-- **02** (filter/aggregate): trips by city/date, avg fare, filter by status/payment method.
-- **03** (JOINs/CASE/strings/anti-joins): trips↔drivers↔riders↔vehicles↔cities joins; anti-join
-  ("drivers who never completed a trip"); CASE for surge/fare tiers; string work on trip status.
-- **04** (subqueries/CTEs/views): top-earning drivers via CTE; a saved "active drivers" view.
-- **05** (window functions): rank drivers by earnings within city, running daily trip count,
-  month-over-month growth, `LAG` for gap-between-a-driver's-trips.
+- **Filtering and aggregation**: trips by city/date, average fare, filtering by status or payment
+  method.
+- **JOINs, CASE, anti-joins**: trips↔drivers↔riders↔vehicles↔cities joins; anti-joins like "drivers
+  who never completed a trip"; CASE for surge/fare tiers.
+- **Subqueries, CTEs, views**: top-earning drivers via a CTE; a saved "top 20 drivers by earnings"
+  view.
+- **Window functions**: ranking drivers by earnings within their home city, a running monthly trip
+  count, month-over-month growth via `LAG`.
 
 ## Diagram
 

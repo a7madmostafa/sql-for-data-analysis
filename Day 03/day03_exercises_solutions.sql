@@ -149,7 +149,9 @@ LEFT JOIN orders o
     ON c.customer_id = o.customer_id;
 
 -- 5.2
-SELECT o.order_id, o.total_amount, c.first_name, c.last_name
+-- Same 6,004 rows as 5.1 — RIGHT JOIN customers keeps everything from
+-- customers (named second here), exactly what LEFT JOIN did in 5.1.
+SELECT c.customer_id, c.first_name, c.last_name, o.order_id
 FROM orders o
 RIGHT JOIN customers c
     ON o.customer_id = c.customer_id;
@@ -173,15 +175,15 @@ WHERE o.order_id IS NULL;
 
 -- 7.1
 SELECT o.customer_id AS ordered_customer, w.customer_id AS browsed_customer
-FROM (SELECT DISTINCT customer_id FROM orders) o
-LEFT JOIN (SELECT DISTINCT customer_id FROM web_events) w
+FROM (SELECT DISTINCT customer_id FROM orders WHERE order_date >= '2025-01-01') o
+LEFT JOIN (SELECT DISTINCT customer_id FROM web_events WHERE occurred_at >= '2025-01-01') w
     ON o.customer_id = w.customer_id
 
 UNION
 
 SELECT o.customer_id AS ordered_customer, w.customer_id AS browsed_customer
-FROM (SELECT DISTINCT customer_id FROM orders) o
-RIGHT JOIN (SELECT DISTINCT customer_id FROM web_events) w
+FROM (SELECT DISTINCT customer_id FROM orders WHERE order_date >= '2025-01-01') o
+RIGHT JOIN (SELECT DISTINCT customer_id FROM web_events WHERE occurred_at >= '2025-01-01') w
     ON o.customer_id = w.customer_id;
 
 
@@ -322,7 +324,9 @@ SELECT seller_name, LOWER(REPLACE(seller_name, ' ', '-')) AS slug
 FROM sellers;
 
 -- 13.2
-SELECT seller_name, LENGTH(seller_name) AS name_length, UPPER(seller_name) AS upper_name
+-- CHAR_LENGTH counts characters; LENGTH counts bytes (the same number for
+-- plain ASCII names, but not once multi-byte characters are involved).
+SELECT seller_name, CHAR_LENGTH(seller_name) AS name_length, UPPER(seller_name) AS upper_name
 FROM sellers
 ORDER BY name_length DESC;
 
@@ -333,22 +337,18 @@ ORDER BY name_length DESC;
 
 -- 14.1
 WITH spend AS (
-    SELECT c.customer_id, c.first_name, c.last_name, SUM(o.total_amount) AS total_spend
+    SELECT c.customer_id, c.first_name, c.last_name, SUM(o.total_amount) AS total_spend,
+        CASE
+            WHEN SUM(o.total_amount) BETWEEN 0 AND 20000 THEN 'under 20k'
+            WHEN SUM(o.total_amount) BETWEEN 20001 AND 40000 THEN '20k-40k'
+        END AS spend_tier
     FROM orders o
     JOIN customers c
         ON o.customer_id = c.customer_id
     GROUP BY c.customer_id, c.first_name, c.last_name
-),
-tier AS (
-    SELECT customer_id, first_name, last_name, total_spend,
-        CASE
-            WHEN total_spend BETWEEN 0 AND 20000 THEN 'under 20k'
-            WHEN total_spend BETWEEN 20001 AND 40000 THEN '20k-40k'
-        END AS spend_tier
-    FROM spend
 )
 SELECT customer_id, first_name, last_name, total_spend, IFNULL(spend_tier, 'unclassified') AS spend_tier
-FROM tier;
+FROM spend;
 
 
 -- ======================================
@@ -406,3 +406,20 @@ JOIN customers c
     ON o.customer_id = c.customer_id
 GROUP BY c.customer_id, c.first_name, c.last_name
 HAVING SUM(o.total_amount) > 35000;
+
+-- C5
+SELECT c.first_name, c.last_name, o.total_amount
+FROM orders o
+JOIN customers c
+    ON c.customer_id = o.customer_id
+ORDER BY o.total_amount DESC
+LIMIT 1;
+
+-- C6
+SELECT c.first_name, c.last_name, SUM(o.total_amount) AS total_revenue
+FROM orders o
+JOIN customers c
+    ON c.customer_id = o.customer_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+ORDER BY total_revenue DESC
+LIMIT 5;

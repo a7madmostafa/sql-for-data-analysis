@@ -3,8 +3,8 @@
 No new SQL today — everything from Days 01–05, now reached from Python. This is the first day
 needing a Python environment, and the first notebooks instead of plain `.sql` files.
 
-The MySQL notebook is intentionally short — just enough to prove the Python↔MySQL plumbing works.
-Every remaining project day (07–10) runs on SQLite, not MySQL, so the real depth — a full sweep
+The MySQL notebook is a short connection check — just enough to prove the Python↔MySQL plumbing
+works. Day 07's project runs on SQLite, not MySQL, so most of the real depth — a full sweep
 through every Day 01–05 concept, plus safe parameter binding — lives in the SQLite notebook and the
 exercises.
 
@@ -17,7 +17,7 @@ exercises.
 - Avoid two real driver gotchas that only show up once you call stored procedures from Python.
 - Migrate a live MySQL database into a local SQLite file with pandas, verify the migration, and connect to the copy two ways — with SQLAlchemy, or with a bare connection string (no SQLAlchemy needed).
 - Turn a query result into a chart with pandas — the payoff SQL alone can't give you.
-- Recognize the handful of SQL differences between MySQL and SQLite that Days 07–10 will lean on.
+- Recognize the handful of SQL differences between MySQL and SQLite that Day 07 will lean on.
 
 ## Files
 
@@ -51,3 +51,13 @@ reasoning as never committing `.env`.
 
 **Order:** `day06_reading.html` → `day06_python_mysql.ipynb` → `day06_python_sqlite.ipynb` →
 `day06_exercises.ipynb`.
+
+## When it doesn't work
+
+| Error | Cause | Fix |
+|---|---|---|
+| `Access denied for user 'root'@'localhost'` | Wrong password in `.env` | Check `.env` against whatever unlocks MySQL Workbench/CLI for you |
+| `ModuleNotFoundError: No module named 'mysql'` (or `sqlalchemy`, `dotenv`, etc.) | Packages not installed | `pip install -r requirements.txt` from the repo root |
+| `Can't connect to MySQL server on 'localhost'` | MySQL service isn't running | Start it the same way you did for Days 01–05 |
+| `UsageError: Line magic function `%sql` not found` | Notebook kernel was restarted | Re-run the `%load_ext sql` cell |
+| Relative path like `../Databases/rawaj.sqlite` not found | Jupyter launched from the wrong folder | Launch `jupyter notebook` from inside `Day 06/`, not the repo root |

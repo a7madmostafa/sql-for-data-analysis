@@ -63,9 +63,15 @@ class SectionHeader:
 
 
 class StatementGroup:
-    def __init__(self, explanation, statements):
+    def __init__(self, explanation, statements, display_texts=None):
         self.explanation = explanation
         self.statements = statements
+        # display_texts holds the exact text to render for each statement --
+        # normally just the statement plus its terminator, but a statement
+        # preceded by a DELIMITER directive gets that directive prepended and
+        # the real terminator (not a hardcoded ";") appended, so DELIMITER
+        # blocks around stored procedures render as they were written.
+        self.display_texts = display_texts or [s + ";" for s in statements]
 
 
 def strip_trailing_comment(line):
@@ -86,14 +92,22 @@ def parse_sql_file(text):
     trailing_notes = []
     in_statement = False
     statements = []
+    display_texts = []
+    # A DELIMITER directive line, waiting to be shown in front of whichever
+    # statement comes next. Deliberately NOT reset by flush_group -- a blank
+    # line between "DELIMITER $$" and the CREATE PROCEDURE it applies to must
+    # not lose it.
+    pending_prefix = None
+    stmt_prefix = None
 
     def flush_group():
-        nonlocal comment_buffer, code_buffer, statements, trailing_notes
+        nonlocal comment_buffer, code_buffer, statements, trailing_notes, display_texts
         if statements:
-            events.append(StatementGroup(" ".join(comment_buffer).strip(), statements))
+            events.append(StatementGroup(" ".join(comment_buffer).strip(), statements, display_texts))
         comment_buffer = []
         code_buffer = []
         statements = []
+        display_texts = []
         trailing_notes = []
 
     for raw_line in lines:
@@ -113,6 +127,7 @@ def parse_sql_file(text):
         if m and not in_statement:
             flush_group()
             delimiter = m.group(1)
+            pending_prefix = stripped
             continue
 
         if stripped == "":
@@ -128,6 +143,10 @@ def parse_sql_file(text):
             code_buffer.append(line)
             continue
 
+        if not code_buffer and pending_prefix is not None:
+            stmt_prefix = pending_prefix
+            pending_prefix = None
+
         code_part, trailing_comment = strip_trailing_comment(line)
         code_buffer.append(code_part if trailing_comment else line)
         if trailing_comment:
@@ -138,6 +157,11 @@ def parse_sql_file(text):
             stmt_text = "\n".join(code_buffer).strip()
             stmt_text = stmt_text[: -len(delimiter)].rstrip()
             statements.append(stmt_text)
+            display_text = stmt_text + delimiter
+            if stmt_prefix:
+                display_text = stmt_prefix + "\n\n" + display_text
+            display_texts.append(display_text)
+            stmt_prefix = None
             code_buffer = []
             in_statement = False
         else:
@@ -176,9 +200,17 @@ def run_statement(cursor, stmt):
     if cursor.description is not None:
         cols = [d[0] for d in cursor.description]
         rows = cursor.fetchall()
-        return {"type": "rows", "columns": cols, "rows": rows}
-    rowcount = cursor.rowcount
-    return {"type": "status", "rowcount": rowcount}
+        result = {"type": "rows", "columns": cols, "rows": rows}
+    else:
+        rowcount = cursor.rowcount
+        result = {"type": "status", "rowcount": rowcount}
+    # CALLing a stored procedure leaves a trailing "call status" result even
+    # after its own visible result set is fetched -- mysql-connector-python
+    # silently misreads the *next* statement's cursor.description as None
+    # unless this is drained here. Harmless no-op for a plain statement.
+    while cursor.nextset():
+        pass
+    return result
 
 
 def render_result_html(result):
@@ -360,7 +392,7 @@ footer{{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);colo
   </defs>
 </svg>
 
-<div class="crumb">Day {day:02d} of 10 &middot; Walkthrough</div>
+<div class="crumb">Day {day:02d} of 7 &middot; Walkthrough</div>
 <h1 class="title">{title}</h1>
 <p class="subtitle">Every statement from <code class="inline">{sql_filename}</code>, executed live against <code class="inline">{database}</code> &mdash; SQL and real output, side by side.</p>
 
@@ -388,8 +420,10 @@ def render_page(day, title, database, sql_filename, events):
         if isinstance(ev, SectionHeader):
             body_parts.append(f'<h2 class="section"><span class="num">{ev.number}</span>{html.escape(ev.title)}</h2>')
         else:
-            body_parts.append(f'<p class="explain">{html.escape(ev.explanation)}</p>')
-            code_text = "\n\n".join(s + ";" for s in ev.statements)
+            explain_html = html.escape(ev.explanation)
+            explain_html = re.sub(r"`([^`]+)`", r"<code>\1</code>", explain_html)
+            body_parts.append(f'<p class="explain">{explain_html}</p>')
+            code_text = "\n\n".join(ev.display_texts)
             body_parts.append(
                 '<div class="code-block"><div class="code-header">'
                 '<span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>'

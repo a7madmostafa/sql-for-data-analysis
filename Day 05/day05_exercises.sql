@@ -68,8 +68,8 @@ USE rawaj;
 
 -- 4.1 Create a procedure governorate_sales_report(IN gov_id INT) that,
 --     given a governorate id, returns the total number of orders and total
---     revenue for every customer in that governorate. Then call it for
---     governorate 1. (Remember: DELIMITER first.)
+--     revenue across every customer in that governorate, combined into one
+--     row. Then call it for governorate 1. (Remember: DELIMITER first.)
 
 -- 4.2 Create a procedure get_customer_count(OUT cnt INT) that returns the
 --     total number of customers in the database through an OUT parameter.

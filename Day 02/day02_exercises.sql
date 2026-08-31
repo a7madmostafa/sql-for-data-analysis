@@ -14,9 +14,10 @@
 --   actually ask. Translate the ask into a query yourself — the wording
 --   won't hand you table/column names as directly as
 --   day02_filtering_and_aggregation.sql did. Questions
---   get harder as sections progress, and later sections
---   deliberately combine techniques from earlier ones (WHERE + GROUP BY,
---   ORDER BY + LIMIT, etc.) — that's intentional, not a typo.
+--   get harder as sections progress, and later sections combine techniques
+--   from earlier ones (WHERE + GROUP BY, ORDER BY + LIMIT, etc.).
+--   No question here needs a JOIN — every one is answerable from a single
+--   table. JOINs arrive on Day 03.
 --
 --   Write your query directly below each question, then run it to check
 --   your answer. Try to solve each one WITHOUT looking at the walkthrough
@@ -41,7 +42,7 @@ USE rawaj;
 --     show her the first 10 orders, exactly as the table stores them.
 
 
--- 1.2 Marketing is auditing customers in batches of 5. Show them the second
+-- 1.2 Marketing is auditing customers in batches of 5. Show them the fourth
 --     batch: skip the first 15 customers, then return the next 5.
 
 
@@ -100,7 +101,7 @@ USE rawaj;
 -- 4.2 What's the range of order sizes we've ever seen — the smallest and
 --     largest total_amount — in a single query?
 
--- 4.3 What's the average order value, rounded to the nearest cent?
+-- 4.3 What's the average order value in EGP, rounded to 2 decimal places?
 
 -- 4.4 Leadership wants one summary row for a board slide: total number of
 --     orders, total shipping fees collected, and total revenue — all in a
@@ -127,7 +128,7 @@ USE rawaj;
 
 -- 5.6 Find the total revenue (total_amount) generated from the 'facebook'
 --     channel across all of web_events...
---     (hint: this one needs a table with a dollar amount — think about
+--     (hint: this one needs a table with an EGP amount in it — think about
 --      whether web_events can answer this, and if not, explain why in a
 --      comment instead of writing a query)
 
@@ -246,7 +247,7 @@ USE rawaj;
 -- 12.2 How many customers are registered in each governorate? This flags
 --      which regions to prioritize for new sellers.
 
--- 12.3 For customer 1 specifically, break down their web events by
+-- 12.3 For customer 631 specifically, break down their web events by
 --      channel.
 
 -- 12.4 Which 5 customers have placed the most orders? Rank them, most
@@ -293,21 +294,26 @@ USE rawaj;
 -- 14.2 What's the earliest year and the latest year Rawaj has order data
 --      for?
 
--- 14.3 Finance wants total revenue by year, ordered chronologically, to
---      see the company's growth trend.
+-- 14.3 Finance wants total revenue by year, ordered chronologically. Run
+--      the query — then, before you report anything as a "growth trend" to
+--      Finance, check whether every year actually has the same number of
+--      months of data behind it (hint: MIN/MAX of order_date, or
+--      COUNT(DISTINCT MONTH(order_date)) per year). What would you tell
+--      Finance about how to read these numbers?
 
 -- 14.4 Leadership suspects Ramadan is the strongest stretch every year.
 --      Test that more generally: total revenue by month across all years,
 --      ranked highest first.
 
--- 14.5 Customer service wants to know: in which month and year did our
---      second-highest-spending customer, Nour Fahmy, spend the most, in
---      total dollar terms? (You'll need a JOIN to get from customer name
---      to orders — same pattern used in the walkthrough.)
-
--- 14.6 Customer service promises delivery within 7 days of the order date.
+-- 14.5 Customer service promises delivery within 7 days of the order date.
 --      For the 10 most recent orders, show the order id, order date, and
 --      expected delivery date.
+
+-- 14.6 In which month and year did Rawaj's single highest-spending customer
+--      spend the most? You don't know who that customer is yet — find them
+--      first (one query), then answer the month question for that
+--      customer_id (a second query). No JOIN needed: everything here lives
+--      in the orders table alone.
 
 
 
@@ -320,9 +326,3 @@ USE rawaj;
 
 -- C2. Which single order is the largest Rawaj has ever received? Show the
 --     customer_id and the order total.
-
--- C3. Using a JOIN, answer C2 again — but show the customer's first and
---     last NAME instead of just their id.
-
--- C4. Using a JOIN, answer C1 again — but rank the top 5 customers by name
---     instead of customer id, ready to drop into an exec presentation.

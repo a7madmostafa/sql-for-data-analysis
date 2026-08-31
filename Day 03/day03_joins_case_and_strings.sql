@@ -135,7 +135,10 @@ FROM customers
 LEFT JOIN orders
     ON orders.customer_id = customers.customer_id;
 
--- Same idea, mirrored: which orders exist, even if their customer record can no longer be resolved?
+-- The same question written the other way round — name customers SECOND and keep
+-- every row from that side with RIGHT JOIN. Same 6,004 rows as the LEFT JOIN above:
+-- RIGHT JOIN is a mirror of LEFT JOIN, not a different question, which is why almost
+-- everyone just swaps the table order and writes LEFT JOIN
 SELECT *
 FROM orders
 RIGHT JOIN customers
@@ -146,6 +149,29 @@ SELECT *
 FROM customers
 LEFT OUTER JOIN orders
     ON orders.customer_id = customers.customer_id;
+
+-- Why the JOIN type is a correctness decision, not a style one: only 5 of Rawaj's 15
+-- account managers currently cover a governorate, so an INNER JOIN quietly reports on 5
+SELECT COUNT(*) AS managers_returned
+FROM account_managers am
+JOIN governorates g
+    ON am.manager_id = g.manager_id;
+
+-- The same count with LEFT JOIN returns all 15 — the 10 managers with no governorate
+-- yet come back with NULLs instead of vanishing. Nothing in the INNER JOIN's output
+-- would have told you those 10 existed
+SELECT COUNT(*) AS managers_returned
+FROM account_managers am
+LEFT JOIN governorates g
+    ON am.manager_id = g.manager_id;
+
+-- Side by side, per manager: INNER JOIN drops a manager entirely, LEFT JOIN keeps them with a 0
+SELECT am.manager_id, am.manager_name, COUNT(g.governorate_id) AS governorates_covered
+FROM account_managers am
+LEFT JOIN governorates g
+    ON am.manager_id = g.manager_id
+GROUP BY am.manager_id, am.manager_name
+ORDER BY governorates_covered DESC, am.manager_id;
 
 -- ======================================
 -- SECTION 6 — ANTI-JOINS (finding non-matches)
@@ -162,20 +188,39 @@ WHERE o.order_id IS NULL;
 -- SECTION 7 — FULL JOIN (MySQL has no FULL JOIN keyword — emulate with UNION)
 -- ======================================
 
--- Compliance wants a single report: which customers have placed an order, which have
--- generated a web event, and where these two lists diverge — matched, order-only, and
--- browse-only rows, all in one result
+-- Marketing wants one 2025 activity report: which customers placed an order this year,
+-- which generated a tracked web event this year, and where the two lists diverge —
+-- matched, order-only (bought with no tracked session), and browse-only (never converted)
 SELECT o.customer_id AS ordered_customer, w.customer_id AS browsed_customer
-FROM (SELECT DISTINCT customer_id FROM orders) o
-LEFT JOIN (SELECT DISTINCT customer_id FROM web_events) w
+FROM (SELECT DISTINCT customer_id FROM orders WHERE order_date >= '2025-01-01') o
+LEFT JOIN (SELECT DISTINCT customer_id FROM web_events WHERE occurred_at >= '2025-01-01') w
     ON o.customer_id = w.customer_id
 
 UNION
 
 SELECT o.customer_id AS ordered_customer, w.customer_id AS browsed_customer
-FROM (SELECT DISTINCT customer_id FROM orders) o
-RIGHT JOIN (SELECT DISTINCT customer_id FROM web_events) w
+FROM (SELECT DISTINCT customer_id FROM orders WHERE order_date >= '2025-01-01') o
+RIGHT JOIN (SELECT DISTINCT customer_id FROM web_events WHERE occurred_at >= '2025-01-01') w
     ON o.customer_id = w.customer_id;
+
+-- The three buckets, counted: 798 customers did both, 116 ordered with no tracked event,
+-- 255 browsed without ordering — a FULL JOIN is only worth writing when both "only" sides
+-- are non-empty, which is what makes the 2025 window (rather than all time) the right frame
+SELECT
+    SUM(ordered_customer IS NOT NULL AND browsed_customer IS NOT NULL) AS ordered_and_browsed,
+    SUM(browsed_customer IS NULL) AS ordered_only,
+    SUM(ordered_customer IS NULL) AS browsed_only
+FROM (
+    SELECT o.customer_id AS ordered_customer, w.customer_id AS browsed_customer
+    FROM (SELECT DISTINCT customer_id FROM orders WHERE order_date >= '2025-01-01') o
+    LEFT JOIN (SELECT DISTINCT customer_id FROM web_events WHERE occurred_at >= '2025-01-01') w
+        ON o.customer_id = w.customer_id
+    UNION
+    SELECT o.customer_id AS ordered_customer, w.customer_id AS browsed_customer
+    FROM (SELECT DISTINCT customer_id FROM orders WHERE order_date >= '2025-01-01') o
+    RIGHT JOIN (SELECT DISTINCT customer_id FROM web_events WHERE occurred_at >= '2025-01-01') w
+        ON o.customer_id = w.customer_id
+) AS full_join_result;
 
 -- ======================================
 -- SECTION 8 — CASE (basic)
@@ -227,6 +272,9 @@ GROUP BY c.customer_id, c.first_name, c.last_name
 ORDER BY total_spent DESC;
 
 -- Same tiering question, but restricted to spend from 2024 onward only — has anyone's tier shifted recently?
+-- order_date is a DATETIME, so use >= '2024-01-01' and not > '2023-12-31': comparing a DATETIME
+-- to a bare date pads it to midnight, so "> 2023-12-31" still lets in every order placed
+-- during the day on 31 Dec 2023 (7 of them here). Always bound a DATETIME at the midnight you mean.
 SELECT c.first_name, c.last_name, SUM(o.total_amount) AS total_spent,
     CASE
         WHEN SUM(o.total_amount) > 40000 THEN 'top'
@@ -236,7 +284,7 @@ SELECT c.first_name, c.last_name, SUM(o.total_amount) AS total_spent,
 FROM orders o
 JOIN customers c
     ON o.customer_id = c.customer_id
-WHERE o.order_date > '2023-12-31'
+WHERE o.order_date >= '2024-01-01'
 GROUP BY c.customer_id, c.first_name, c.last_name
 ORDER BY total_spent DESC;
 
@@ -261,11 +309,14 @@ ORDER BY num_orders DESC;
 -- ======================================
 
 -- Which account managers fall specifically in the "2M-3M EGP total revenue" band — a mid-tier group worth a closer look?
+-- Note the band boundaries: BETWEEN 1 AND 2000000 then BETWEEN 2000001 AND 3000000 would leave a
+-- gap for anything between 2,000,000.01 and 2,000,000.99 — total_amount is DECIMAL, so use
+-- open-ended <= comparisons and let CASE's first-match-wins ordering close the ranges instead
 SELECT am.manager_name, SUM(o.total_amount) AS total_revenue,
     CASE
         WHEN SUM(o.total_amount) = 0 THEN 'ZERO'
-        WHEN SUM(o.total_amount) BETWEEN 1 AND 2000000 THEN 'Under 2M'
-        WHEN SUM(o.total_amount) BETWEEN 2000001 AND 3000000 THEN '2-3M'
+        WHEN SUM(o.total_amount) <= 2000000 THEN 'Under 2M'
+        WHEN SUM(o.total_amount) <= 3000000 THEN '2-3M'
         ELSE '+3M'
     END AS revenue_band
 FROM orders o
@@ -276,7 +327,27 @@ JOIN governorates g
 JOIN account_managers am
     ON g.manager_id = am.manager_id
 GROUP BY am.manager_id, am.manager_name
-HAVING SUM(o.total_amount) BETWEEN 2000001 AND 3000000;
+HAVING SUM(o.total_amount) > 2000000 AND SUM(o.total_amount) <= 3000000;
+
+-- MySQL also lets HAVING reference a SELECT-list alias directly — this returns the same
+-- two managers, without repeating the aggregate expression. It's a MySQL extension
+-- (standard SQL doesn't allow it), so the version above is the portable one
+SELECT am.manager_name, SUM(o.total_amount) AS total_revenue,
+    CASE
+        WHEN SUM(o.total_amount) = 0 THEN 'ZERO'
+        WHEN SUM(o.total_amount) <= 2000000 THEN 'Under 2M'
+        WHEN SUM(o.total_amount) <= 3000000 THEN '2-3M'
+        ELSE '+3M'
+    END AS revenue_band
+FROM orders o
+JOIN customers c
+    ON o.customer_id = c.customer_id
+JOIN governorates g
+    ON c.governorate_id = g.governorate_id
+JOIN account_managers am
+    ON g.manager_id = am.manager_id
+GROUP BY am.manager_id, am.manager_name
+HAVING revenue_band = '2-3M';
 
 -- ======================================
 -- SECTION 11 — TRIMMING WHITESPACE
@@ -306,9 +377,34 @@ SELECT seller_name, LOCATE(' ', seller_name) AS space_position
 FROM sellers
 LIMIT 5;
 
+-- RIGHT pulls from the opposite end — the last 4 digits of each product's SKU
+SELECT sku, RIGHT(sku, 4) AS sku_suffix
+FROM products
+LIMIT 5;
+
+-- SUBSTRING(str, start): from a fixed position to the end of the string —
+-- here, everything after the '@' (using LOCATE's result as the start point)
+SELECT email, SUBSTRING(email, LOCATE('@', email) + 1) AS email_domain
+FROM customers
+WHERE email IS NOT NULL
+LIMIT 5;
+
+-- SUBSTRING(str, start, length): the same function, capped at a fixed number
+-- of characters — the first 3 letters of each customer's email
+SELECT email, SUBSTRING(email, 1, 3) AS email_prefix
+FROM customers
+WHERE email IS NOT NULL
+LIMIT 5;
+
 -- ======================================
 -- SECTION 13 — BUILDING AND CLEANING STRINGS
 -- ======================================
+
+-- REPLACE swaps every occurrence of one substring for another — turning a
+-- seller's shop name into a URL-safe slug, one space at a time
+SELECT seller_name, REPLACE(seller_name, ' ', '-') AS seller_slug
+FROM sellers
+LIMIT 5;
 
 -- Sales wants a contact email auto-generated for every seller, from just the
 -- first word of their shop name: firstword@rawaj-marketplace.com, all lowercase
@@ -342,4 +438,18 @@ WITH total_range AS (
     FROM orders
 )
 SELECT IFNULL(total_range, '5000+') AS total_range
+FROM total_range;
+
+-- COALESCE does the same job as IFNULL here — it returns the first non-NULL
+-- argument out of however many you give it (IFNULL is MySQL-only and takes
+-- exactly two; COALESCE is standard SQL and works with any number)
+WITH total_range AS (
+    SELECT
+        CASE
+            WHEN total_amount BETWEEN 0 AND 2000 THEN '0-2000'
+            WHEN total_amount BETWEEN 2001 AND 5000 THEN '2001-5000'
+        END AS total_range
+    FROM orders
+)
+SELECT COALESCE(total_range, '5000+') AS total_range
 FROM total_range;

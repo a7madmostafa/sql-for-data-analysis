@@ -8,7 +8,7 @@ DESCRIBE orders;
 -- ======================================
 
 -- Quick sanity check that the client is connected and running queries at all (no FROM clause needed)
-SELECT "Hello World" AS Welcome;
+SELECT 'Hello World' AS Welcome;
 
 -- Confirm basic arithmetic works in a SELECT before trusting it inside a real calculation
 SELECT 10/5;
@@ -50,7 +50,7 @@ SELECT *
 FROM customers
 ORDER BY last_name, first_name;
 
--- Which orders were the biggest, in dollar terms?
+-- Which orders were the biggest, in EGP terms?
 SELECT *
 FROM orders
 ORDER BY total_amount DESC;
@@ -80,9 +80,13 @@ ORDER BY governorate_id ASC, last_name DESC;
 SELECT COUNT(order_id) AS Orders_count
 FROM orders;
 
--- How many of those orders actually have a recorded dollar total? (COUNT ignores NULLs, unlike COUNT(*))
-SELECT COUNT(total_amount) AS Non_Null_count
-FROM orders;
+-- COUNT(column) skips NULLs, while COUNT(*) counts every row. Every order has a
+-- total_amount, so both give the same answer there — customers.email is the column
+-- that actually has gaps, so that's where the difference shows up
+SELECT
+    COUNT(*) AS All_customers,
+    COUNT(email) AS Customers_with_email
+FROM customers;
 
 -- What's the smallest order Rawaj has ever received?
 SELECT MIN(total_amount) AS MinOrderTotal
@@ -94,10 +98,10 @@ FROM orders;
 
 -- Finance wants one summary row: order count, smallest, biggest, average, and total revenue, all at once
 SELECT
-    COUNT(total_amount) AS OrderCount,     		-- Number of non-null order totals
+    COUNT(*) AS OrderCount,                		-- Number of orders
     MIN(total_amount) AS MinTotal,         		-- Lowest order total
     MAX(total_amount) AS MaxTotal,         		-- Highest order total
-    ROUND(AVG(total_amount), 2) AS AvgTotal,  	    -- Rounded average order total
+    ROUND(AVG(total_amount), 2) AS AvgTotal,  	    -- Average order total, to 2 decimal places
     SUM(total_amount) AS TotalRevenue        		-- Total revenue
 FROM orders;
 
@@ -115,7 +119,7 @@ ORDER BY total_amount DESC;
 -- Pull every order placed before 2024, for a look back at Rawaj's earliest months
 SELECT *
 FROM orders
-WHERE order_date < "2024-01-01"
+WHERE order_date < '2024-01-01'
 ORDER BY order_date;
 
 
@@ -134,15 +138,15 @@ SELECT COUNT(*) AS Facebook_cnt
 FROM web_events
 WHERE channel = 'facebook';
 
--- How many orders has customer 1 placed, and what's their average order size?
-SELECT 	COUNT(total_amount) AS No_of_Orders,
-		AVG(total_amount) AS AvgOrderTotal
+-- How many orders has customer 631 placed, and what's their average order size?
+SELECT 	COUNT(*) AS No_of_Orders,
+		ROUND(AVG(total_amount), 2) AS AvgOrderTotal
 FROM orders
-WHERE customer_id = 1;
+WHERE customer_id = 631;
 
 -- Same question, for a different customer (2)
-SELECT  COUNT(total_amount) AS Orders_Customer2,
-		AVG(total_amount) AS AvgOrderTotal
+SELECT  COUNT(*) AS Orders_Customer2,
+		ROUND(AVG(total_amount), 2) AS AvgOrderTotal
 FROM orders
 WHERE customer_id = 2;
 
@@ -151,37 +155,37 @@ WHERE customer_id = 2;
 -- SECTION 6 — NOT EQUAL CONDITIONS
 -- ======================================
 
--- Every order EXCEPT those from customer 1 — useful when you want to exclude one high-volume customer from a report
+-- Every order EXCEPT those from customer 631 — useful when you want to exclude one customer from a report
 SELECT *
 FROM orders
-WHERE customer_id != 1;
+WHERE customer_id != 631;
 
 -- Same exclusion, standard SQL spelling (<>)
 SELECT *
 FROM orders
-WHERE customer_id <> 1;
+WHERE customer_id <> 631;
 
 -- Same exclusion again, using the NOT keyword instead
 SELECT *
 FROM orders
-WHERE NOT customer_id = 1;
+WHERE NOT customer_id = 631;
 
 
 -- ======================================
 -- SECTION 7 — AND / OR CONDITIONS
 -- ======================================
 
--- Did customer 1 specifically generate any Facebook traffic?
+-- Did customer 631 specifically generate any Facebook traffic?
 SELECT *
 FROM web_events
 WHERE channel = 'facebook'
-AND customer_id = 1;
+AND customer_id = 631;
 
--- Now cast a much wider net: everything Facebook overall, plus everything from customer 1, regardless of channel
+-- Now cast a much wider net: everything Facebook overall, plus everything from customer 631, regardless of channel
 SELECT *
 FROM web_events
 WHERE channel = 'facebook'
-OR customer_id = 1;
+OR customer_id = 631;
 
 
 -- ======================================
@@ -199,10 +203,14 @@ SELECT *
 FROM orders
 WHERE total_amount BETWEEN 2000 AND 4999;
 
--- Which orders came in during the final two days of 2024 — useful for a year-end cutoff report?
+-- Which orders came in during the final two days of 2024 plus New Year's Day — useful for a
+-- year-end cutoff report? order_date is a DATETIME, so BETWEEN would be wrong here:
+-- BETWEEN '2024-12-30' AND '2025-01-01' stops at 2025-01-01 00:00:00 and silently drops
+-- every Jan 1 order placed after midnight. Use >= start AND < the day AFTER the end instead
 SELECT *
 FROM orders
-WHERE order_date BETWEEN "2024-12-30" AND "2025-01-01";
+WHERE order_date >= '2024-12-30'
+AND order_date < '2025-01-02';
 
 
 -- ======================================
@@ -239,6 +247,10 @@ WHERE email IS NOT NULL;
 -- ======================================
 -- SECTION 11 — LIKE (Pattern Matching)
 -- ======================================
+
+-- LIKE is CASE-INSENSITIVE by default in MySQL, so 'A%' also matches names starting
+-- with a lowercase 'a', and '%el%' matches "El-Masry" AND "Abdelrahman". Expect more
+-- rows back than a case-sensitive search would give you
 
 -- Which customers have a first name starting with the letter A — useful for an alphabetized outreach list?
 SELECT *
@@ -281,18 +293,18 @@ GROUP BY channel
 ORDER BY Cnt DESC;
 
 
--- Which channels does customer 1 specifically use most — what are their top 3?
+-- Which channels does customer 631 specifically use most — what are their top 3?
 SELECT channel, COUNT(*) AS Cnt
 FROM web_events
-WHERE customer_id = 1
+WHERE customer_id = 631
 GROUP BY channel
 ORDER BY Cnt DESC
 LIMIT 3;
 
--- How much web activity did each of these three key customers (1, 2, 3) generate?
+-- How much web activity did each of these three key customers (631, 2, 3) generate?
 SELECT customer_id, COUNT(customer_id) AS Cnt
 FROM web_events
-WHERE customer_id IN (1,2,3)
+WHERE customer_id IN (631,2,3)
 GROUP BY customer_id
 ORDER BY customer_id ASC;
 
@@ -300,7 +312,7 @@ ORDER BY customer_id ASC;
 -- For those same three customers, break the activity down by channel too — which channel does each customer favor?
 SELECT customer_id, channel, COUNT(channel) AS Cnt
 FROM web_events
-WHERE customer_id IN (1,2,3)
+WHERE customer_id IN (631,2,3)
 GROUP BY customer_id, channel
 ORDER BY customer_id ASC;
 
@@ -308,7 +320,7 @@ ORDER BY customer_id ASC;
 SELECT customer_id, channel, COUNT(channel) AS Cnt
 FROM web_events
 WHERE channel IN ('organic', 'google')
-AND customer_id IN (1,2,3)
+AND customer_id IN (631,2,3)
 GROUP BY customer_id, channel;
 
 
@@ -330,7 +342,7 @@ GROUP BY customer_id
 ORDER BY Cnt ASC;
 
 
--- Same channel-traffic question as Section 12's first query, just reformatted for a shared report
+-- The same channel breakdown again, laid out one column per line and with a report-ready alias
 SELECT
     channel,
     COUNT(*) AS EventCount
@@ -347,7 +359,7 @@ SELECT
     MIN(total_amount) AS MinTotal,
     MAX(total_amount) AS MaxTotal
 FROM orders
-WHERE order_date LIKE "2024%"
+WHERE YEAR(order_date) = 2024
 GROUP BY customer_id
 ORDER BY OrderCount DESC;
 
@@ -387,7 +399,7 @@ SELECT
     MIN(occurred_at) AS FirstEvent,
     MAX(occurred_at) AS LastEvent
 FROM web_events
-WHERE customer_id IN (1,2,3)
+WHERE customer_id IN (631,2,3)
 GROUP BY customer_id, channel
 ORDER BY customer_id;
 
@@ -428,7 +440,7 @@ ORDER BY TotalSpent;
 -- the customers whose 2024 total topped 20,000 EGP
 SELECT customer_id, SUM(total_amount) AS TotalSpent2024
 FROM orders
-WHERE order_date LIKE "2024%"
+WHERE YEAR(order_date) = 2024
 GROUP BY customer_id
 HAVING SUM(total_amount) > 20000
 ORDER BY TotalSpent2024 DESC;
@@ -436,7 +448,6 @@ ORDER BY TotalSpent2024 DESC;
 
 -- ======================================
 -- SECTION 14 — DATE Functions
--- for REF : https://www.w3schools.com/sql/func_mysql_date.asp
 -- ======================================
 
 -- Which single dates had the most orders — were there any spike days worth investigating?
@@ -462,7 +473,7 @@ SELECT
 FROM orders;
 
 -- Which years does this dataset actually cover?
-SELECT DISTINCT(YEAR(order_date)) Years
+SELECT DISTINCT YEAR(order_date) AS Years
 FROM orders
 ORDER BY Years;
 
@@ -490,10 +501,12 @@ ORDER BY TOTALRev ;
 
 -- =======================================================================================================================================
 
--- Find the sales in terms of total dollars for all orders in each year, ordered from greatest to least.
--- Do you notice any trends in the yearly sales totals?
+-- Total sales (EGP) per year. 2024 is the biggest year at roughly 11.6M EGP, ahead of
+-- 2025 (6.6M) and 2023 (4.8M) — but that gap is mostly a coverage artifact, not growth:
+-- the dataset starts in June 2023 and stops in May 2025, so only 2024 is a full year.
+-- Never read a yearly trend off these totals without checking the date range first.
 
--- Using YEAR() — note: ordered ascending here, opposite of the two variants below
+-- Using YEAR(), sorted smallest total first
 SELECT YEAR(order_date) ord_year,
 		SUM(total_amount) total_spent
 FROM orders
@@ -518,8 +531,9 @@ ORDER BY 2 DESC;
 
 -- =======================================================================================================================================
 
--- Which year did Rawaj have the greatest sales in terms of total number of orders?
--- Are all years evenly represented by the dataset?
+-- Which year had the most orders? 2024 again, with 3,003 — against 1,747 in 2025 and
+-- 1,250 in 2023. Same caveat as above: the years are not evenly represented, because
+-- 2023 only starts in June and 2025 only runs through May.
 
 SELECT YEAR(order_date) ord_year,  COUNT(*) Orders_cnt
 FROM orders
@@ -528,15 +542,16 @@ ORDER BY 2 DESC;
 
 -- =======================================================================================================================================
 
--- Which month did Rawaj have the greatest sales in terms of total dollars?
--- Are all months evenly represented by the dataset?
-
--- Filtered to full-year 2024 (excludes the partial 2023/2025 data) to avoid skewing the month totals
+-- Which month had the greatest total sales? Restricting to 2024 — the one complete year —
+-- keeps the partial 2023/2025 months from skewing the comparison. March comes out well
+-- ahead of every other month, with April second: that's the Ramadan/Eid shopping spike,
+-- a real seasonal signal rather than noise.
 SELECT
 	MONTH(order_date) ord_month,
     SUM(total_amount) total_spent
 FROM orders
-WHERE order_date BETWEEN '2024-01-01' AND '2025-01-01'
+WHERE order_date >= '2024-01-01'
+AND order_date < '2025-01-01'
 GROUP BY 1
 ORDER BY 2 DESC;
 
@@ -569,7 +584,8 @@ SELECT
     MONTHNAME(order_date) AS month_name,
     SUM(total_amount) total_sales
 FROM orders
-GROUP BY month_name;
+GROUP BY month_name
+ORDER BY total_sales DESC;
 
 -- =======================================================================================================================================
 
@@ -583,14 +599,19 @@ ORDER BY total_sales DESC;
 
 -- =======================================================================================================================================
 
---  In which month of which year did our single highest-spending customer, Mohamed Abdelrahman, spend the most?
---  (first JOIN in this script — links orders to customers to filter by name)
+-- In which month of which year did Rawaj's single highest-spending customer spend the most?
+-- Two steps, because we don't know yet who that customer is. First, let the data name them:
+SELECT customer_id, SUM(total_amount) AS lifetime_spend
+FROM orders
+GROUP BY customer_id
+ORDER BY lifetime_spend DESC
+LIMIT 1;
 
-SELECT DATE_FORMAT(order_date,'%Y-%m') ord_date, SUM(o.total_amount) tot_spent
-FROM orders o
-JOIN customers c
-	ON c.customer_id = o.customer_id
-WHERE c.first_name = 'Mohamed' AND c.last_name = 'Abdelrahman'
+-- That returns customer 971, at just over 61,000 EGP lifetime. Now break their spend down
+-- by month and take the biggest one — April 2024, at roughly 19,850 EGP
+SELECT DATE_FORMAT(order_date,'%Y-%m') ord_month, SUM(total_amount) tot_spent
+FROM orders
+WHERE customer_id = 971
 GROUP BY 1
 ORDER BY 2 DESC
 LIMIT 1;
@@ -611,4 +632,4 @@ SELECT CURDATE();
 SELECT NOW();
 
 -- If an order were placed today, what would its 7-day delivery date be?
-SELECT DATE_ADD(CURDATE(), INTERVAL 7 DAY) Delivery
+SELECT DATE_ADD(CURDATE(), INTERVAL 7 DAY) Delivery;

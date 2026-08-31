@@ -54,7 +54,7 @@ ORDER BY total_sales DESC;
 -- the same answer more directly)
 WITH ranked_orders AS (
     SELECT customer_id, order_id, total_amount,
-           RANK() OVER (PARTITION BY customer_id ORDER BY total_amount DESC) AS order_rank
+           ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY total_amount DESC) AS order_rank
     FROM orders
 )
 SELECT customer_id, order_id, total_amount
@@ -73,7 +73,8 @@ WITH monthly_sales AS (
     GROUP BY month
 )
 SELECT month, total_sales,
-       LAG(total_sales) OVER (ORDER BY month) AS prev_month_sales,
+       LAG(total_sales)  OVER (ORDER BY month) AS prev_month_sales,
+       LEAD(total_sales) OVER (ORDER BY month) AS next_month_sales,
        total_sales - LAG(total_sales) OVER (ORDER BY month) AS change_from_prev_month
 FROM monthly_sales
 ORDER BY month;

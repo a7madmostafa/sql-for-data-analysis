@@ -138,7 +138,7 @@ body{margin-left:0}
   </defs>
 </svg>
 
-<div class="crumb">Day 05 of 10 · Window Functions &amp; Stored Procedures</div>
+<div class="crumb">Day 05 of 7 · Window Functions &amp; Stored Procedures</div>
 <h1 class="title">Window Functions &amp; Stored Procedures</h1>
 <p class="subtitle">Ranking and running totals without collapsing rows, then reusable logic saved inside the database itself.</p>
 
@@ -164,6 +164,17 @@ body{margin-left:0}
   haven't already, then <code class="inline">USE rawaj;</code>. No new setup script today.</p>
 </div>
 
+<div class="callout warn">
+  <div class="ti">Window functions need MySQL 8.0 or newer</div>
+  <p>Everything in Sections 1–5 was added to MySQL in version 8.0. On an older server
+  (5.7 and below) every one of these queries fails with a syntax error pointing at
+  <code class="inline">OVER</code>. Check before you start:</p>
+  <p><code class="inline">SELECT VERSION();</code> — if the number starts with
+  <code class="inline">8.</code> or higher you're fine. If it starts with
+  <code class="inline">5.</code>, upgrade before working through this day; there is no
+  workaround short of rewriting each query as a correlated subquery.</p>
+</div>
+
 <h2 class="section"><span class="num">1</span>Window functions — OVER, without collapsing rows</h2>
 <p>Every aggregate so far (<code class="inline">SUM</code>, <code class="inline">COUNT</code>,
 <code class="inline">AVG</code>...) needed <code class="inline">GROUP BY</code>, and
@@ -184,7 +195,7 @@ one just gains an extra column computed by looking through a "window" of other r
     <rect x="10" y="114" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="55" y="130">B, 120</text>
   </g>
   <text x="127" y="80" text-anchor="middle" font-size="10.5" fill="#666">SUM(amt)</text>
-  <text x="127" y="93" text-anchor="middle" font-size="10.5" fill="#666">GROUP BY acct</text>
+  <text x="127" y="93" text-anchor="middle" font-size="10.5" fill="#666">GROUP BY cust</text>
   <line x1="104" y1="84" x2="150" y2="84" stroke="#333" stroke-width="1.4"/>
   <path d="M144,78 L150,84 L144,90" stroke="#333" stroke-width="1.4" fill="none"/>
   <g font-size="12" text-anchor="middle">
@@ -204,7 +215,7 @@ one just gains an extra column computed by looking through a "window" of other r
     <rect x="380" y="114" width="90" height="24" fill="#ffffff" stroke="#333" stroke-width="1.4"/><text x="425" y="130">B, 120</text>
   </g>
   <text x="498" y="74" text-anchor="middle" font-size="9.5" fill="#666">SUM(amt) OVER</text>
-  <text x="498" y="87" text-anchor="middle" font-size="9.5" fill="#666">(PARTITION BY acct</text>
+  <text x="498" y="87" text-anchor="middle" font-size="9.5" fill="#666">(PARTITION BY cust</text>
   <text x="498" y="100" text-anchor="middle" font-size="9.5" fill="#666">ORDER BY amt)</text>
   <line x1="474" y1="84" x2="520" y2="84" stroke="#333" stroke-width="1.4"/>
   <path d="M514,78 L520,84 L514,90" stroke="#333" stroke-width="1.4" fill="none"/>
@@ -231,14 +242,24 @@ running total, not a single company-wide sum.</p>
 </div>
 <div class="annotations">
   <div class="annotation"><b>OVER is what makes it a window function</b><p>Drop the <code class="inline">OVER (...)</code> and this is a plain aggregate needing <code class="inline">GROUP BY</code>. Add it, and <code class="inline">SUM</code> instead computes a value per row, looking at the set of rows <code class="inline">ORDER BY</code> defines as "so far."</p></div>
-  <div class="annotation"><b>The window's ORDER BY is independent</b><p><code class="inline">ORDER BY occurred_at</code> inside <code class="inline">OVER(...)</code> controls calculation order (which rows count as "before" this one) — a separate, outer <code class="inline">ORDER BY</code> would control display order, and both are usually the same column here.</p></div>
+  <div class="annotation"><b>The window's ORDER BY is independent</b><p><code class="inline">ORDER BY order_date</code> inside <code class="inline">OVER(...)</code> controls calculation order (which rows count as "before" this one) — a separate, outer <code class="inline">ORDER BY</code> would control display order, and both are usually the same column here.</p></div>
+</div>
+<div class="callout tip">
+  <div class="ti">A gotcha worth knowing early</div>
+  <p><code class="inline">SUM(...) OVER (ORDER BY col)</code> with no explicit frame clause
+  defaults to <code class="inline">RANGE UNBOUNDED PRECEDING</code>, which means "every row whose
+  ordering value is less than <em>or equal to</em> this one." So if two rows tie on the ordering
+  column, they both get the <em>same</em> cumulative total — the one that includes both of them —
+  rather than one stepping past the other. Ordering on something unique (a timestamp, an id)
+  sidesteps it; <code class="inline">ROWS UNBOUNDED PRECEDING</code> forces strict row-by-row
+  accumulation if you need it.</p>
 </div>
 
 <h2 class="section"><span class="num">2</span>PARTITION BY — resetting the window per group</h2>
 <p><code class="inline">PARTITION BY</code> inside <code class="inline">OVER(...)</code> is to a
 window function what <code class="inline">GROUP BY</code> is to a plain aggregate — it restarts the
 calculation every time the partition column's value changes, without collapsing any rows.</p>
-<p><strong>Business question:</strong> the same running total, but per account — not one company-wide
+<p><strong>Business question:</strong> the same running total, but per customer — not one company-wide
 number mixing every customer together.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
@@ -262,6 +283,45 @@ defines — they only disagree once two rows tie on that ordering column.</p>
     <tr><td><code class="inline">DENSE_RANK()</code></td><td>Tied rows share a number, but <strong>never skips</strong>: 1, 2, 2, 3.</td></tr>
   </tbody>
 </table>
+
+<h3 class="sub">Seeing the difference on three rows</h3>
+<p>The table above is easier to trust once you watch it happen. This query invents three rows with
+a deliberate tie — <code class="inline">A</code> and <code class="inline">B</code> both on 100 — and
+runs all three functions over them. No table needed, so you can paste it into any MySQL 8 client:</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">tie demo — paste anywhere</span></div>
+  <div class="code-body"><span class="kw">SELECT</span> name, v,
+       <span class="fn">RANK</span>()       <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> v <span class="kw">DESC</span>) <span class="kw">AS</span> rnk,
+       <span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> v <span class="kw">DESC</span>) <span class="kw">AS</span> dense_rnk,
+       <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> v <span class="kw">DESC</span>) <span class="kw">AS</span> row_num
+<span class="kw">FROM</span> (
+    <span class="kw">SELECT</span> <span class="str">'A'</span> <span class="kw">AS</span> name, 100 <span class="kw">AS</span> v
+    <span class="kw">UNION ALL SELECT</span> <span class="str">'B'</span>, 100
+    <span class="kw">UNION ALL SELECT</span> <span class="str">'C'</span>, 90
+) t
+<span class="kw">ORDER BY</span> v <span class="kw">DESC</span>;</div>
+</div>
+<table class="api">
+  <thead><tr><th>name</th><th>v</th><th>rnk</th><th>dense_rnk</th><th>row_num</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>100</td><td>1</td><td>1</td><td>1</td></tr>
+    <tr><td>B</td><td>100</td><td>1</td><td>1</td><td>2</td></tr>
+    <tr><td>C</td><td>90</td><td><strong>3</strong></td><td><strong>2</strong></td><td><strong>3</strong></td></tr>
+  </tbody>
+</table>
+<p>Read the bottom row across: <code class="inline">RANK</code> jumped to
+<strong>3</strong> (it burned number 2 on the tie), <code class="inline">DENSE_RANK</code> stayed at
+<strong>2</strong> (no gap), and <code class="inline">ROW_NUMBER</code> never repeated a number at
+all — it broke the A/B tie arbitrarily. That's the whole distinction, on three rows.</p>
+
+<div class="callout warn">
+  <div class="ti">Why the invented data</div>
+  <p>The Rawaj query below has <em>no</em> ties — all five managers land on different totals, so
+  all three columns read 1, 2, 3, 4, 5 and the functions look identical. That's typical of real
+  data with money in it, which is exactly why the difference is worth learning from a rigged
+  three-row example first.</p>
+</div>
+
 <p><strong>Business question:</strong> leadership wants account managers ranked by total sales — and wants
 to know exactly how ties get handled, since two managers landing on the same revenue isn't rare.</p>
 <div class="code-block">
@@ -282,14 +342,17 @@ to know exactly how ties get handled, since two managers landing on the same rev
 <span class="kw">ORDER BY</span> total_sales <span class="kw">DESC</span>;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>CTE first, ranking second</b><p>All three ranking functions need <code class="inline">rep_totals</code> already computed — the same CTE pattern from Day 04's Section 4, now feeding a window function instead of a plain <code class="inline">SELECT</code>.</p></div>
+  <div class="annotation"><b>CTE first, ranking second</b><p>All three ranking functions need <code class="inline">manager_totals</code> already computed — the same CTE pattern from Day 04's Section 4, now feeding a window function instead of a plain <code class="inline">SELECT</code>.</p></div>
   <div class="annotation"><b>Which one to reach for</b><p><code class="inline">DENSE_RANK</code> for gapless tiers ("top 3 revenue tiers"), <code class="inline">RANK</code> when a skipped number should reflect competition (like a race), <code class="inline">ROW_NUMBER</code> whenever you need exactly one row per rank no matter what — the next section depends on that guarantee.</p></div>
 </div>
 
 <h2 class="section"><span class="num">4</span>Ranking within a partition, then filtering to one per group</h2>
 <p>A window function can't be filtered directly in <code class="inline">WHERE</code> — the same rule
-that blocks <code class="inline">WHERE COUNT(*) &gt; 5</code> (Day 03). Compute the rank in a CTE
-first, then filter the CTE's output.</p>
+that blocks <code class="inline">WHERE COUNT(*) &gt; 5</code> (Day 02). The analogy stops one step
+short, though: unlike aggregates, <code class="inline">HAVING</code> doesn't help either, because
+window functions are evaluated <em>after</em> <code class="inline">HAVING</code> — a window function
+can only be filtered from an outer query, CTE, or subquery. Compute the rank in a CTE first, then
+filter the CTE's output.</p>
 <p><strong>Business question:</strong> for every customer, what was their single largest order? (Same
 shape as Day 04's Section 1 subquery question — a window function reaches the same answer more
 directly.)</p>
@@ -297,7 +360,7 @@ directly.)</p>
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
   <div class="code-body"><span class="kw">WITH</span> ranked_orders <span class="kw">AS</span> (
     <span class="kw">SELECT</span> customer_id, order_id, total_amount,
-           <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> customer_id <span class="kw">ORDER BY</span> total_amount <span class="kw">DESC</span>) <span class="kw">AS</span> order_rank
+           <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> customer_id <span class="kw">ORDER BY</span> total_amount <span class="kw">DESC</span>) <span class="kw">AS</span> order_rank
     <span class="kw">FROM</span> orders
 )
 <span class="kw">SELECT</span> customer_id, order_id, total_amount
@@ -307,6 +370,7 @@ directly.)</p>
 </div>
 <div class="annotations">
   <div class="annotation"><b>PARTITION BY here means "per customer"</b><p>Without it, this would rank every order in the whole table against each other — <code class="inline">PARTITION BY customer_id</code> is what makes rank 1 mean "this customer's biggest order," restarting for each customer.</p></div>
+  <div class="annotation"><b>ROW_NUMBER, not RANK, for a "one per group" filter</b><p>This is the guarantee Section 3 pointed at. If a customer's two biggest orders happened to be for the identical amount, <code class="inline">RANK</code> would give <em>both</em> rank 1 and the query would return two rows for that customer — quietly breaking "one row per customer." <code class="inline">ROW_NUMBER</code> can't do that, so exactly one row comes back per customer no matter what the data does.</p></div>
 </div>
 
 <h2 class="section"><span class="num">5</span>LAG / LEAD — comparing a row to a neighbor</h2>
@@ -323,13 +387,30 @@ looks one row <em>forward</em>. Both default to an offset of 1 — <code class="
     <span class="kw">GROUP BY</span> month
 )
 <span class="kw">SELECT</span> month, total_sales,
-       <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> prev_month_sales,
+       <span class="fn">LAG</span>(total_sales)  <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> prev_month_sales,
+       <span class="fn">LEAD</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> next_month_sales,
        total_sales - <span class="fn">LAG</span>(total_sales) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> change_from_prev_month
 <span class="kw">FROM</span> monthly_sales
 <span class="kw">ORDER BY</span> month;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>The first row has nothing to look back to</b><p><code class="inline">LAG</code> returns <code class="inline">NULL</code> for the very first month — expected behavior, not a bug, same as any window function at the edge of its data.</p></div>
+  <div class="annotation"><b>The first row has nothing to look back to</b><p><code class="inline">LAG</code> returns <code class="inline">NULL</code> for the very first month — expected behavior, not a bug, same as any window function at the edge of its data. <code class="inline">LEAD</code> has the mirror-image problem: the <em>last</em> month has nothing ahead of it, so its <code class="inline">next_month_sales</code> is <code class="inline">NULL</code> too.</p></div>
+  <div class="annotation"><b>LAG and LEAD are the same function pointing opposite ways</b><p>Both take an offset that defaults to 1. <code class="inline">LEAD(total_sales)</code> here is just "the value one row further down, in month order" — handy when you want each row to carry both its history and what came next, without self-joining the table to itself.</p></div>
+</div>
+<div class="callout insight">
+  <div class="ti">What the output actually shows</div>
+  <p>Run this and one pair of months leaps out. February 2024 totals <strong>666,832.47 EGP</strong>;
+  March 2024 totals <strong>2,937,664.69 EGP</strong> — roughly <strong>4.4×</strong> the month
+  before, a jump of over 2.27 million EGP. April stays elevated at 1,936,906.62 EGP, then May drops
+  back to 652,697.27 EGP, right onto the ordinary baseline of roughly 600–800k that every other
+  month sits at.</p>
+  <p>Ramadan fell in March 2024, with Eid al-Fitr at its end and Eid shopping running into April.
+  That two-month bulge and its snap back to baseline is the single largest signal in Rawaj's order
+  history — and it is exactly the kind of thing a month-over-month
+  <code class="inline">LAG</code> column exists to surface. A plain
+  <code class="inline">SUM ... GROUP BY month</code> would list the same numbers; the
+  <code class="inline">change_from_prev_month</code> column is what makes the spike impossible to
+  scroll past.</p>
 </div>
 
 <h2 class="section"><span class="num">6</span>Stored procedures (IN parameters)</h2>
@@ -367,7 +448,11 @@ argument would in any programming language.</p>
 count and total revenue for one customer. Save it once as a procedure everyone can call.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
-  <div class="code-body"><span class="kw">DELIMITER</span> $$
+  <div class="code-body"><span class="com">-- re-running CREATE PROCEDURE without dropping first fails with</span>
+<span class="com">-- ERROR 1304: PROCEDURE customer_sales_report already exists</span>
+<span class="kw">DROP PROCEDURE IF EXISTS</span> customer_sales_report;
+
+<span class="kw">DELIMITER</span> $$
 
 <span class="kw">CREATE PROCEDURE</span> customer_sales_report(<span class="kw">IN</span> cust_id <span class="kw">INT</span>)
 <span class="kw">BEGIN</span>
@@ -397,7 +482,9 @@ variable</strong> (conventionally written <code class="inline">@name</code>) ins
 company-wide revenue — captured into a variable it can act on.</p>
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day05_window_functions_and_stored_procedures.sql</span></div>
-  <div class="code-body"><span class="kw">DELIMITER</span> $$
+  <div class="code-body"><span class="kw">DROP PROCEDURE IF EXISTS</span> get_total_revenue;
+
+<span class="kw">DELIMITER</span> $$
 
 <span class="kw">CREATE PROCEDURE</span> get_total_revenue(<span class="kw">OUT</span> total_revenue <span class="kw">DECIMAL</span>(14,2))
 <span class="kw">BEGIN</span>
@@ -410,13 +497,13 @@ company-wide revenue — captured into a variable it can act on.</p>
 <span class="kw">SELECT</span> @rev <span class="kw">AS</span> total_revenue;</div>
 </div>
 <div class="annotations">
-  <div class="annotation"><b>Kept intentionally shallow</b><p>This is enough to read a stored procedure when you meet one in a real codebase — this is a data-analysis course, not a backend/app-dev one, so writing elaborate procedures isn't the goal here.</p></div>
+  <div class="annotation"><b>Enough to read one, not to design one</b><p>This is enough to recognize a stored procedure when you meet one in a real codebase, and to know what <code class="inline">IN</code>/<code class="inline">OUT</code> parameters do — the SQL inside is everything you already know from Days 01–04.</p></div>
 </div>
 
 <div class="callout recap">
   <div class="ti">Next: Day 06</div>
   <p>This closes the core SQL curriculum. Day 06 applies everything from Days 01–05 from Python —
-  connecting to both MySQL and SQLite, ahead of Days 07–10's real SQLite projects.</p>
+  connecting to both MySQL and SQLite, ahead of Day 07's real SQLite project.</p>
 </div>
 
 <footer>Day 05 · Window Functions &amp; Stored Procedures · self-paced</footer>

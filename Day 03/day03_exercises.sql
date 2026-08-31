@@ -5,7 +5,8 @@
 --   1. Run "Databases/rawaj_db.sql" once to create and load the database,
 --      if you haven't already.
 --   2. See "day03_reading.html" for how JOIN syntax maps onto the
---      relationship types from Day 01, plus the full rawaj schema recap.
+--      relationship types from Day 01. "Day 02/day02_reading.html" has the
+--      full rawaj schema diagram if you need to check a table/column name.
 --
 -- Tables available: account_managers, governorates, sellers, brands,
 -- categories, products, product_listings, customers, orders, order_items,
@@ -18,10 +19,12 @@
 --   looking at the walkthrough first — use it afterwards only if you get
 --   stuck. See day03_exercises_solutions.sql to check your answers.
 --
---   No real subqueries or CTE syntax yet (that's Day 04) — Section 14 uses
---   a WITH block, but only as a light preview, the same way the walkthrough
---   does. Everything else is solvable with JOIN, GROUP BY, HAVING, CASE,
---   and string functions alone.
+--   No real subqueries or CTE syntax as its own topic yet (that's Day 04) —
+--   Section 7 uses a `(SELECT DISTINCT ...)` in FROM as a derived table (a
+--   SELECT standing in for a table), and Section 14 uses a WITH block, both
+--   only as light previews the walkthrough already models. Everything else
+--   is solvable with JOIN, GROUP BY, HAVING, CASE, and string functions
+--   alone.
 -- ============================================================
 
 USE rawaj;
@@ -98,9 +101,10 @@ USE rawaj;
 --     placed (NULL where they've never ordered) — every customer should
 --     appear, whether or not they have orders.
 
--- 5.2 Same idea, mirrored: for every order, show its id and total_amount,
---     plus the name of the customer it belongs to (same idea as 5.1,
---     opposite JOIN direction).
+-- 5.2 Answer 5.1 again, but write it with RIGHT JOIN instead — name orders
+--     first and customers second. Check the row count against 5.1: it
+--     should come back identical, since RIGHT JOIN B is just LEFT JOIN
+--     written with the table order swapped.
 
 
 
@@ -119,8 +123,9 @@ USE rawaj;
 -- ======================================
 
 -- 7.1 MySQL has no FULL JOIN keyword. Using UNION of a LEFT JOIN and a
---     RIGHT JOIN over two DISTINCT customer_id lists, build one report
---     pairing "placed an order" against "generated a web event" — matched,
+--     RIGHT JOIN over two DISTINCT customer_id lists — restricted to 2025,
+--     same as the walkthrough — build one report pairing "placed an order
+--     this year" against "generated a web event this year": matched,
 --     order-only, and browse-only rows, all in one result. (Same shape as
 --     the walkthrough — build it again yourself, from scratch.)
 
@@ -246,3 +251,11 @@ USE rawaj;
 --     every "gold" tier customer — total spend over 35,000 EGP, same
 --     threshold as 9.2's tiering. (Combine Section 13's string-building
 --     with a JOIN + HAVING filter on total spend.)
+
+-- C5. Which single order is the largest Rawaj has ever received? This time
+--     show the customer's first and last NAME instead of just their id —
+--     you'll need your first JOIN back to customers to get it.
+
+-- C6. Using a JOIN, list the top 5 customers by total revenue (SUM of
+--     total_amount) by NAME instead of customer_id, highest first — ready
+--     to drop into an exec presentation.
