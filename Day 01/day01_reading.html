@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Day 01 — SQL Foundations</title>
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem('theme');
+    if(saved === 'dark' || saved === 'light'){
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+  }catch(e){}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,8 +26,41 @@
   --insight-bg:#E8F5E9; --insight-bd:#1E8449; --insight-ti:#1E5631;
   --tip-bg:#EEF6FF; --tip-bd:#2E6FB5; --tip-ti:#1F4E82;
   --warn-bg:#FDECEA; --warn-bd:#C0392B; --warn-ti:#7B1F14;
+  --card-bg:#FFFFFF; --annotations-bg:#FAFBFD; --divider:#EEF2F7;
   --recap-bg:#FFF8E1; --recap-bd:#B45309; --recap-ti:#8A4B00;
 }
+:root[data-theme="dark"]{
+  --ink:#E7E9EC; --blue:#4C8DFF; --blue-dark:#9DBBFF; --gray:#A6ADB8; --gray-muted:#767D89;
+  --border:#2A2E37; --panel:#191C22; --white:#FFFFFF; --paper:#101216; --card-bg:#1A1D23;
+  --annotations-bg:#14171C; --divider:#242830;
+  --insight-bg:#152A1B; --insight-bd:#3D9964; --insight-ti:#6FDB98;
+  --tip-bg:#141E2E; --tip-bd:#5B9AE6; --tip-ti:#8FC2FF;
+  --warn-bg:#2A1614; --warn-bd:#E0574A; --warn-ti:#FF9086;
+  --recap-bg:#241D0C; --recap-bd:#D98A3D; --recap-ti:#F0B36B;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#E7E9EC; --blue:#4C8DFF; --blue-dark:#9DBBFF; --gray:#A6ADB8; --gray-muted:#767D89;
+    --border:#2A2E37; --panel:#191C22; --white:#FFFFFF; --paper:#101216; --card-bg:#1A1D23;
+    --annotations-bg:#14171C; --divider:#242830;
+    --insight-bg:#152A1B; --insight-bd:#3D9964; --insight-ti:#6FDB98;
+    --tip-bg:#141E2E; --tip-bd:#5B9AE6; --tip-ti:#8FC2FF;
+    --warn-bg:#2A1614; --warn-bd:#E0574A; --warn-ti:#FF9086;
+    --recap-bg:#241D0C; --recap-bd:#D98A3D; --recap-ti:#F0B36B;
+  }
+}
+body{transition:background-color .15s ease,color .15s ease}
+.theme-toggle{position:fixed;top:14px;right:20px;z-index:1200;width:40px;height:40px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);cursor:pointer;box-shadow:0 2px 8px rgba(20,20,30,.08);display:flex;align-items:center;justify-content:center}
+.theme-toggle svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.theme-toggle .icon-moon{display:none}
+:root[data-theme="dark"] .theme-toggle .icon-sun{display:none}
+:root[data-theme="dark"] .theme-toggle .icon-moon{display:block}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .theme-toggle .icon-sun{display:none}
+  :root:not([data-theme="light"]) .theme-toggle .icon-moon{display:block}
+}
+:root[data-theme="light"] .theme-toggle .icon-sun{display:block}
+:root[data-theme="light"] .theme-toggle .icon-moon{display:none}
 *{box-sizing:border-box} html,body{margin:0;padding:0}
 body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
 .page{max-width:920px;margin:0 auto;padding:56px 48px 90px}
@@ -34,7 +77,7 @@ h3.sub{font-size:17.5px;color:var(--ink);margin:30px 0 10px;font-weight:700}
 p{margin:0 0 15px} p.lead{font-size:18px;color:var(--ink);font-weight:600}
 strong{color:var(--ink);font-weight:700}
 code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--blue-dark)}
-table.api{width:100%;border-collapse:collapse;margin:14px 0 22px;background:white;font-size:14px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+table.api{width:100%;border-collapse:collapse;margin:14px 0 22px;background:var(--card-bg);font-size:14px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
 table.api th,table.api td{padding:10px 13px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
 table.api thead th{background:var(--panel);color:var(--ink);font-size:11.5px;text-transform:uppercase;letter-spacing:.07em}
 table.api tbody tr:last-child td{border-bottom:none}
@@ -56,21 +99,21 @@ table.api tbody tr:last-child td{border-bottom:none}
 .code-body .kw{color:var(--code-kw)}.code-body .fn{color:var(--code-fn)}
 .code-body .str{color:var(--code-str)}.code-body .com{color:var(--code-com);font-style:italic}
 .code-body .def{color:var(--code-default)}
-.annotations{background:#FAFBFD;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:6px 20px 14px;margin-bottom:28px}
-.annotation{padding:11px 0;border-top:1px solid #EEF2F7}
+.annotations{background:var(--annotations-bg);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:6px 20px 14px;margin-bottom:28px}
+.annotation{padding:11px 0;border-top:1px solid var(--divider)}
 .annotation:first-child{border-top:0}
 .annotation b{color:var(--blue);font-size:14px}
 .annotation p{margin:3px 0 0;font-size:14.5px;color:var(--ink)}
 
 .compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 26px}
-.compare .col{background:white;border:1px solid var(--border);border-radius:8px;padding:17px 19px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.compare .col{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:17px 19px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
 .compare .col h4{margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink)}
 .compare .col p,.compare .col li{font-size:14.5px}
 .compare .col ul{margin:6px 0 0;padding-left:18px}
 
 .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0 26px}
 .card-grid.three{grid-template-columns:repeat(3,1fr)}
-.card{background:white;border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 2px 8px rgba(20,20,30,.05)}
 .card h4{margin:0 0 7px;color:var(--ink);font-size:16px;font-weight:700}
 .card p{font-size:14.5px;margin:0 0 6px;color:var(--gray)}
 .card p:last-child{margin-bottom:0}
@@ -87,16 +130,16 @@ figcaption{font-size:13.5px;color:var(--gray);margin-top:12px;font-style:italic}
 
 footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color:var(--gray-muted);font-size:12px;text-align:center;font-family:'IBM Plex Mono',monospace}
 @media(max-width:760px){.page{padding:32px 22px}h1.title{font-size:30px}.card-grid,.card-grid.three,.compare{grid-template-columns:1fr}}
-.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:#F3F4F6;border-right:1px solid #E5E7EB;padding:22px 0;overflow-y:auto;z-index:1000}
-.site-sidebar .brand{font-family:'Bricolage Grotesque',Georgia,serif;font-weight:800;font-size:14.5px;color:#141414;padding:0 20px 16px;border-bottom:1px solid #E5E7EB;margin-bottom:8px;line-height:1.3}
-.site-sidebar a{display:block;padding:9px 20px;font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;font-size:14px;color:#5B6472;text-decoration:none;border-left:3px solid transparent}
-.site-sidebar a:hover{background:#fff;color:#2F63E8}
-.site-sidebar a.active{background:#fff;color:#2F63E8;font-weight:700;border-left-color:#2F63E8}
-.site-sidebar .daynum{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9CA3AF;display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
-.site-sidebar a.active .daynum{color:#2F63E8}
-body{margin-left:220px}
-.sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:1200;width:40px;height:40px;border-radius:8px;border:1px solid #E5E7EB;background:#fff;font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(20,20,30,.08);align-items:center;justify-content:center}
-.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(20,20,20,.35);z-index:900}
+.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:var(--panel);border-right:1px solid var(--border);padding:22px 0;overflow-y:auto;z-index:1000}
+.site-sidebar .brand{font-family:'Bricolage Grotesque',Georgia,serif;font-weight:800;font-size:14.5px;color:var(--ink);padding:0 20px 16px;border-bottom:1px solid var(--border);margin-bottom:8px;line-height:1.3}
+.site-sidebar a{display:block;padding:9px 20px;font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--gray);text-decoration:none;border-left:3px solid transparent}
+.site-sidebar a:hover{background:var(--card-bg);color:var(--blue)}
+.site-sidebar a.active{background:var(--card-bg);color:var(--blue);font-weight:700;border-left-color:var(--blue)}
+.site-sidebar .daynum{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--gray-muted);display:block;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+.site-sidebar a.active .daynum{color:var(--blue)}
+body{margin-left:220px;background:var(--paper)}
+.sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:1200;width:40px;height:40px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(20,20,30,.08);align-items:center;justify-content:center}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:900}
 @media(max-width:900px){
 .site-sidebar{width:250px;transform:translateX(-100%);transition:transform .25s ease;box-shadow:2px 0 16px rgba(0,0,0,.18)}
 .site-sidebar.open{transform:translateX(0)}
@@ -112,7 +155,7 @@ body{margin-left:0}
 .dl-icon{width:11px;height:11px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .day-nav{display:flex;gap:16px;margin:40px 0 0;flex-wrap:wrap}
 .day-nav-link{flex:1 1 260px;max-width:340px;display:flex;flex-direction:column;gap:4px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:border-color .15s,background .15s}
-.day-nav-link:hover{background:#fff;border-color:var(--blue)}
+.day-nav-link:hover{background:var(--card-bg);border-color:var(--blue)}
 .day-nav-link.next{margin-left:auto;text-align:right;align-items:flex-end}
 .day-nav-link .dn-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:700}
 .day-nav-link .dn-title{font-size:14.5px;color:var(--ink);font-weight:600}
@@ -121,6 +164,10 @@ body{margin-left:0}
 </head>
 <body>
 <button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+<button class="theme-toggle" aria-label="Toggle dark mode">
+  <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
+</button>
 <div class="sidebar-backdrop"></div>
 <nav class="site-sidebar">
 <div class="brand">SQL for Data Analysis</div>
@@ -718,6 +765,22 @@ returning one row per input row, it collapses many rows into a single summary nu
     if (sidebar.classList.contains('open')) close(); else openMenu();
   });
   backdrop.addEventListener('click', close);
+})();
+</script>
+<script>
+(function(){
+  var btn = document.querySelector('.theme-toggle');
+  if(!btn) return;
+  function currentTheme(){
+    var attr = document.documentElement.getAttribute('data-theme');
+    if(attr === 'dark' || attr === 'light') return attr;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  btn.addEventListener('click', function(){
+    var next = currentTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('theme', next); }catch(e){}
+  });
 })();
 </script>
 </body></html>
