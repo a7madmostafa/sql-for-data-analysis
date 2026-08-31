@@ -146,8 +146,9 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color
 <p class="subtitle">Every statement from <code class="inline">day02_filtering_and_aggregation.sql</code>, executed live against <code class="inline">rawaj</code> &mdash; SQL and real output, side by side.</p>
 
 <div class="day-links">
-  <a class="primary" href="day02_reading.html">Reading</a>
-  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2002" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>Walkthrough &amp; Exercises</a>
+  <a href="day02_reading.html">Reading</a>
+  <a class="primary" href="day02_filtering_and_aggregation.html">Worked Examples</a>
+  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/Day%2002" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>View on GitHub</a>
 </div>
 
 <div class="callout">
@@ -676,7 +677,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color
 <div class="result-wrap"><table class="api result-table"><thead><tr><th>CURDATE()</th></tr></thead><tbody><tr><td>2026-08-31</td></tr></tbody></table><p class="row-note">1 row</p></div>
 <p class="explain">Quick reference: current date and time, for timestamping something happening right now</p>
 <div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">NOW</span>();</div></div>
-<div class="result-wrap"><table class="api result-table"><thead><tr><th>NOW()</th></tr></thead><tbody><tr><td>2026-08-31 15:57:49</td></tr></tbody></table><p class="row-note">1 row</p></div>
+<div class="result-wrap"><table class="api result-table"><thead><tr><th>NOW()</th></tr></thead><tbody><tr><td>2026-08-31 16:10:27</td></tr></tbody></table><p class="row-note">1 row</p></div>
 <p class="explain">If an order were placed today, what would its 7-day delivery date be?</p>
 <div class="code-block"><div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">day02_filtering_and_aggregation.sql</span></div><div class="code-body"><span class="kw">SELECT</span> <span class="fn">DATE_ADD</span>(<span class="fn">CURDATE</span>(), INTERVAL 7 DAY) Delivery;</div></div>
 <div class="result-wrap"><table class="api result-table"><thead><tr><th>Delivery</th></tr></thead><tbody><tr><td>2026-09-07</td></tr></tbody></table><p class="row-note">1 row</p></div>

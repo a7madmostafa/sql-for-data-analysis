@@ -252,6 +252,14 @@ DAYS = [
     ("07", "day07_reading.html", "Project: Wasel"),
 ]
 
+WALKTHROUGH_FILENAMES = {
+    1: "day01_sql_foundations.html",
+    2: "day02_filtering_and_aggregation.html",
+    3: "day03_joins_case_and_strings.html",
+    4: "day04_subqueries_ctes_and_views.html",
+    5: "day05_window_functions_and_stored_procedures.html",
+}
+
 SIDEBAR_CSS = """.site-sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:var(--panel);border-right:1px solid var(--border);padding:22px 0;overflow-y:auto;z-index:1000}
 .site-sidebar .brand{font-family:'Bricolage Grotesque',Georgia,serif;font-weight:800;font-size:14.5px;color:var(--ink);padding:0 20px 16px;border-bottom:1px solid var(--border);margin-bottom:8px;line-height:1.3}
 .site-sidebar a{display:block;padding:9px 20px;font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--gray);text-decoration:none;border-left:3px solid transparent}
@@ -353,12 +361,17 @@ DAY_LINKS_CSS = """.day-links{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 22
 
 
 def render_day_links(day):
+    """Same button row as the reading page for this day: Reading, Worked
+    Examples, one GitHub link -- Worked Examples is active here since this
+    function only renders the walkthrough-output ("Worked Examples") page."""
     reading_file = f"day{day:02d}_reading.html"
+    walkthrough_file = WALKTHROUGH_FILENAMES[day]
     gh_folder = f"Day%20{day:02d}"
     return (
         '<div class="day-links">\n'
-        f'  <a class="primary" href="{reading_file}">Reading</a>\n'
-        f'  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/{gh_folder}" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>Walkthrough &amp; Exercises</a>\n'
+        f'  <a href="{reading_file}">Reading</a>\n'
+        f'  <a class="primary" href="{walkthrough_file}">Worked Examples</a>\n'
+        f'  <a href="https://github.com/a7madmostafa/sql-for-data-analysis/tree/main/{gh_folder}" target="_blank" rel="noopener"><svg class="dl-icon"><use href="#icon-external"/></svg>View on GitHub</a>\n'
         "</div>"
     )
 
