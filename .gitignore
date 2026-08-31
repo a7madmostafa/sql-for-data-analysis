@@ -1,6 +1,7 @@
 # Internal build-planning / agent-instruction docs — not published course content
 CLAUDE.md
 COURSE_PLAN.md
+sql_for_data_analysis_education_manager_review.md
 
 # Secrets
 .env
